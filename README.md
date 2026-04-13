@@ -1,9 +1,9 @@
-# Naia's Bakery Quest
+# Bakery Quest
 
 A math practice app for 3rd graders, themed as a bakery game. Practice
 multiplication and division facts through timed customer orders.
 
-Built for Naia — serves customers, earns tips, unlocks upgrades.
+Serves customers, earns tips, unlocks upgrades.
 
 ## Features
 

@@ -1,7 +1,7 @@
-# Naia's Bakery Quest — Development Guide
+# Bakery Quest — Development Guide
 
 ## Brief
-A math practice app for a 3rd grader (Naia) disguised as a bakery game.
+A math practice app for a 3rd grader disguised as a bakery game.
 Multiplication and division facts (3s–9s), timed customer orders, hint system,
 progression with tips and unlockable upgrades.
 
@@ -51,8 +51,8 @@ Single-file app (`index.html`) with embedded CSS and JS.
 | Single HTML file, no framework | Zero build complexity, instant deploy anywhere, easy for parent to modify |
 | Emoji characters, not images | Self-contained, no asset pipeline, works offline |
 | localStorage only | No backend needed for a kid's practice app |
-| Bakery theme with story problems | Interview with Naia: she wants characters + timer, loves baking theme |
-| Hint-then-reveal (not punish) | Interview: she wants hints on wrong answers, not just "wrong" |
+| Bakery theme with story problems | Kid wants characters + timer, loves baking theme |
+| Hint-then-reveal (not punish) | Kid wants hints on wrong answers, not just "wrong" |
 | 10 orders per round, 20s patience | Targets ~10 min sessions (her attention span) |
 | Levels start at 3s/4s | She already knows 1s, 2s, 5s, 10s |
 
