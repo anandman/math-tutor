@@ -20,11 +20,8 @@ Serves customers, earns tips, unlocks upgrades.
 ```bash
 # Serve locally
 npx serve .
-
-# Deploy to Vercel
-vercel
 ```
 
 No build step, no dependencies. Just a single `index.html`.
 
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for architecture and design decisions.
+Deployed to GitHub Pages — pushes to `main` auto-deploy via `.github/workflows/pages.yml`.
