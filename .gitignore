@@ -1,4 +1,5 @@
-# Agent config (local only -- generated from docs/DEVELOPMENT.md)
+# Development docs (local only -- never check in)
+docs/DEVELOPMENT.md
 AGENTS.md
 CLAUDE.md
 GEMINI.md
@@ -7,8 +8,9 @@ HANDOFF.md
 .claude/
 .gemini/
 
-# Brainstorming artifacts
+# Superpowers artifacts
 .superpowers/
+docs/superpowers/
 
 # OS
 .DS_Store
