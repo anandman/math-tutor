@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Naia's Bakery Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cream: #FFF8F0;
+  --warm-white: #FFFDF9;
+  --peach: #FDDCB5;
+  --coral: #E8725A;
+  --coral-dark: #C9573F;
+  --teal: #5BAD8A;
+  --teal-dark: #3E8A6A;
+  --chocolate: #3D2315;
+  --brown: #6B4226;
+  --golden: #F0B752;
+  --golden-dark: #D49B2A;
+  --pink: #F5A0B8;
+  --mint: #B8E6D0;
+  --lavender: #D4BDE6;
+  --sky: #A8D8EA;
+  --shadow: rgba(61, 35, 21, 0.12);
+  --shadow-lg: rgba(61, 35, 21, 0.2);
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Quicksand', sans-serif;
+  background: var(--cream);
+  color: var(--chocolate);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif; }
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 80%, var(--peach) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, var(--mint) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, var(--warm-white) 0%, transparent 70%);
+  opacity: 0.4;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.screen {
+  display: none;
+  width: 100%;
+  max-width: 520px;
+  padding: 24px;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.4s ease;
+}
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-4deg); }
+  75% { transform: rotate(4deg); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes slideRight {
+  from { transform: translateX(-40px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes celebration {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.15) rotate(-3deg); }
+  50% { transform: scale(1.15) rotate(3deg); }
+  75% { transform: scale(1.1) rotate(-1deg); }
+  100% { transform: scale(1); }
+}
+
+.bakery-sign {
+  background: var(--coral);
+  color: var(--warm-white);
+  padding: 24px 48px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 8px 0 var(--coral-dark), 0 12px 24px var(--shadow-lg);
+  position: relative;
+  margin-bottom: 32px;
+}
+.bakery-sign h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.bakery-sign .subtitle { font-family: 'Quicksand', sans-serif; font-size: 1rem; font-weight: 600; opacity: 0.9; margin-top: 4px; }
+
+.btn {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 16px;
+  padding: 16px 36px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.96) !important; }
+.btn-primary { background: var(--coral); color: var(--warm-white); box-shadow: 0 5px 0 var(--coral-dark), 0 8px 16px var(--shadow); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 7px 0 var(--coral-dark), 0 12px 20px var(--shadow); }
+.btn-teal { background: var(--teal); color: var(--warm-white); box-shadow: 0 5px 0 var(--teal-dark), 0 8px 16px var(--shadow); }
+.btn-teal:hover { transform: translateY(-2px); }
+.btn-golden { background: var(--golden); color: var(--chocolate); box-shadow: 0 5px 0 var(--golden-dark), 0 8px 16px var(--shadow); }
+.btn-golden:hover { transform: translateY(-2px); }
+.btn-small { font-size: 0.95rem; padding: 10px 22px; border-radius: 12px; }
+.btn-back { background: var(--peach); color: var(--brown); box-shadow: 0 3px 0 #dfc19e; }
+
+.level-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; margin: 20px 0; }
+.level-card {
+  background: var(--warm-white); border: 3px solid var(--peach); border-radius: 18px;
+  padding: 20px 16px; text-align: center; cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; position: relative; overflow: hidden;
+}
+.level-card:hover { transform: translateY(-4px); border-color: var(--coral); box-shadow: 0 8px 20px var(--shadow); }
+.level-card.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.3); }
+.level-card.locked:hover { transform: none; border-color: var(--peach); box-shadow: none; }
+.level-card .level-icon { font-size: 2.2rem; margin-bottom: 8px; }
+.level-card h3 { font-size: 1.05rem; margin-bottom: 4px; color: var(--brown); }
+.level-card p { font-size: 0.8rem; color: var(--brown); opacity: 0.7; font-weight: 500; }
+.level-card .lock-badge { position: absolute; top: 8px; right: 8px; font-size: 1.1rem; }
+
+.mode-toggle { display: flex; background: var(--warm-white); border: 3px solid var(--peach); border-radius: 14px; overflow: hidden; margin-bottom: 18px; width: 100%; }
+.mode-btn {
+  flex: 1; padding: 12px; text-align: center; font-family: 'Fredoka', sans-serif;
+  font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s, color 0.2s;
+  border: none; background: transparent; color: var(--brown);
+}
+.mode-btn.active { background: var(--coral); color: var(--warm-white); }
+
+.game-header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 16px; }
+.tips-display {
+  background: var(--golden); color: var(--chocolate); font-family: 'Fredoka', sans-serif;
+  font-weight: 700; font-size: 1.1rem; padding: 8px 18px; border-radius: 30px;
+  box-shadow: 0 3px 0 var(--golden-dark); display: flex; align-items: center; gap: 6px;
+}
+.progress-display { font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 0.95rem; color: var(--brown); opacity: 0.8; }
+
+.customer-area {
+  background: var(--warm-white); border: 3px solid var(--peach); border-radius: 24px;
+  padding: 28px 24px; width: 100%; text-align: center; position: relative;
+  box-shadow: 0 4px 16px var(--shadow); margin-bottom: 16px;
+}
+.customer-emoji { font-size: 4rem; margin-bottom: 6px; animation: popIn 0.5s ease; display: inline-block; }
+.customer-name { font-family: 'Fredoka', sans-serif; font-size: 1rem; font-weight: 600; color: var(--brown); margin-bottom: 12px; }
+
+.speech-bubble {
+  background: var(--cream); border: 2px solid var(--peach); border-radius: 16px;
+  padding: 16px 20px; margin: 8px 0 16px; position: relative;
+  font-size: 1rem; font-weight: 600; color: var(--chocolate); line-height: 1.5;
+}
+.speech-bubble::before {
+  content: ''; position: absolute; top: -10px; left: 50%; margin-left: -10px;
+  border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 10px solid var(--peach);
+}
+.speech-bubble::after {
+  content: ''; position: absolute; top: -7px; left: 50%; margin-left: -8px;
+  border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 8px solid var(--cream);
+}
+
+.math-problem { font-family: 'Fredoka', sans-serif; font-size: 2rem; font-weight: 700; color: var(--coral); margin: 4px 0; }
+
+.patience-bar-container { width: 100%; margin-bottom: 16px; }
+.patience-label { font-size: 0.8rem; font-weight: 700; color: var(--brown); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+.patience-bar { width: 100%; height: 14px; background: var(--peach); border-radius: 10px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+.patience-fill { height: 100%; background: var(--teal); border-radius: 10px; transition: width 0.3s linear, background 0.3s; width: 100%; }
+.patience-fill.warning { background: var(--golden); }
+.patience-fill.danger { background: var(--coral); }
+
+.answer-area { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.answer-input {
+  font-family: 'Fredoka', sans-serif; font-size: 2.2rem; font-weight: 700; text-align: center;
+  width: 160px; padding: 12px; border: 3px solid var(--peach); border-radius: 16px;
+  background: var(--warm-white); color: var(--chocolate); outline: none; transition: border-color 0.2s;
+  -moz-appearance: textfield;
+}
+.answer-input::-webkit-outer-spin-button, .answer-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.answer-input:focus { border-color: var(--golden); box-shadow: 0 0 0 3px rgba(240, 183, 82, 0.2); }
+.answer-input.correct { border-color: var(--teal); background: #E8F8F0; animation: celebration 0.5s ease; }
+.answer-input.wrong { border-color: var(--coral); background: #FEE8E4; animation: wiggle 0.4s ease; }
+
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 280px; }
+.numpad-btn {
+  font-family: 'Fredoka', sans-serif; font-size: 1.5rem; font-weight: 600; padding: 14px;
+  border: 2px solid var(--peach); border-radius: 14px; background: var(--warm-white);
+  color: var(--chocolate); cursor: pointer; transition: background 0.1s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.numpad-btn:active { transform: scale(0.93); background: var(--peach); }
+.numpad-btn.clear { color: var(--coral); font-size: 1.2rem; }
+.numpad-btn.submit-btn { background: var(--teal); color: white; font-size: 1.2rem; }
+.numpad-btn.submit-btn:active { background: var(--teal-dark); }
+
+.hint-box {
+  background: #FFF9E6; border: 2px solid var(--golden); border-radius: 16px;
+  padding: 16px 20px; width: 100%; margin: 12px 0; animation: slideRight 0.3s ease;
+}
+.hint-box .hint-title { font-family: 'Fredoka', sans-serif; font-weight: 700; color: var(--golden-dark); margin-bottom: 6px; font-size: 0.95rem; }
+.hint-box .hint-text { font-size: 0.95rem; font-weight: 600; color: var(--brown); line-height: 1.5; }
+
+.feedback {
+  font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.1rem;
+  min-height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.feedback.correct-fb { color: var(--teal-dark); }
+.feedback.wrong-fb { color: var(--coral); }
+
+.results-card {
+  background: var(--warm-white); border: 3px solid var(--peach); border-radius: 24px;
+  padding: 28px; width: 100%; text-align: center; box-shadow: 0 6px 20px var(--shadow);
+}
+.results-card h2 { font-size: 1.8rem; color: var(--coral); margin-bottom: 4px; }
+
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+.stat-box { background: var(--cream); border-radius: 14px; padding: 16px; }
+.stat-box .stat-value { font-family: 'Fredoka', sans-serif; font-size: 2rem; font-weight: 700; color: var(--coral); }
+.stat-box .stat-label { font-size: 0.8rem; font-weight: 700; color: var(--brown); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-box.teal .stat-value { color: var(--teal-dark); }
+.stat-box.golden .stat-value { color: var(--golden-dark); }
+
+.results-buttons { display: flex; gap: 12px; margin-top: 8px; justify-content: center; }
+
+.treat-unlock {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: var(--warm-white); border: 4px solid var(--golden); border-radius: 28px;
+  padding: 40px; text-align: center; z-index: 100; animation: popIn 0.5s ease;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.treat-unlock-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
+.treat-unlock h3 { font-size: 1.3rem; color: var(--golden-dark); margin: 12px 0 4px; }
+.treat-unlock .new-treat { font-size: 4rem; animation: float 2s ease-in-out infinite; }
+
+.shop-item {
+  background: var(--warm-white); border: 3px solid var(--peach); border-radius: 16px;
+  padding: 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px;
+}
+.shop-item.owned { border-color: var(--teal); opacity: 0.7; }
+.shop-item-icon { font-size: 2rem; }
+.shop-item-info { flex: 1; }
+.shop-item-name { font-family: 'Fredoka', sans-serif; font-weight: 700; color: var(--brown); }
+.shop-item-desc { font-size: 0.8rem; color: var(--brown); opacity: 0.7; font-weight: 600; }
+.shop-owned { font-family: 'Fredoka', sans-serif; font-weight: 700; color: var(--teal); }
+
+.tricky-facts-box {
+  background: #FFF3E0; border-radius: 12px; padding: 14px; text-align: left; margin-top: 12px;
+}
+.tricky-facts-label { color: var(--brown); font-size: 0.85rem; font-weight: 700; }
+.tricky-facts-list { margin-top: 6px; font-family: 'Fredoka', sans-serif; font-weight: 600; color: var(--coral); font-size: 1rem; }
+.perfect-round { color: var(--teal-dark); font-weight: 700; margin-top: 12px; }
+
+/* ─── Chart table ─── */
+.chart-container { overflow-x: auto; width: 100%; }
+.chart-container table {
+  border-collapse: collapse; font-family: 'Fredoka', sans-serif; font-size: 0.85rem;
+  width: 100%; text-align: center;
+}
+.chart-container th {
+  background: var(--coral); color: var(--warm-white); padding: 6px 4px;
+  font-weight: 600; font-size: 0.8rem; min-width: 32px;
+}
+.chart-container td {
+  padding: 5px 4px; border: 1px solid var(--peach); color: var(--chocolate);
+  font-weight: 500; min-width: 32px;
+}
+.chart-container tr:first-child th { border-radius: 6px 6px 0 0; }
+.chart-container td:first-child {
+  background: var(--coral); color: var(--warm-white); font-weight: 600;
+}
+.chart-container tr:nth-child(even) td:not(:first-child) { background: var(--cream); }
+.chart-container tr:nth-child(odd) td:not(:first-child) { background: var(--warm-white); }
+
+.peek-chart-btn {
+  font-size: 1.1rem; background: var(--peach); border: 2px solid var(--golden);
+  border-radius: 10px; padding: 4px 10px; cursor: pointer;
+  font-family: 'Fredoka', sans-serif; transition: transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.peek-chart-btn:active { transform: scale(0.9); }
+
+.quit-game-btn {
+  font-family: 'Quicksand', sans-serif; font-size: 0.75rem; font-weight: 600;
+  color: var(--brown); opacity: 0.45; background: none; border: none;
+  cursor: pointer; padding: 4px 0; margin-top: 4px; align-self: flex-start;
+  transition: opacity 0.2s; -webkit-tap-highlight-color: transparent;
+}
+.quit-game-btn:hover { opacity: 0.7; }
+
+@media (max-height: 700px) {
+  .customer-emoji { font-size: 3rem; }
+  .math-problem { font-size: 1.6rem; }
+  .answer-input { font-size: 1.8rem; padding: 8px; width: 130px; }
+  .numpad-btn { padding: 10px; font-size: 1.3rem; }
+  .customer-area { padding: 16px; }
+  .speech-bubble { padding: 10px 14px; font-size: 0.9rem; }
+  .bakery-sign h1 { font-size: 1.8rem; }
+  .bakery-sign { padding: 16px 32px; margin-bottom: 20px; }
+}
+
+/* ─── Landscape tablet (iPad 11th gen: 1180x820 CSS px) ─── */
+@media (min-width: 800px) and (max-height: 900px) and (orientation: landscape) {
+  body { overflow: auto; }
+  .screen { max-width: 700px; padding: 16px 32px; }
+
+  /* Menu: keep vertical, just tighten spacing */
+  #menu-screen { flex-direction: column; align-items: center; }
+  .bakery-sign { padding: 18px 40px; margin-bottom: 16px; }
+  .bakery-sign h1 { font-size: 2rem; }
+  #menu-screen svg.bakery-scene { max-width: 220px; margin-bottom: 12px; }
+
+  /* Level select: 4 columns */
+  .level-grid { grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 12px 0; }
+  .level-card { padding: 14px 12px; }
+
+  /* Game screen: side-by-side, wider */
+  #game-screen { max-width: 900px; justify-content: center; }
+  .game-header { margin-bottom: 6px; }
+
+  .game-layout {
+    display: flex; gap: 24px; width: 100%;
+    align-items: stretch;
+  }
+  .game-left {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+  }
+  .game-right {
+    flex: 0 0 280px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 10px;
+  }
+
+  /* Move patience bar inside the customer area */
+  .patience-bar-container { margin-bottom: 0; order: -1; margin-bottom: 10px; }
+
+  .customer-area { margin-bottom: 8px; padding: 18px 20px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .customer-emoji { font-size: 2.8rem; margin-bottom: 2px; }
+  .customer-name { margin-bottom: 6px; font-size: 0.9rem; }
+  .speech-bubble { padding: 10px 16px; margin: 4px 0 8px; font-size: 0.9rem; }
+  .math-problem { font-size: 1.6rem; }
+
+  .answer-input { font-size: 1.8rem; padding: 10px; width: 100%; max-width: 250px; }
+  .numpad { max-width: 250px; gap: 6px; }
+  .numpad-btn { padding: 11px; font-size: 1.25rem; }
+
+  .hint-box { margin: 6px 0; padding: 10px 14px; }
+  .feedback { font-size: 0.95rem; min-height: 24px; }
+
+  /* Results: horizontal stats */
+  .results-card { padding: 20px 28px; }
+  .results-card h2 { font-size: 1.5rem; }
+  .stat-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+
+  /* Shop: 2-column grid */
+  #shop-items { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .shop-item { margin-bottom: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- MENU SCREEN -->
+<div class="screen active" id="menu-screen">
+  <div class="bakery-sign">
+    <h1>Naia's Bakery</h1>
+    <div class="subtitle">A Math Adventure</div>
+  </div>
+
+  <svg class="bakery-scene" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:320px;margin:0 auto 16px;">
+    <rect x="40" y="50" width="240" height="120" rx="8" fill="#FDDCB5" stroke="#6B4226" stroke-width="2"/>
+    <path d="M30 55 L160 10 L290 55 Z" fill="#E8725A" stroke="#C9573F" stroke-width="2"/>
+    <rect x="130" y="100" width="60" height="70" rx="30 30 0 0" fill="#6B4226"/>
+    <circle cx="175" cy="138" r="4" fill="#F0B752"/>
+    <rect x="62" y="80" width="45" height="40" rx="6" fill="#A8D8EA" stroke="#6B4226" stroke-width="2"/>
+    <line x1="84.5" y1="80" x2="84.5" y2="120" stroke="#6B4226" stroke-width="1.5"/>
+    <line x1="62" y1="100" x2="107" y2="100" stroke="#6B4226" stroke-width="1.5"/>
+    <rect x="213" y="80" width="45" height="40" rx="6" fill="#A8D8EA" stroke="#6B4226" stroke-width="2"/>
+    <line x1="235.5" y1="80" x2="235.5" y2="120" stroke="#6B4226" stroke-width="1.5"/>
+    <line x1="213" y1="100" x2="258" y2="100" stroke="#6B4226" stroke-width="1.5"/>
+    <path d="M50 78 Q70 68 90 78 Q110 68 130 78 Q150 68 170 78 Q190 68 210 78 Q230 68 250 78 Q270 68 270 78" fill="none" stroke="#E8725A" stroke-width="3"/>
+    <rect x="110" y="25" width="100" height="28" rx="6" fill="#FFF8F0" stroke="#6B4226" stroke-width="1.5"/>
+    <text x="160" y="44" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="12" font-weight="700" fill="#3D2315">OPEN</text>
+    <rect x="230" y="20" width="18" height="35" rx="3" fill="#FDDCB5" stroke="#6B4226" stroke-width="1.5"/>
+    <circle cx="239" cy="16" r="6" fill="#e0e0e0" opacity="0.6">
+      <animate attributeName="cy" values="16;6;-2" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0.3;0" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="243" cy="12" r="4" fill="#e0e0e0" opacity="0.4">
+      <animate attributeName="cy" values="12;2;-6" dur="3.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0.2;0" dur="3.5s" repeatCount="indefinite"/>
+    </circle>
+  </svg>
+
+  <button class="btn btn-primary" onclick="showScreen('level-screen')" style="margin-bottom: 14px;">
+    Start Baking!
+  </button>
+  <div style="display: flex; gap: 10px;">
+    <button class="btn btn-golden btn-small" onclick="showScreen('shop-screen')">
+      My Bakery
+    </button>
+    <button class="btn btn-teal btn-small" onclick="showScreen('chart-screen')">
+      Math Chart
+    </button>
+  </div>
+</div>
+
+<!-- LEVEL SELECT -->
+<div class="screen" id="level-screen">
+  <h2 style="font-size: 1.5rem; color: var(--brown); margin-bottom: 6px;">Choose Your Order</h2>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" data-mode="multiply" onclick="setTrack('multiply')">Multiply</button>
+    <button class="mode-btn" data-mode="divide" onclick="setTrack('divide')">Divide</button>
+  </div>
+
+  <div class="level-grid" id="level-grid"></div>
+
+  <div id="both-mode-area" style="width: 100%; text-align: center; margin-top: 4px;"></div>
+
+  <button class="btn btn-small btn-back" onclick="showScreen('menu-screen')" style="margin-top: 12px;">Back</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen" id="game-screen">
+  <div class="game-layout">
+    <div class="game-left">
+      <div class="game-header">
+        <div class="tips-display"><span>💰</span> <span id="tips-count">0</span></div>
+        <button class="peek-chart-btn" onclick="toggleGameChart()" title="Peek at chart">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="display: block;"><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" stroke-width="1"/><line x1="1" y1="10" x2="15" y2="10" stroke="currentColor" stroke-width="1"/><line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" stroke-width="1"/><line x1="10.5" y1="1" x2="10.5" y2="15" stroke="currentColor" stroke-width="1"/></svg>
+        </button>
+        <div class="progress-display">Order <span id="current-order">1</span> / <span id="total-orders">10</span></div>
+      </div>
+      <div class="patience-bar-container">
+        <div class="patience-label">Customer patience</div>
+        <div class="patience-bar">
+          <div class="patience-fill" id="patience-fill"></div>
+        </div>
+      </div>
+      <div class="customer-area">
+        <div class="customer-emoji" id="customer-emoji">👩</div>
+        <div class="customer-name" id="customer-name">Mrs. Baker</div>
+        <div class="speech-bubble" id="speech-bubble">
+          I need 4 trays with 6 muffins each!
+        </div>
+        <div class="math-problem" id="math-problem">4 x 6 = ?</div>
+      </div>
+
+      <div id="hint-area"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="quit-game-btn" onclick="quitGame()">Quit</button>
+    </div>
+
+    <div class="game-right">
+      <div class="answer-area">
+        <input type="number" class="answer-input" id="answer-input" inputmode="numeric" autocomplete="off">
+        <div class="numpad">
+          <button class="numpad-btn" onclick="numpadPress(1)">1</button>
+          <button class="numpad-btn" onclick="numpadPress(2)">2</button>
+          <button class="numpad-btn" onclick="numpadPress(3)">3</button>
+          <button class="numpad-btn" onclick="numpadPress(4)">4</button>
+          <button class="numpad-btn" onclick="numpadPress(5)">5</button>
+          <button class="numpad-btn" onclick="numpadPress(6)">6</button>
+          <button class="numpad-btn" onclick="numpadPress(7)">7</button>
+          <button class="numpad-btn" onclick="numpadPress(8)">8</button>
+          <button class="numpad-btn" onclick="numpadPress(9)">9</button>
+          <button class="numpad-btn clear" onclick="numpadClear()">&#9003;</button>
+          <button class="numpad-btn" onclick="numpadPress(0)">0</button>
+          <button class="numpad-btn submit-btn" onclick="checkAnswer()">GO</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="screen" id="results-screen">
+  <div class="results-card">
+    <div style="font-size: 3rem; margin-bottom: 4px;" id="results-emoji">🎉</div>
+    <h2 id="results-title">Great Baking!</h2>
+    <p style="font-weight: 600; color: var(--brown); opacity: 0.7;" id="results-subtitle">You served all your customers!</p>
+
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-value" id="stat-correct">8</div>
+        <div class="stat-label">Correct</div>
+      </div>
+      <div class="stat-box teal">
+        <div class="stat-value" id="stat-total">10</div>
+        <div class="stat-label">Orders</div>
+      </div>
+      <div class="stat-box golden">
+        <div class="stat-value" id="stat-tips">45</div>
+        <div class="stat-label">Tips Earned</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="stat-streak">5</div>
+        <div class="stat-label">Best Streak</div>
+      </div>
+    </div>
+
+    <div id="tricky-facts"></div>
+
+    <div class="results-buttons">
+      <button class="btn btn-primary btn-small" onclick="showScreen('level-screen')">More Orders</button>
+      <button class="btn btn-golden btn-small" onclick="showScreen('menu-screen')">Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHART SCREEN (from menu) -->
+<div class="screen" id="chart-screen">
+  <h2 style="font-size: 1.5rem; color: var(--brown); margin-bottom: 12px;">Multiplication Chart</h2>
+  <div class="chart-container" id="chart-table"></div>
+  <button class="btn btn-small btn-back" onclick="showScreen('menu-screen')" style="margin-top: 14px;">Back</button>
+</div>
+
+<!-- CHART OVERLAY (in-game peek, timer keeps running) -->
+<div id="game-chart-overlay" class="treat-unlock-overlay" style="display: none;" onclick="toggleGameChart()"></div>
+<div id="game-chart" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--warm-white); border: 4px solid var(--golden); border-radius: 20px; padding: 20px; z-index: 100; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 80vh; overflow: auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <h3 style="font-size: 1.1rem; color: var(--brown);">Multiplication Chart</h3>
+    <button class="btn btn-small btn-back" onclick="toggleGameChart()" style="padding: 6px 14px; font-size: 0.8rem;">Close</button>
+  </div>
+  <div class="chart-container" id="game-chart-table"></div>
+  <p style="font-size: 0.75rem; color: var(--brown); opacity: 0.6; text-align: center; margin-top: 8px; font-weight: 600;">Timer is still running!</p>
+</div>
+
+<!-- SHOP SCREEN -->
+<div class="screen" id="shop-screen">
+  <h2 style="font-size: 1.5rem; color: var(--brown); margin-bottom: 4px;">My Bakery</h2>
+  <div class="tips-display" style="margin-bottom: 20px;"><span>💰</span> <span id="shop-tips">0</span> tips saved</div>
+  <div id="shop-items" style="width: 100%;"></div>
+  <button class="btn btn-small btn-back" onclick="showScreen('menu-screen')" style="margin-top: 16px;">Back</button>
+</div>
+
+<!-- UNLOCK POPUP -->
+<div id="treat-unlock-overlay" class="treat-unlock-overlay" style="display: none;" onclick="dismissUnlock()"></div>
+<div id="treat-unlock" class="treat-unlock" style="display: none;">
+  <div class="new-treat" id="unlock-treat">🎂</div>
+  <h3 id="unlock-title">New Recipe Unlocked!</h3>
+  <p style="color: var(--brown); font-weight: 600;" id="unlock-desc">You can now bake cakes!</p>
+  <button class="btn btn-golden btn-small" onclick="dismissUnlock()" style="margin-top: 16px;">Yay!</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// CONSTANTS & CONFIG
+// ═══════════════════════════════════════
+var ORDERS_PER_ROUND = 10;
+var PATIENCE_SECONDS = 20;
+var SR_WEIGHTS = [5, 4, 3, 2, 1]; // box 0 = 5x likely, box 4 = 1x
+
+// Separate level definitions per track
+var TRACK_LEVELS = {
+  multiply: [
+    { id: 'm1', facts: [3, 4],                name: 'Level 1', desc: '3s & 4s',   icon: '🧁' },
+    { id: 'm2', facts: [6, 7],                name: 'Level 2', desc: '6s & 7s',   icon: '🍪' },
+    { id: 'm3', facts: [8, 9],                name: 'Level 3', desc: '8s & 9s',   icon: '🎂' },
+    { id: 'm4', facts: [3, 4, 5, 6, 7, 8, 9], name: 'Level 4', desc: 'All mixed!', icon: '🌟' },
+  ],
+  divide: [
+    { id: 'd1', facts: [2, 5, 10],            name: 'Level 1', desc: '2s, 5s & 10s', icon: '🧁' },
+    { id: 'd2', facts: [3, 4],                name: 'Level 2', desc: '3s & 4s',      icon: '🍪' },
+    { id: 'd3', facts: [6, 7, 8, 9],          name: 'Level 3', desc: '6s - 9s',      icon: '🎂' },
+    { id: 'd4', facts: [2, 3, 4, 5, 6, 7, 8, 9, 10], name: 'Level 4', desc: 'All mixed!', icon: '🌟' },
+  ],
+};
+
+// ═══════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════
+var state = {
+  track: 'multiply',    // 'multiply', 'divide', or 'both'
+  levelIndex: 0,
+  levelId: 'm1',
+  currentOrder: 0,
+  tips: 0,
+  totalTips: 0,
+  correct: 0,
+  streak: 0,
+  bestStreak: 0,
+  attempts: 0,
+  currentProblem: null,
+  patienceRemaining: PATIENCE_SECONDS,
+  patienceTimer: null,
+  hintShown: false,
+  answered: false,
+  wrongFacts: [],
+  factsPool: [],         // facts eligible for this round (from level + SR)
+};
+
+// ═══════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════
+function loadProgress() {
+  try {
+    var saved = localStorage.getItem('bakery-quest-v2');
+    if (saved) return JSON.parse(saved);
+  } catch(e) { /* ignore */ }
+  return { totalTips: 0, unlockedLevels: ['m1', 'd1'], upgrades: [], sr: {} };
+}
+
+function saveProgressData(progress) {
+  localStorage.setItem('bakery-quest-v2', JSON.stringify(progress));
+}
+
+function getProgress() { return loadProgress(); }
+
+// ═══════════════════════════════════════
+// SPACED REPETITION (LEITNER BOXES)
+// ═══════════════════════════════════════
+// SR data: { "mul:3x4": { box: 0, correct: 0, wrong: 0, lastSeen: ts }, ... }
+function srKey(type, a, b) {
+  if (type === 'multiply') return 'mul:' + a + 'x' + b;
+  return 'div:' + (a * b) + '/' + a;
+}
+
+function getSRData(progress, key) {
+  if (!progress.sr) progress.sr = {};
+  if (!progress.sr[key]) progress.sr[key] = { box: 0, correct: 0, wrong: 0, lastSeen: 0 };
+  return progress.sr[key];
+}
+
+function srRecordCorrect(key) {
+  var progress = getProgress();
+  var d = getSRData(progress, key);
+  d.correct++;
+  d.box = Math.min(4, d.box + 1);
+  d.lastSeen = Date.now();
+  saveProgressData(progress);
+}
+
+function srRecordWrong(key) {
+  var progress = getProgress();
+  var d = getSRData(progress, key);
+  d.wrong++;
+  d.box = 0;
+  d.lastSeen = Date.now();
+  saveProgressData(progress);
+}
+
+// Build weighted pool of facts for a given level
+function buildFactsPool(track, levelDef) {
+  var progress = getProgress();
+  var pool = [];
+  var facts = levelDef.facts;
+  var i, j, a, b, key, data, weight;
+
+  for (i = 0; i < facts.length; i++) {
+    a = facts[i];
+    for (j = 1; j <= 10; j++) {
+      b = j;
+      if (track === 'multiply' || track === 'both') {
+        key = srKey('multiply', a, b);
+        data = getSRData(progress, key);
+        weight = SR_WEIGHTS[data.box];
+        pool.push({ type: 'multiply', a: a, b: b, key: key, weight: weight });
+      }
+      if (track === 'divide' || track === 'both') {
+        key = srKey('divide', a, b);
+        data = getSRData(progress, key);
+        weight = SR_WEIGHTS[data.box];
+        pool.push({ type: 'divide', a: a, b: b, key: key, weight: weight });
+      }
+    }
+  }
+  return pool;
+}
+
+function pickWeightedFact(pool) {
+  var totalWeight = 0;
+  var i;
+  for (i = 0; i < pool.length; i++) totalWeight += pool[i].weight;
+  var r = Math.random() * totalWeight;
+  var cumulative = 0;
+  for (i = 0; i < pool.length; i++) {
+    cumulative += pool[i].weight;
+    if (r <= cumulative) return pool[i];
+  }
+  return pool[pool.length - 1];
+}
+
+// ═══════════════════════════════════════
+// CUSTOMERS & FLAVOR
+// ═══════════════════════════════════════
+var customers = [
+  { emoji: '👩‍🍳', name: 'Chef Rosa' },
+  { emoji: '👨‍🍳', name: 'Chef Marco' },
+  { emoji: '👧', name: 'Little Emma' },
+  { emoji: '👦', name: 'Tommy' },
+  { emoji: '👵', name: 'Grandma Pearl' },
+  { emoji: '👴', name: 'Grandpa Joe' },
+  { emoji: '🧑', name: 'Alex' },
+  { emoji: '👩', name: 'Ms. Honey' },
+  { emoji: '🧔', name: 'Mr. Sprinkle' },
+  { emoji: '🦊', name: 'Foxy' },
+  { emoji: '🐻', name: 'Bear Bruno' },
+  { emoji: '🐰', name: 'Bunny Boo' },
+  { emoji: '🐱', name: 'Kitty Cake' },
+  { emoji: '🐸', name: 'Froggy Fred' },
+];
+
+var treats = ['cupcakes', 'muffins', 'cookies', 'brownies', 'donuts', 'croissants', 'scones', 'tarts'];
+var containers = ['trays', 'boxes', 'plates', 'bags', 'baskets'];
+
+var shopItems = [
+  { id: 'counter', name: 'Marble Counter', icon: '🪨', cost: 30, desc: 'A shiny new counter!' },
+  { id: 'oven', name: 'Golden Oven', icon: '🔥', cost: 50, desc: 'Bake twice as fast!' },
+  { id: 'sign', name: 'Neon Sign', icon: '✨', cost: 40, desc: 'Attract more customers!' },
+  { id: 'flowers', name: 'Flower Pots', icon: '🌸', cost: 25, desc: 'Pretty up the bakery!' },
+  { id: 'chandelier', name: 'Chandelier', icon: '💡', cost: 60, desc: 'Light up the room!' },
+  { id: 'music', name: 'Music Box', icon: '🎵', cost: 35, desc: 'Bakery tunes!' },
+];
+
+// ═══════════════════════════════════════
+// PROBLEM GENERATION
+// ═══════════════════════════════════════
+function generateProblem() {
+  var fact = pickWeightedFact(state.factsPool);
+  var a = fact.a, b = fact.b;
+  var treat = treats[Math.floor(Math.random() * treats.length)];
+  var container = containers[Math.floor(Math.random() * containers.length)];
+
+  if (fact.type === 'multiply') {
+    return {
+      a: a, b: b,
+      answer: a * b,
+      type: 'multiply',
+      srKey: fact.key,
+      display: a + ' \u00d7 ' + b + ' = ?',
+      story: 'I need ' + a + ' ' + container + ' with ' + b + ' ' + treat + ' each!',
+      hintText: 'Think of it as ' + a + ' groups of ' + b + '. That\'s ' + Array(a).fill(b).join(' + ') + ' = ?',
+    };
+  } else {
+    var product = a * b;
+    return {
+      a: product, b: a,
+      answer: b,
+      type: 'divide',
+      srKey: fact.key,
+      display: product + ' \u00f7 ' + a + ' = ?',
+      story: 'I have ' + product + ' ' + treat + '. Split them into ' + a + ' equal groups please!',
+      hintText: 'What times ' + a + ' equals ' + product + '? Try counting by ' + a + 's!',
+    };
+  }
+}
+
+// ═══════════════════════════════════════
+// SCREEN MANAGEMENT
+// ═══════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  if (id === 'shop-screen') renderShop();
+  if (id === 'level-screen') renderLevelSelect();
+  if (id === 'chart-screen') buildChartTable('chart-table');
+}
+
+function setTrack(track) {
+  state.track = track;
+  document.querySelectorAll('.mode-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.mode === track);
+  });
+  renderLevelSelect();
+}
+
+function renderLevelSelect() {
+  var progress = getProgress();
+  var grid = document.getElementById('level-grid');
+  while (grid.firstChild) grid.removeChild(grid.firstChild);
+
+  var levels = TRACK_LEVELS[state.track] || [];
+  levels.forEach(function(lvl, idx) {
+    var unlocked = progress.unlockedLevels.indexOf(lvl.id) !== -1;
+    var card = document.createElement('div');
+    card.className = 'level-card' + (unlocked ? '' : ' locked');
+    card.dataset.level = lvl.id;
+
+    var iconDiv = document.createElement('div');
+    iconDiv.className = 'level-icon';
+    iconDiv.textContent = lvl.icon;
+    card.appendChild(iconDiv);
+
+    var h3 = document.createElement('h3');
+    h3.textContent = lvl.name;
+    card.appendChild(h3);
+
+    var p = document.createElement('p');
+    p.textContent = lvl.desc;
+    card.appendChild(p);
+
+    if (!unlocked) {
+      var badge = document.createElement('span');
+      badge.className = 'lock-badge';
+      badge.textContent = '🔒';
+      card.appendChild(badge);
+    }
+
+    card.addEventListener('click', function() {
+      if (!unlocked) return;
+      startLevel(state.track, idx, lvl);
+    });
+
+    grid.appendChild(card);
+  });
+
+  // "Both" mode button — available if at least level 1 done in each track
+  var bothArea = document.getElementById('both-mode-area');
+  while (bothArea.firstChild) bothArea.removeChild(bothArea.firstChild);
+
+  var hasMultiply = progress.unlockedLevels.indexOf('m2') !== -1 || (progress.sr && Object.keys(progress.sr).some(function(k) { return k.startsWith('mul:') && progress.sr[k].correct > 0; }));
+  var hasDivide = progress.unlockedLevels.indexOf('d2') !== -1 || (progress.sr && Object.keys(progress.sr).some(function(k) { return k.startsWith('div:') && progress.sr[k].correct > 0; }));
+
+  if (hasMultiply && hasDivide) {
+    var bothBtn = document.createElement('button');
+    bothBtn.className = 'btn btn-teal btn-small';
+    bothBtn.textContent = 'Both! (Mix it up)';
+    bothBtn.addEventListener('click', function() { startBothMode(); });
+    bothArea.appendChild(bothBtn);
+  }
+}
+
+// ═══════════════════════════════════════
+// GAME LOGIC
+// ═══════════════════════════════════════
+function startLevel(track, levelIndex, levelDef) {
+  state.track = track;
+  state.levelIndex = levelIndex;
+  state.levelId = levelDef.id;
+  state.currentOrder = 0;
+  state.tips = 0;
+  state.correct = 0;
+  state.streak = 0;
+  state.bestStreak = 0;
+  state.wrongFacts = [];
+  state.factsPool = buildFactsPool(track, levelDef);
+
+  showScreen('game-screen');
+  document.getElementById('total-orders').textContent = ORDERS_PER_ROUND;
+  document.getElementById('tips-count').textContent = '0';
+  nextOrder();
+}
+
+function startBothMode() {
+  // Collect all facts from all unlocked levels in both tracks
+  var progress = getProgress();
+  var allFacts = [];
+
+  ['multiply', 'divide'].forEach(function(track) {
+    TRACK_LEVELS[track].forEach(function(lvl) {
+      if (progress.unlockedLevels.indexOf(lvl.id) !== -1) {
+        lvl.facts.forEach(function(f) {
+          if (allFacts.indexOf(f) === -1) allFacts.push(f);
+        });
+      }
+    });
+  });
+
+  var bothLevel = { id: 'both', facts: allFacts, name: 'Both', desc: 'Mix', icon: '🌟' };
+  state.track = 'both';
+  state.levelIndex = -1;
+  state.levelId = 'both';
+  state.currentOrder = 0;
+  state.tips = 0;
+  state.correct = 0;
+  state.streak = 0;
+  state.bestStreak = 0;
+  state.wrongFacts = [];
+  state.factsPool = buildFactsPool('both', bothLevel);
+
+  showScreen('game-screen');
+  document.getElementById('total-orders').textContent = ORDERS_PER_ROUND;
+  document.getElementById('tips-count').textContent = '0';
+  nextOrder();
+}
+
+function nextOrder() {
+  state.currentOrder++;
+  if (state.currentOrder > ORDERS_PER_ROUND) {
+    endRound();
+    return;
+  }
+
+  state.currentProblem = generateProblem();
+  state.attempts = 0;
+  state.hintShown = false;
+  state.answered = false;
+
+  var c = customers[Math.floor(Math.random() * customers.length)];
+  var emojiEl = document.getElementById('customer-emoji');
+  emojiEl.textContent = c.emoji;
+  emojiEl.style.animation = 'none';
+  requestAnimationFrame(function() { emojiEl.style.animation = 'popIn 0.5s ease'; });
+
+  document.getElementById('customer-name').textContent = c.name;
+  document.getElementById('speech-bubble').textContent = state.currentProblem.story;
+  document.getElementById('math-problem').textContent = state.currentProblem.display;
+  document.getElementById('current-order').textContent = state.currentOrder;
+
+  var hintArea = document.getElementById('hint-area');
+  while (hintArea.firstChild) hintArea.removeChild(hintArea.firstChild);
+
+  var feedbackEl = document.getElementById('feedback');
+  feedbackEl.textContent = '';
+  feedbackEl.className = 'feedback';
+
+  var input = document.getElementById('answer-input');
+  input.value = '';
+  input.className = 'answer-input';
+  input.focus();
+
+  startPatience();
+}
+
+function startPatience() {
+  state.patienceRemaining = PATIENCE_SECONDS;
+  var fill = document.getElementById('patience-fill');
+  fill.style.width = '100%';
+  fill.className = 'patience-fill';
+
+  clearInterval(state.patienceTimer);
+  state.patienceTimer = setInterval(function() {
+    state.patienceRemaining -= 0.1;
+    var pct = Math.max(0, (state.patienceRemaining / PATIENCE_SECONDS) * 100);
+    fill.style.width = pct + '%';
+
+    if (pct < 25) fill.className = 'patience-fill danger';
+    else if (pct < 50) fill.className = 'patience-fill warning';
+    else fill.className = 'patience-fill';
+
+    if (state.patienceRemaining <= 0) {
+      clearInterval(state.patienceTimer);
+      if (!state.answered) timeUp();
+    }
+  }, 100);
+}
+
+function timeUp() {
+  state.answered = true;
+  document.getElementById('answer-input').className = 'answer-input wrong';
+  state.wrongFacts.push(state.currentProblem.display);
+  state.streak = 0;
+  srRecordWrong(state.currentProblem.srKey);
+
+  var fb = document.getElementById('feedback');
+  fb.textContent = "Time's up! The answer was " + state.currentProblem.answer;
+  fb.className = 'feedback wrong-fb';
+
+  setTimeout(nextOrder, 2200);
+}
+
+function showHint(text) {
+  var hintArea = document.getElementById('hint-area');
+  while (hintArea.firstChild) hintArea.removeChild(hintArea.firstChild);
+
+  var box = document.createElement('div');
+  box.className = 'hint-box';
+
+  var title = document.createElement('div');
+  title.className = 'hint-title';
+  title.textContent = '💡 Hint!';
+  box.appendChild(title);
+
+  var content = document.createElement('div');
+  content.className = 'hint-text';
+  content.textContent = text;
+  box.appendChild(content);
+
+  hintArea.appendChild(box);
+}
+
+function checkAnswer() {
+  if (state.answered) return;
+
+  var input = document.getElementById('answer-input');
+  var value = parseInt(input.value);
+  if (isNaN(value)) return;
+
+  state.attempts++;
+  var fb = document.getElementById('feedback');
+
+  if (value === state.currentProblem.answer) {
+    state.answered = true;
+    clearInterval(state.patienceTimer);
+    input.className = 'answer-input correct';
+
+    state.correct++;
+    state.streak++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+
+    // SR: promote the fact
+    srRecordCorrect(state.currentProblem.srKey);
+    // Refresh pool weights for next pick
+    refreshPoolWeights();
+
+    var tipAmount = 3;
+    if (state.patienceRemaining > PATIENCE_SECONDS * 0.7) tipAmount = 5;
+    else if (state.patienceRemaining > PATIENCE_SECONDS * 0.4) tipAmount = 4;
+    if (state.attempts > 1) tipAmount = Math.max(1, tipAmount - 2);
+
+    state.tips += tipAmount;
+    document.getElementById('tips-count').textContent = state.tips;
+
+    var msgs = ['Yum! Perfect!', 'Delicious!', 'Amazing baker!', "That's right!", 'Nailed it!'];
+    fb.textContent = msgs[Math.floor(Math.random() * msgs.length)] + '  +' + tipAmount + ' tips!';
+    fb.className = 'feedback correct-fb';
+
+    setTimeout(nextOrder, 1500);
+
+  } else if (state.attempts === 1) {
+    input.className = 'answer-input wrong';
+    setTimeout(function() { input.className = 'answer-input'; }, 600);
+    input.value = '';
+
+    state.hintShown = true;
+    showHint(state.currentProblem.hintText);
+    fb.textContent = 'Not quite \u2014 try again!';
+    fb.className = 'feedback wrong-fb';
+
+  } else {
+    state.answered = true;
+    clearInterval(state.patienceTimer);
+    input.className = 'answer-input wrong';
+    state.wrongFacts.push(state.currentProblem.display);
+    state.streak = 0;
+
+    // SR: demote the fact
+    srRecordWrong(state.currentProblem.srKey);
+    refreshPoolWeights();
+
+    fb.textContent = 'The answer is ' + state.currentProblem.answer + ". You'll get it next time!";
+    fb.className = 'feedback wrong-fb';
+
+    setTimeout(nextOrder, 2500);
+  }
+}
+
+function refreshPoolWeights() {
+  var progress = getProgress();
+  state.factsPool.forEach(function(f) {
+    var data = getSRData(progress, f.key);
+    f.weight = SR_WEIGHTS[data.box];
+  });
+}
+
+function endRound() {
+  clearInterval(state.patienceTimer);
+  var progress = getProgress();
+  state.totalTips = (progress.totalTips || 0) + state.tips;
+  progress.totalTips = state.totalTips;
+
+  // Unlock next level in the current track
+  var pct = state.correct / ORDERS_PER_ROUND;
+  var unlockName = null;
+  if (pct >= 0.7 && state.track !== 'both') {
+    var levels = TRACK_LEVELS[state.track];
+    var nextIdx = state.levelIndex + 1;
+    if (nextIdx < levels.length) {
+      var nextId = levels[nextIdx].id;
+      if (progress.unlockedLevels.indexOf(nextId) === -1) {
+        progress.unlockedLevels.push(nextId);
+        unlockName = levels[nextIdx];
+      }
+    }
+  }
+  saveProgressData(progress);
+
+  var emoji = '🎉', title = 'Amazing Baker!', sub = 'Your customers loved it!';
+  if (pct < 0.5) { emoji = '💪'; title = 'Keep Practicing!'; sub = 'Every baker starts somewhere!'; }
+  else if (pct < 0.7) { emoji = '👍'; title = 'Good Job!'; sub = 'Getting better every time!'; }
+  else if (pct < 0.9) { emoji = '🎉'; title = 'Great Baking!'; sub = 'Your customers are happy!'; }
+  else { emoji = '⭐'; title = 'Star Baker!'; sub = "You're a math whiz!"; }
+
+  document.getElementById('results-emoji').textContent = emoji;
+  document.getElementById('results-title').textContent = title;
+  document.getElementById('results-subtitle').textContent = sub;
+  document.getElementById('stat-correct').textContent = state.correct;
+  document.getElementById('stat-total').textContent = ORDERS_PER_ROUND;
+  document.getElementById('stat-tips').textContent = state.tips;
+  document.getElementById('stat-streak').textContent = state.bestStreak;
+
+  // Show tricky facts + pattern insights
+  var trickyEl = document.getElementById('tricky-facts');
+  while (trickyEl.firstChild) trickyEl.removeChild(trickyEl.firstChild);
+
+  if (state.wrongFacts.length > 0) {
+    var unique = state.wrongFacts.filter(function(v, i, a) { return a.indexOf(v) === i; });
+    var box = document.createElement('div');
+    box.className = 'tricky-facts-box';
+
+    var label = document.createElement('strong');
+    label.className = 'tricky-facts-label';
+    label.textContent = '📝 Practice these:';
+    box.appendChild(label);
+
+    var list = document.createElement('div');
+    list.className = 'tricky-facts-list';
+    list.textContent = unique.join('  |  ');
+    box.appendChild(list);
+
+    // Pattern detection: find struggling number families
+    var srData = getProgress().sr || {};
+    var troubleNums = {};
+    Object.keys(srData).forEach(function(k) {
+      if (srData[k].box === 0 && srData[k].wrong > 0) {
+        // extract the base number from key like "mul:3x4" or "div:12/3"
+        var parts;
+        if (k.startsWith('mul:')) {
+          parts = k.substring(4).split('x');
+          var n = parseInt(parts[0]);
+          troubleNums[n] = (troubleNums[n] || 0) + 1;
+        } else if (k.startsWith('div:')) {
+          parts = k.substring(4).split('/');
+          var d = parseInt(parts[1]);
+          troubleNums[d] = (troubleNums[d] || 0) + 1;
+        }
+      }
+    });
+    // If 3+ facts wrong for a number, call it out
+    var patterns = Object.keys(troubleNums).filter(function(n) { return troubleNums[n] >= 3; });
+    if (patterns.length > 0) {
+      var patternEl = document.createElement('div');
+      patternEl.style.cssText = 'margin-top: 8px; font-size: 0.85rem; font-weight: 600; color: var(--brown);';
+      patternEl.textContent = '💡 Tip: ' + patterns.join('s, ') + 's seem tricky \u2014 they\'ll show up more often!';
+      box.appendChild(patternEl);
+    }
+
+    trickyEl.appendChild(box);
+  } else {
+    var perfect = document.createElement('p');
+    perfect.className = 'perfect-round';
+    perfect.textContent = 'Perfect round \u2014 no mistakes!';
+    trickyEl.appendChild(perfect);
+  }
+
+  showScreen('results-screen');
+
+  if (unlockName) {
+    setTimeout(function() {
+      showUnlock(unlockName.icon, unlockName.name + ' Unlocked!', unlockName.desc);
+    }, 800);
+  }
+}
+
+function quitGame() {
+  clearInterval(state.patienceTimer);
+  showScreen('menu-screen');
+}
+
+// ═══════════════════════════════════════
+// NUMPAD
+// ═══════════════════════════════════════
+function numpadPress(n) {
+  if (state.answered) return;
+  var input = document.getElementById('answer-input');
+  if (input.value.length >= 3) return;
+  input.value += n;
+}
+
+function numpadClear() {
+  var input = document.getElementById('answer-input');
+  input.value = input.value.slice(0, -1);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (!document.getElementById('game-screen').classList.contains('active')) return;
+  if (state.answered) return;
+  if (e.key >= '0' && e.key <= '9') numpadPress(parseInt(e.key));
+  else if (e.key === 'Backspace') numpadClear();
+  else if (e.key === 'Enter') checkAnswer();
+});
+
+// ═══════════════════════════════════════
+// SHOP
+// ═══════════════════════════════════════
+function renderShop() {
+  var progress = getProgress();
+  document.getElementById('shop-tips').textContent = progress.totalTips || 0;
+
+  var container = document.getElementById('shop-items');
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  shopItems.forEach(function(item) {
+    var owned = (progress.upgrades || []).indexOf(item.id) !== -1;
+    var canAfford = (progress.totalTips || 0) >= item.cost;
+
+    var row = document.createElement('div');
+    row.className = 'shop-item' + (owned ? ' owned' : '');
+
+    var icon = document.createElement('div');
+    icon.className = 'shop-item-icon';
+    icon.textContent = item.icon;
+    row.appendChild(icon);
+
+    var info = document.createElement('div');
+    info.className = 'shop-item-info';
+    var nameEl = document.createElement('div');
+    nameEl.className = 'shop-item-name';
+    nameEl.textContent = item.name;
+    info.appendChild(nameEl);
+    var descEl = document.createElement('div');
+    descEl.className = 'shop-item-desc';
+    descEl.textContent = item.desc;
+    info.appendChild(descEl);
+    row.appendChild(info);
+
+    if (owned) {
+      var ownedLabel = document.createElement('span');
+      ownedLabel.className = 'shop-owned';
+      ownedLabel.textContent = 'Owned ✓';
+      row.appendChild(ownedLabel);
+    } else {
+      var buyBtn = document.createElement('button');
+      buyBtn.className = 'btn btn-golden btn-small';
+      buyBtn.textContent = '💰 ' + item.cost;
+      if (!canAfford) {
+        buyBtn.disabled = true;
+        buyBtn.style.opacity = '0.4';
+        buyBtn.style.cursor = 'not-allowed';
+      } else {
+        buyBtn.addEventListener('click', function() { buyItem(item.id, item.cost); });
+      }
+      row.appendChild(buyBtn);
+    }
+
+    container.appendChild(row);
+  });
+}
+
+function buyItem(id, cost) {
+  var progress = getProgress();
+  if ((progress.totalTips || 0) < cost) return;
+  progress.totalTips -= cost;
+  state.totalTips = progress.totalTips;
+  if (!progress.upgrades) progress.upgrades = [];
+  progress.upgrades.push(id);
+  saveProgressData(progress);
+  renderShop();
+
+  var item = shopItems.find(function(i) { return i.id === id; });
+  showUnlock(item.icon, 'New Upgrade!', item.name);
+}
+
+// ═══════════════════════════════════════
+// UNLOCK POPUP
+// ═══════════════════════════════════════
+function showUnlock(icon, title, desc) {
+  document.getElementById('unlock-treat').textContent = icon;
+  document.getElementById('unlock-title').textContent = title;
+  document.getElementById('unlock-desc').textContent = desc;
+  document.getElementById('treat-unlock').style.display = 'block';
+  document.getElementById('treat-unlock-overlay').style.display = 'block';
+}
+
+function dismissUnlock() {
+  document.getElementById('treat-unlock').style.display = 'none';
+  document.getElementById('treat-unlock-overlay').style.display = 'none';
+}
+
+// ═══════════════════════════════════════
+// MULTIPLICATION CHART
+// ═══════════════════════════════════════
+function buildChartTable(containerId) {
+  var container = document.getElementById(containerId);
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  var table = document.createElement('table');
+
+  // Header row: x | 1 | 2 | ... | 12
+  var thead = document.createElement('tr');
+  var corner = document.createElement('th');
+  corner.textContent = '\u00d7';
+  thead.appendChild(corner);
+  for (var c = 1; c <= 12; c++) {
+    var th = document.createElement('th');
+    th.textContent = c;
+    thead.appendChild(th);
+  }
+  table.appendChild(thead);
+
+  // Body rows: 1-12
+  for (var r = 1; r <= 12; r++) {
+    var tr = document.createElement('tr');
+    var rowHead = document.createElement('td');
+    rowHead.textContent = r;
+    tr.appendChild(rowHead);
+    for (var c2 = 1; c2 <= 12; c2++) {
+      var td = document.createElement('td');
+      td.textContent = r * c2;
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
+  }
+
+  container.appendChild(table);
+}
+
+function toggleGameChart() {
+  var overlay = document.getElementById('game-chart-overlay');
+  var chart = document.getElementById('game-chart');
+  var visible = chart.style.display !== 'none';
+  if (visible) {
+    chart.style.display = 'none';
+    overlay.style.display = 'none';
+  } else {
+    buildChartTable('game-chart-table');
+    chart.style.display = 'block';
+    overlay.style.display = 'block';
+  }
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+renderLevelSelect();
+</script>
+</body>
+</html>
