@@ -227,6 +227,14 @@ body::before {
 .hint-box .hint-title { font-family: 'Fredoka', sans-serif; font-weight: 700; color: var(--golden-dark); margin-bottom: 6px; font-size: 0.95rem; }
 .hint-box .hint-text { font-size: 0.95rem; font-weight: 600; color: var(--brown); line-height: 1.5; }
 
+.array-visual { margin: 10px auto 4px; display: inline-block; }
+.array-row { display: flex; align-items: center; gap: 1px; margin: 2px 0; }
+.array-cell { font-size: 0.85rem; width: 22px; text-align: center; line-height: 1; }
+.array-visual.compact .array-cell { font-size: 0.65rem; width: 16px; }
+.array-total { font-family: 'Fredoka', sans-serif; font-weight: 600; color: var(--teal-dark); margin-left: 8px; font-size: 0.85rem; }
+.array-visual.compact .array-total { font-size: 0.75rem; }
+.hint-note { font-size: 0.85rem; font-weight: 600; color: var(--coral); margin-top: 8px; font-style: italic; }
+
 .feedback {
   font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.1rem;
   min-height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -472,6 +480,7 @@ body::before {
           I need 4 trays with 6 muffins each!
         </div>
         <div class="math-problem" id="math-problem">4 x 6 = ?</div>
+        <div id="question-array"></div>
       </div>
 
       <div id="hint-area"></div>
@@ -613,6 +622,7 @@ var state = {
   patienceRemaining: PATIENCE_SECONDS,
   patienceTimer: null,
   hintShown: false,
+  hintPaused: false,
   answered: false,
   wrongFacts: [],
   factsPool: [],         // facts eligible for this round (from level + SR)
@@ -656,6 +666,13 @@ function srRecordCorrect(key) {
   d.correct++;
   d.box = Math.min(4, d.box + 1);
   d.lastSeen = Date.now();
+  // Commutative linking: if she knows 3×7, she knows 7×3
+  var comKey = getCommutativeKey(key);
+  if (comKey) {
+    var cd = getSRData(progress, comKey);
+    cd.box = Math.min(4, cd.box + 1);
+    cd.lastSeen = Date.now();
+  }
   saveProgressData(progress);
 }
 
@@ -732,6 +749,11 @@ var customers = [
 var treats = ['cupcakes', 'muffins', 'cookies', 'brownies', 'donuts', 'croissants', 'scones', 'tarts'];
 var containers = ['trays', 'boxes', 'plates', 'bags', 'baskets'];
 
+var TREAT_EMOJI = {
+  cupcakes: '🧁', muffins: '🧁', cookies: '🍪', brownies: '🍫',
+  donuts: '🍩', croissants: '🥐', scones: '🫓', tarts: '🥧'
+};
+
 var shopItems = [
   { id: 'counter', name: 'Marble Counter', icon: '🪨', cost: 30, desc: 'A shiny new counter!' },
   { id: 'oven', name: 'Golden Oven', icon: '🔥', cost: 50, desc: 'Bake twice as fast!' },
@@ -740,6 +762,72 @@ var shopItems = [
   { id: 'chandelier', name: 'Chandelier', icon: '💡', cost: 60, desc: 'Light up the room!' },
   { id: 'music', name: 'Music Box', icon: '🎵', cost: 35, desc: 'Bakery tunes!' },
 ];
+
+// ═══════════════════════════════════════
+// HINT STRATEGIES
+// ═══════════════════════════════════════
+function getMultiplyHint(a, b) {
+  if (a === 2) return 'Double it! ' + b + ' + ' + b + ' = ?';
+  if (a === 3) return 'Double ' + b + ' is ' + (2*b) + '. One more ' + b + ': ' + (2*b) + ' + ' + b + ' = ?';
+  if (a === 4) return 'Double ' + b + ' is ' + (2*b) + '. Double again: ' + (2*b) + ' + ' + (2*b) + ' = ?';
+  if (a === 5) return '10 × ' + b + ' = ' + (10*b) + '. Half of that is ?';
+  if (a === 6) return '5 × ' + b + ' = ' + (5*b) + '. One more ' + b + ': ' + (5*b) + ' + ' + b + ' = ?';
+  if (a === 7) return '5 × ' + b + ' = ' + (5*b) + '. Plus 2 × ' + b + ' = ' + (2*b) + ': ' + (5*b) + ' + ' + (2*b) + ' = ?';
+  if (a === 8) return '10 × ' + b + ' = ' + (10*b) + '. Minus 2 × ' + b + ' = ' + (2*b) + ': ' + (10*b) + ' − ' + (2*b) + ' = ?';
+  if (a === 9) return '10 × ' + b + ' = ' + (10*b) + '. Minus one ' + b + ': ' + (10*b) + ' − ' + b + ' = ?';
+  if (a === 10) return 'Just add a zero after ' + b + '!';
+  return 'Think of ' + a + ' groups of ' + b + ': ' + Array(a).fill(b).join(' + ') + ' = ?';
+}
+
+function getDivisionHint(product, divisor, quotient) {
+  var counts = [];
+  for (var i = 1; i <= quotient; i++) counts.push(divisor * i);
+  return 'Count by ' + divisor + 's: ' + counts.join(', ') + '. How many steps to reach ' + product + '?';
+}
+
+function getReasonablenessNote(type, a, b, wrongAnswer) {
+  if (!wrongAnswer || type !== 'multiply') return '';
+  if ((a % 2 === 0 || b % 2 === 0) && wrongAnswer % 2 !== 0)
+    return 'Tip: multiplying by an even number always gives an even answer.';
+  if (wrongAnswer > a * 10)
+    return 'Tip: ' + a + ' × ' + b + ' has to be less than ' + a + ' × 10 = ' + (a * 10) + '.';
+  if (wrongAnswer < Math.max(a, b))
+    return 'Tip: ' + a + ' × ' + b + ' has to be at least ' + Math.max(a, b) + '.';
+  return '';
+}
+
+function buildArrayVisual(rows, cols, emoji, showTotals) {
+  if (rows > 10 || cols > 10) return null;
+  var container = document.createElement('div');
+  container.className = 'array-visual' + ((rows > 6 || cols > 6) ? ' compact' : '');
+  var runningTotal = 0;
+  for (var r = 0; r < rows; r++) {
+    var row = document.createElement('div');
+    row.className = 'array-row';
+    for (var c = 0; c < cols; c++) {
+      var cell = document.createElement('span');
+      cell.className = 'array-cell';
+      cell.textContent = emoji;
+      row.appendChild(cell);
+    }
+    if (showTotals) {
+      runningTotal += cols;
+      var total = document.createElement('span');
+      total.className = 'array-total';
+      total.textContent = (r < rows - 1) ? '→ ' + runningTotal : '→ ?';
+      row.appendChild(total);
+    }
+    container.appendChild(row);
+  }
+  return container;
+}
+
+function getCommutativeKey(key) {
+  if (!key.startsWith('mul:')) return null;
+  var parts = key.substring(4).split('x');
+  if (parts[0] === parts[1]) return null;
+  return 'mul:' + parts[1] + 'x' + parts[0];
+}
 
 // ═══════════════════════════════════════
 // PROBLEM GENERATION
@@ -758,7 +846,8 @@ function generateProblem() {
       srKey: fact.key,
       display: a + ' \u00d7 ' + b + ' = ?',
       story: 'I need ' + a + ' ' + container + ' with ' + b + ' ' + treat + ' each!',
-      hintText: 'Think of it as ' + a + ' groups of ' + b + '. That\'s ' + Array(a).fill(b).join(' + ') + ' = ?',
+      hintText: getMultiplyHint(a, b),
+      treatIcon: TREAT_EMOJI[treat] || '🧁',
     };
   } else {
     var product = a * b;
@@ -769,7 +858,7 @@ function generateProblem() {
       srKey: fact.key,
       display: product + ' \u00f7 ' + a + ' = ?',
       story: 'I have ' + product + ' ' + treat + '. Split them into ' + a + ' equal groups please!',
-      hintText: 'What times ' + a + ' equals ' + product + '? Try counting by ' + a + 's!',
+      hintText: getDivisionHint(product, a, b),
     };
   }
 }
@@ -913,6 +1002,7 @@ function nextOrder() {
   state.currentProblem = generateProblem();
   state.attempts = 0;
   state.hintShown = false;
+  state.hintPaused = false;
   state.answered = false;
 
   var c = customers[Math.floor(Math.random() * customers.length)];
@@ -925,6 +1015,14 @@ function nextOrder() {
   document.getElementById('speech-bubble').textContent = state.currentProblem.story;
   document.getElementById('math-problem').textContent = state.currentProblem.display;
   document.getElementById('current-order').textContent = state.currentOrder;
+
+  // Show bare array for multiplication questions
+  var qArray = document.getElementById('question-array');
+  while (qArray.firstChild) qArray.removeChild(qArray.firstChild);
+  if (state.currentProblem.type === 'multiply' && state.currentProblem.treatIcon) {
+    var bareArray = buildArrayVisual(state.currentProblem.a, state.currentProblem.b, state.currentProblem.treatIcon, false);
+    if (bareArray) qArray.appendChild(bareArray);
+  }
 
   var hintArea = document.getElementById('hint-area');
   while (hintArea.firstChild) hintArea.removeChild(hintArea.firstChild);
@@ -949,7 +1047,7 @@ function startPatience() {
 
   clearInterval(state.patienceTimer);
   state.patienceTimer = setInterval(function() {
-    state.patienceRemaining -= 0.1;
+    state.patienceRemaining -= state.hintPaused ? 0.05 : 0.1;
     var pct = Math.max(0, (state.patienceRemaining / PATIENCE_SECONDS) * 100);
     fill.style.width = pct + '%';
 
@@ -978,7 +1076,7 @@ function timeUp() {
   setTimeout(nextOrder, 2200);
 }
 
-function showHint(text) {
+function showHint(text, problem, wrongAnswer) {
   var hintArea = document.getElementById('hint-area');
   while (hintArea.firstChild) hintArea.removeChild(hintArea.firstChild);
 
@@ -994,6 +1092,23 @@ function showHint(text) {
   content.className = 'hint-text';
   content.textContent = text;
   box.appendChild(content);
+
+  // Visual bakery array with factor-running totals
+  if (problem && problem.type === 'multiply' && problem.treatIcon) {
+    var arrayEl = buildArrayVisual(problem.a, problem.b, problem.treatIcon, true);
+    if (arrayEl) box.appendChild(arrayEl);
+  }
+
+  // Reasonableness note based on wrong answer
+  if (problem && wrongAnswer) {
+    var note = getReasonablenessNote(problem.type, problem.a, problem.b, wrongAnswer);
+    if (note) {
+      var noteEl = document.createElement('div');
+      noteEl.className = 'hint-note';
+      noteEl.textContent = note;
+      box.appendChild(noteEl);
+    }
+  }
 
   hintArea.appendChild(box);
 }
@@ -1039,10 +1154,12 @@ function checkAnswer() {
   } else if (state.attempts === 1) {
     input.className = 'answer-input wrong';
     setTimeout(function() { input.className = 'answer-input'; }, 600);
+    var wrongVal = value;
     input.value = '';
 
     state.hintShown = true;
-    showHint(state.currentProblem.hintText);
+    state.hintPaused = true;
+    showHint(state.currentProblem.hintText, state.currentProblem, wrongVal);
     fb.textContent = 'Not quite \u2014 try again!';
     fb.className = 'feedback wrong-fb';
 
@@ -1181,6 +1298,7 @@ function quitGame() {
 // ═══════════════════════════════════════
 function numpadPress(n) {
   if (state.answered) return;
+  if (state.hintPaused) state.hintPaused = false;
   var input = document.getElementById('answer-input');
   if (input.value.length >= 3) return;
   input.value += n;
@@ -1194,6 +1312,7 @@ function numpadClear() {
 document.addEventListener('keydown', function(e) {
   if (!document.getElementById('game-screen').classList.contains('active')) return;
   if (state.answered) return;
+  if (state.hintPaused) state.hintPaused = false;
   if (e.key >= '0' && e.key <= '9') numpadPress(parseInt(e.key));
   else if (e.key === 'Backspace') numpadClear();
   else if (e.key === 'Enter') checkAnswer();
