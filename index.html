@@ -155,7 +155,24 @@ body::before {
   font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s, color 0.2s;
   border: none; background: transparent; color: var(--brown);
 }
-.mode-btn.active { background: var(--coral); color: var(--warm-white); }
+[hidden] { display: none !important; }
+#game-screen { max-height: 100dvh; overflow-y: auto; }
+.game-layout { flex-shrink: 0; width: 100%; }
+#level-screen { max-height: 100dvh; overflow-y: auto; justify-content: flex-start; }
+#topic-picker { display: grid; grid-template-columns: repeat(3, 1fr); flex-shrink: 0; margin: 8px 0 12px; }
+.choice-label { font-size: 0.85rem; text-align: center; color: var(--brown); }
+#skill-picker { width: 100%; }
+.skill-group { margin-bottom: 8px; }
+.skill-group p { font-size: 0.8rem; margin-bottom: 4px; color: var(--brown); }
+.skill-buttons { display: flex; gap: 6px; }
+.skill-buttons .mode-btn { background: var(--warm-white); border: 2px solid var(--peach); border-radius: 12px; padding: 8px; }
+.level-card { font-family: inherit; }
+.level-card:focus-visible, .mode-btn:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+.answer-help { font-size: 0.8rem; color: var(--brown); text-align: center; max-width: 300px; }
+.comparison-pad { display: flex; gap: 8px; width: 100%; }
+.comparison-pad button { flex: 1; padding: 15px 6px; }
+.comparison-pad small { display: block; font-size: 0.7rem; }
+.mode-btn.active, .skill-buttons .mode-btn.active { background: var(--coral); color: var(--warm-white); }
 
 .game-header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 16px; }
 .tips-display {
@@ -333,6 +350,19 @@ body::before {
   .bakery-sign { padding: 16px 32px; margin-bottom: 20px; }
 }
 
+@media (max-width: 600px) {
+  #game-screen { padding: 14px 20px; }
+  .customer-area { padding: 12px; margin-bottom: 8px; }
+  .customer-emoji { font-size: 2.4rem; margin-bottom: 0; }
+  .customer-name { margin-bottom: 4px; }
+  .speech-bubble { padding: 10px; margin: 6px 0; font-size: 0.9rem; }
+  .math-problem { font-size: 1.6rem; }
+  .answer-area { gap: 6px; }
+  .answer-input { font-size: 1.6rem; padding: 8px; }
+  .numpad-btn { padding: 10px; font-size: 1.3rem; }
+  .feedback { min-height: 24px; }
+}
+
 /* ─── Landscape tablet (iPad 11th gen: 1180x820 CSS px) ─── */
 @media (min-width: 800px) and (max-height: 900px) and (orientation: landscape) {
   body { overflow: auto; }
@@ -444,10 +474,10 @@ body::before {
 <div class="screen" id="level-screen">
   <h2 style="font-size: 1.5rem; color: var(--brown); margin-bottom: 6px;">Choose Your Order</h2>
 
-  <div class="mode-toggle">
-    <button class="mode-btn active" data-mode="multiply" onclick="setTrack('multiply')">Multiply</button>
-    <button class="mode-btn" data-mode="divide" onclick="setTrack('divide')">Divide</button>
-  </div>
+  <p class="choice-label">Choose a topic</p>
+  <div class="mode-toggle" id="topic-picker" aria-label="Math topics"></div>
+  <div id="skill-picker" aria-label="Practice skills"></div>
+  <p class="choice-label" id="level-guide">Choose a level • Get 7 of 10 right to unlock the next!</p>
 
   <div class="level-grid" id="level-grid"></div>
 
@@ -490,8 +520,14 @@ body::before {
 
     <div class="game-right">
       <div class="answer-area">
-        <input type="number" class="answer-input" id="answer-input" inputmode="numeric" autocomplete="off">
-        <div class="numpad">
+        <input type="text" class="answer-input" id="answer-input" inputmode="numeric" autocomplete="off" aria-label="Your answer" aria-describedby="answer-help" maxlength="12">
+        <p id="answer-help" class="answer-help"></p>
+        <div id="comparison-pad" class="comparison-pad" hidden>
+          <button class="numpad-btn" aria-label="Less than" onclick="submitComparison('&lt;')">&lt;<small>less than</small></button>
+          <button class="numpad-btn" aria-label="Equal to" onclick="submitComparison('=')">=<small>equal to</small></button>
+          <button class="numpad-btn" aria-label="Greater than" onclick="submitComparison('&gt;')">&gt;<small>greater than</small></button>
+        </div>
+        <div class="numpad" id="number-pad">
           <button class="numpad-btn" onclick="numpadPress(1)">1</button>
           <button class="numpad-btn" onclick="numpadPress(2)">2</button>
           <button class="numpad-btn" onclick="numpadPress(3)">3</button>
@@ -504,6 +540,8 @@ body::before {
           <button class="numpad-btn clear" onclick="numpadClear()">&#9003;</button>
           <button class="numpad-btn" onclick="numpadPress(0)">0</button>
           <button class="numpad-btn submit-btn" onclick="checkAnswer()">GO</button>
+          <button class="numpad-btn" id="decimal-key" aria-label="Decimal point" onclick="numpadPress('.')" hidden>.</button>
+          <button class="numpad-btn" id="fraction-key" aria-label="Fraction slash" onclick="numpadPress('/')" hidden>/</button>
         </div>
       </div>
     </div>
@@ -604,11 +642,43 @@ var TRACK_LEVELS = {
   ],
 };
 
+// New topics share the existing round, rewards, and adaptive-practice engine.
+var TOPICS = [
+  ['addition', 'Addition'], ['subtraction', 'Subtraction'],
+  ['multiply', 'Multiply'], ['divide', 'Divide'],
+  ['decimals', 'Decimals'], ['fractions', 'Fractions']
+];
+var SKILL_GROUPS = [
+  { label: '1. Compare', skills: [['compare', 'Compare']] },
+  { label: '2. Add & subtract', skills: [['add', 'Add'], ['subtract', 'Subtract']] },
+  { label: '3. Multiply & divide', skills: [['multiply', 'Multiply'], ['divide', 'Divide']] }
+];
+['addition', 'subtraction'].forEach(function(track) {
+  TRACK_LEVELS[track] = [10, 20, 100].map(function(limit, i) {
+    return { id: track + (i + 1), name: 'Level ' + (i + 1), desc: 'Within ' + limit,
+      icon: ['🧁', '🍪', '🎂'][i], topic: track, operation: track === 'addition' ? 'add' : 'subtract', difficulty: i, limit: limit };
+  });
+});
+['decimals', 'fractions'].forEach(function(topic) {
+  SKILL_GROUPS.forEach(function(group) {
+    group.skills.forEach(function(skill) {
+      var op = skill[0];
+      var descriptions = topic === 'decimals'
+        ? (op === 'multiply' || op === 'divide' ? ['Tenths & whole numbers', 'Tenths with tenths', 'Hundredths with tenths'] : ['Tenths below 1', 'Tenths up to 10', 'Hundredths up to 10'])
+        : (op === 'multiply' || op === 'divide' ? ['Fractions & whole numbers', 'Halves, thirds & quarters', 'More denominators'] : ['Matching denominators', 'Related denominators', 'Different denominators']);
+      TRACK_LEVELS[topic + '_' + op] = descriptions.map(function(desc, i) {
+        return { id: topic + '_' + op + (i + 1), name: 'Level ' + (i + 1), desc: desc,
+          icon: ['🧁', '🍪', '🎂'][i], topic: topic, operation: op, difficulty: i };
+      });
+    });
+  });
+});
+
 // ═══════════════════════════════════════
 // GAME STATE
 // ═══════════════════════════════════════
 var state = {
-  track: 'multiply',    // 'multiply', 'divide', or 'both'
+  track: 'multiply',    // TRACK_LEVELS key, or 'both' for mixed fact practice
   levelIndex: 0,
   levelId: 'm1',
   currentOrder: 0,
@@ -632,11 +702,18 @@ var state = {
 // PERSISTENCE
 // ═══════════════════════════════════════
 function loadProgress() {
-  try {
-    var saved = localStorage.getItem('bakery-quest-v2');
-    if (saved) return JSON.parse(saved);
-  } catch(e) { /* ignore */ }
-  return { totalTips: 0, unlockedLevels: ['m1', 'd1'], upgrades: [], sr: {} };
+  var progress;
+  try { progress = JSON.parse(localStorage.getItem('bakery-quest-v2')); } catch(e) { /* use defaults */ }
+  if (!progress || typeof progress !== 'object' || Array.isArray(progress)) progress = {};
+  if (!Array.isArray(progress.unlockedLevels)) progress.unlockedLevels = [];
+  Object.keys(TRACK_LEVELS).forEach(function(track) {
+    var first = TRACK_LEVELS[track][0].id;
+    if (progress.unlockedLevels.indexOf(first) === -1) progress.unlockedLevels.push(first);
+  });
+  if (!Array.isArray(progress.upgrades)) progress.upgrades = [];
+  if (!progress.sr || typeof progress.sr !== 'object') progress.sr = {};
+  if (!Number.isFinite(progress.totalTips)) progress.totalTips = 0;
+  return progress;
 }
 
 function saveProgressData(progress) {
@@ -687,6 +764,7 @@ function srRecordWrong(key) {
 
 // Build weighted pool of facts for a given level
 function buildFactsPool(track, levelDef) {
+  if (levelDef.topic) return buildTopicPool(levelDef);
   var progress = getProgress();
   var pool = [];
   var facts = levelDef.facts;
@@ -832,8 +910,122 @@ function getCommutativeKey(key) {
 // ═══════════════════════════════════════
 // PROBLEM GENERATION
 // ═══════════════════════════════════════
+function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+function fractionText(n, d) {
+  var divisor = gcd(n, d);
+  n /= divisor; d /= divisor;
+  return d === 1 ? String(n) : n + '/' + d;
+}
+function decimalText(n, d) { return String(Number((n / d).toFixed(4))); }
+
+function buildTopicPool(level) {
+  var pool = [], seen = new Set(), progress = getProgress();
+  var op = level.operation, topic = level.topic, difficulty = level.difficulty;
+  function add(an, ad, bn, bd) {
+    // Subtraction always leaves a nonnegative amount; no zero divisors.
+    if (op === 'subtract' && an * bd < bn * ad) return;
+    if (op === 'divide' && bn === 0) return;
+    var format = topic === 'fractions' ? fractionText : decimalText;
+    // Keep visible denominators for early fraction comparison and addition.
+    function operand(n, d) { return topic === 'fractions' && d !== 1 ? n + '/' + d : format(n, d); }
+    var left = operand(an, ad), right = operand(bn, bd), answer, symbol;
+    if (op === 'compare') {
+      answer = an * bd < bn * ad ? '<' : an * bd > bn * ad ? '>' : '=';
+      symbol = '?';
+    } else {
+      var n, d;
+      if (op === 'add') { n = an * bd + bn * ad; d = ad * bd; symbol = '+'; }
+      if (op === 'subtract') { n = an * bd - bn * ad; d = ad * bd; symbol = '−'; }
+      if (op === 'multiply') { n = an * bn; d = ad * bd; symbol = '×'; }
+      if (op === 'divide') { n = an * bd; d = ad * bn; symbol = '÷'; }
+      answer = format(n, d);
+    }
+    var key = topic + ':' + op + ':' + left + ':' + right;
+    if (seen.has(key)) return;
+    seen.add(key);
+    var hint, story;
+    if (topic === 'addition' || topic === 'subtraction') {
+      hint = op === 'add' ? 'Start at ' + left + ' and count on ' + right + '. Make a group of ten if it helps.' : 'Start at ' + left + ' and count back ' + right + '. You can take away tens, then ones.';
+      story = op === 'add' ? 'We baked ' + left + ' cookies, then ' + right + ' more. How many cookies now?' : 'We had ' + left + ' cookies and sold ' + right + '. How many are left?';
+    } else {
+      if (op === 'compare') {
+        story = 'Two recipes need ' + left + ' cup and ' + right + ' cup of flour. Is the first amount less, equal, or greater?';
+        hint = topic === 'decimals' ? 'Line up the decimal points. Compare the ones, then tenths, then hundredths. Extra zeros at the end do not change the amount.' : 'Compare equal-sized pieces. With the same denominator, compare the tops. Otherwise, make matching denominators first.';
+      } else {
+        if (op === 'add') story = 'Mix ' + left + ' cup of flour with ' + right + ' cup more. How many cups altogether?';
+        if (op === 'subtract') story = 'We have ' + left + ' cup of flour and use ' + right + ' cup. How many cups remain?';
+        if (op === 'multiply') story = 'A full batch needs ' + left + ' cup of flour. How many cups for ' + right + ' batches?';
+        if (op === 'divide') story = 'We have ' + left + ' cup of flour. Each batch uses ' + right + ' cup. How many batches can we make?';
+        if (topic === 'decimals') {
+          hint = op === 'add' || op === 'subtract' ? 'Line up the decimal points. Add zeros to match the places, then ' + (op === 'add' ? 'add' : 'subtract') + ' each column.' : op === 'multiply' ? 'Multiply as whole numbers, then count the decimal places in BOTH numbers to place the decimal point.' : 'Multiply BOTH amounts by 10 (or 100) until the divisor is a whole number. Then divide.';
+        } else {
+          hint = op === 'add' || op === 'subtract' ? 'Make the denominators match. Then ' + (op === 'add' ? 'add' : 'subtract') + ' the numerators and keep the denominator. Equivalent fractions are welcome!' : op === 'multiply' ? 'Write whole numbers over 1. Multiply the tops, then multiply the bottoms.' : 'Flip the second fraction, then multiply the tops and the bottoms. Write whole numbers over 1 first.';
+        }
+      }
+    }
+    pool.push({ key: key, weight: SR_WEIGHTS[getSRData(progress, key).box], problem: {
+      type: topic, operation: op, answer: answer, srKey: key,
+      display: left + ' ' + symbol + ' ' + right + (op === 'compare' ? '' : ' = ?'),
+      story: story, hintText: hint
+    }});
+  }
+  var a, b, d, e;
+  if (topic === 'addition' || topic === 'subtraction') {
+    for (a = 0; a <= level.limit; a++) {
+      for (b = 0; b <= level.limit; b++) {
+        if (op !== 'add' || a + b <= level.limit) add(a, 1, b, 1);
+      }
+    }
+  } else if (topic === 'decimals') {
+    if (op === 'multiply' || op === 'divide') {
+      d = difficulty === 2 ? 100 : 10;
+      e = difficulty === 0 ? 1 : 10;
+      for (a = 1; a <= 20; a++) for (b = 1; b <= 9; b++) {
+        if (op === 'divide') add(a * b, d * e, b, e); // exact terminating quotient
+        else add(a, d, b, e);
+      }
+    } else {
+      d = difficulty === 2 ? 100 : 10;
+      var values = difficulty === 0 ? [0,1,2,3,4,5,6,7,8,9] : difficulty === 1 ? [0,1,2,5,9,10,12,15,20,25,40,55,70,90,100] : [0,1,5,9,10,11,20,25,50,75,99,100,105,110,125,150,205,250,500,750,999,1000];
+      values.forEach(function(x) { values.forEach(function(y) {
+        if (op !== 'add' || x + y <= (difficulty === 0 ? 10 : 10 * d)) add(x,d,y,d);
+      }); });
+    }
+  } else {
+    var denominators = difficulty === 0 ? [2,4] : difficulty === 1 ? [2,3,4,6,8] : [2,3,4,5,6,8,10,12];
+    denominators.forEach(function(ad) { denominators.forEach(function(bd) {
+      if (difficulty === 0 && ad !== bd) return;
+      if (difficulty === 1 && op !== 'multiply' && op !== 'divide' && ad % bd !== 0 && bd % ad !== 0) return;
+      for (a = 1; a <= ad; a++) for (b = 1; b <= bd; b++) {
+        add(a, ad, b, difficulty === 0 && (op === 'multiply' || op === 'divide') ? 1 : bd);
+      }
+    }); });
+  }
+  return pool;
+}
+
+function parseAnswer(text) {
+  text = String(text).trim();
+  if (/^[<=>]$/.test(text)) return text;
+  if (/^\d{1,5}\s*\/\s*\d{1,5}$/.test(text)) {
+    var parts = text.split('/').map(Number);
+    return parts[1] > 0 ? parts : null;
+  }
+  if (!/^(?:\d{1,6}(?:\.\d{0,4})?|\.\d{1,4})$/.test(text)) return null;
+  var places = (text.split('.')[1] || '').length;
+  var denominator = Math.pow(10, places);
+  return [Math.round(Number(text) * denominator), denominator];
+}
+function answersMatch(input, answer) {
+  var actual = parseAnswer(input), expected = parseAnswer(answer);
+  if (actual === null || expected === null) return false;
+  if (typeof actual === 'string' || typeof expected === 'string') return actual === expected;
+  return actual[0] * expected[1] === expected[0] * actual[1];
+}
+
 function generateProblem() {
   var fact = pickWeightedFact(state.factsPool);
+  if (fact.problem) return fact.problem;
   var a = fact.a, b = fact.b;
   var treat = treats[Math.floor(Math.random() * treats.length)];
   var container = containers[Math.floor(Math.random() * containers.length)];
@@ -876,13 +1068,43 @@ function showScreen(id) {
 
 function setTrack(track) {
   state.track = track;
-  document.querySelectorAll('.mode-btn').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.mode === track);
-  });
   renderLevelSelect();
+}
+function renderPracticePicker() {
+  var topic = state.track.split('_')[0];
+  if (topic === 'both') topic = 'multiply';
+  var picker = document.getElementById('topic-picker');
+  picker.replaceChildren();
+  function button(label, track, active) {
+    var btn = document.createElement('button');
+    btn.className = 'mode-btn' + (active ? ' active' : '');
+    btn.textContent = label;
+    btn.setAttribute('aria-pressed', String(active));
+    btn.addEventListener('click', function() { setTrack(track); });
+    return btn;
+  }
+  TOPICS.forEach(function(t) {
+    picker.appendChild(button(t[1], t[0] === 'fractions' || t[0] === 'decimals' ? t[0] + '_compare' : t[0], topic === t[0]));
+  });
+  var skills = document.getElementById('skill-picker');
+  skills.replaceChildren();
+  if (topic !== 'decimals' && topic !== 'fractions') return;
+  SKILL_GROUPS.forEach(function(group) {
+    var section = document.createElement('div'); section.className = 'skill-group';
+    var label = document.createElement('p'); label.textContent = group.label;
+    section.appendChild(label);
+    var row = document.createElement('div'); row.className = 'skill-buttons';
+    group.skills.forEach(function(skill) {
+      var track = topic + '_' + skill[0];
+      row.appendChild(button(skill[1], track, state.track === track));
+    });
+    section.appendChild(row); skills.appendChild(section);
+  });
 }
 
 function renderLevelSelect() {
+  if (state.track === 'both') state.track = 'multiply';
+  renderPracticePicker();
   var progress = getProgress();
   var grid = document.getElementById('level-grid');
   while (grid.firstChild) grid.removeChild(grid.firstChild);
@@ -890,7 +1112,9 @@ function renderLevelSelect() {
   var levels = TRACK_LEVELS[state.track] || [];
   levels.forEach(function(lvl, idx) {
     var unlocked = progress.unlockedLevels.indexOf(lvl.id) !== -1;
-    var card = document.createElement('div');
+    var card = document.createElement('button');
+    card.type = 'button';
+    card.disabled = !unlocked;
     card.className = 'level-card' + (unlocked ? '' : ' locked');
     card.dataset.level = lvl.id;
 
@@ -904,7 +1128,7 @@ function renderLevelSelect() {
     card.appendChild(h3);
 
     var p = document.createElement('p');
-    p.textContent = lvl.desc;
+    p.textContent = lvl.desc + (unlocked ? '' : ' • Finish Level ' + idx + ' first');
     card.appendChild(p);
 
     if (!unlocked) {
@@ -929,10 +1153,10 @@ function renderLevelSelect() {
   var hasMultiply = progress.unlockedLevels.indexOf('m2') !== -1 || (progress.sr && Object.keys(progress.sr).some(function(k) { return k.startsWith('mul:') && progress.sr[k].correct > 0; }));
   var hasDivide = progress.unlockedLevels.indexOf('d2') !== -1 || (progress.sr && Object.keys(progress.sr).some(function(k) { return k.startsWith('div:') && progress.sr[k].correct > 0; }));
 
-  if (hasMultiply && hasDivide) {
+  if ((state.track === 'multiply' || state.track === 'divide') && hasMultiply && hasDivide) {
     var bothBtn = document.createElement('button');
     bothBtn.className = 'btn btn-teal btn-small';
-    bothBtn.textContent = 'Both! (Mix it up)';
+    bothBtn.textContent = 'Mix multiplication & division';
     bothBtn.addEventListener('click', function() { startBothMode(); });
     bothArea.appendChild(bothBtn);
   }
@@ -1034,7 +1258,18 @@ function nextOrder() {
   var input = document.getElementById('answer-input');
   input.value = '';
   input.className = 'answer-input';
-  input.focus();
+  var comparison = state.currentProblem.operation === 'compare';
+  var fractional = state.currentProblem.type === 'fractions';
+  var decimal = state.currentProblem.type === 'decimals';
+  document.getElementById('comparison-pad').hidden = !comparison;
+  document.getElementById('number-pad').hidden = comparison;
+  document.getElementById('decimal-key').hidden = !decimal;
+  document.getElementById('fraction-key').hidden = !fractional;
+  input.hidden = comparison;
+  input.inputMode = fractional ? 'text' : decimal ? 'decimal' : 'numeric';
+  document.getElementById('answer-help').textContent = comparison ? 'Compare the first amount with the second. Choose <, =, or >.' : fractional ? 'Enter a fraction like 3/4 or 5/4, or a whole number. Equivalent fractions count!' : decimal ? 'Use the decimal point, like 0.25.' : 'Type your answer or use the buttons.';
+  if (!comparison) input.focus();
+  else document.querySelector('#comparison-pad button').focus();
 
   startPatience();
 }
@@ -1117,13 +1352,17 @@ function checkAnswer() {
   if (state.answered) return;
 
   var input = document.getElementById('answer-input');
-  var value = parseInt(input.value);
-  if (isNaN(value)) return;
+  var parsed = parseAnswer(input.value);
+  if (parsed === null) {
+    document.getElementById('feedback').textContent = 'Enter a number or fraction with a nonzero denominator.';
+    return;
+  }
+  var value = typeof parsed === 'string' ? parsed : parsed[0] / parsed[1];
 
   state.attempts++;
   var fb = document.getElementById('feedback');
 
-  if (value === state.currentProblem.answer) {
+  if (answersMatch(input.value, state.currentProblem.answer)) {
     state.answered = true;
     clearInterval(state.patienceTimer);
     input.className = 'answer-input correct';
@@ -1300,7 +1539,7 @@ function numpadPress(n) {
   if (state.answered) return;
   if (state.hintPaused) state.hintPaused = false;
   var input = document.getElementById('answer-input');
-  if (input.value.length >= 3) return;
+  if (input.value.length >= 12) return;
   input.value += n;
 }
 
@@ -1309,13 +1548,29 @@ function numpadClear() {
   input.value = input.value.slice(0, -1);
 }
 
-document.addEventListener('keydown', function(e) {
-  if (!document.getElementById('game-screen').classList.contains('active')) return;
+function submitComparison(symbol) {
   if (state.answered) return;
-  if (state.hintPaused) state.hintPaused = false;
-  if (e.key >= '0' && e.key <= '9') numpadPress(parseInt(e.key));
-  else if (e.key === 'Backspace') numpadClear();
-  else if (e.key === 'Enter') checkAnswer();
+  document.getElementById('answer-input').value = symbol;
+  state.hintPaused = false;
+  checkAnswer();
+}
+document.getElementById('answer-input').addEventListener('input', function() {
+  state.hintPaused = false;
+});
+document.addEventListener('keydown', function(e) {
+  if (!document.getElementById('game-screen').classList.contains('active') || state.answered) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (state.currentProblem.operation === 'compare') {
+    if (['<', '=', '>'].indexOf(e.key) !== -1) { e.preventDefault(); submitComparison(e.key); }
+    return;
+  }
+  // The text field handles typing, selection, paste, and backspace natively.
+  if (e.key === 'Enter' && e.target === document.getElementById('answer-input')) {
+    e.preventDefault(); checkAnswer();
+  } else if (e.target !== document.getElementById('answer-input')) {
+    if (/^[0-9./]$/.test(e.key)) { e.preventDefault(); numpadPress(e.key); }
+    else if (e.key === 'Backspace') { e.preventDefault(); numpadClear(); }
+  }
 });
 
 // ═══════════════════════════════════════

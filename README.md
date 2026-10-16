@@ -1,13 +1,18 @@
 # Bakery Quest
 
-A math practice app for 3rd graders, themed as a bakery game. Practice
-multiplication and division facts through timed customer orders.
+A math practice app for kids, themed as a bakery game. Practice whole-number
+arithmetic, decimals, and fractions through timed customer orders.
 
 Serves customers, earns tips, unlocks upgrades.
 
 ## Features
 
-- Multiplication & division (3s through 9s, 4 levels)
+- Addition & subtraction: levels within 10, 20, and 100, with no negative answers
+- Multiplication & division: four levels of fact practice
+- Decimals & fractions: compare first, then add/subtract, then multiply/divide
+- Topic and skill pickers, with three increasingly challenging levels per new skill
+- Every skill starts unlocked; score 7/10 to unlock its next level
+- Decimal and fraction keypad entry, with equivalent fraction answers accepted
 - Bakery story problems with fun characters
 - Timed orders with patience bar
 - Hint system: wrong answer gives a hint + second chance
@@ -22,6 +27,12 @@ Serves customers, earns tips, unlocks upgrades.
 npx serve .
 ```
 
-No build step, no dependencies. Just a single `index.html`.
+No build step or app dependencies. Just a single `index.html`.
+
+Run the arithmetic, input-validation, and saved-progress regression tests with Node.js:
+
+```bash
+node --test tests/*.test.cjs
+```
 
 Deployed to GitHub Pages — pushes to `main` auto-deploy via `.github/workflows/pages.yml`.
