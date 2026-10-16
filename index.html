@@ -295,6 +295,70 @@ body::before {
 .shop-item-desc { font-size: 0.8rem; color: var(--brown); opacity: 0.7; font-weight: 600; }
 .shop-owned { font-family: 'Fredoka', sans-serif; font-weight: 700; color: var(--teal); }
 
+/* A room to arrange and a collection to keep. */
+#shop-screen { max-width: 1060px; max-height: 100dvh; overflow-y: auto; align-items: stretch; }
+.bakery-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; }
+.bakery-home { border: 0; background: none; color: var(--brown); font-family: inherit; font-size: 0.8rem; font-weight: 700; padding: 0 0 8px; cursor: pointer; }
+.bakery-heading h2 { font-size: 2rem; }
+.bakery-eyebrow { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; color: var(--teal-dark); }
+.bakery-intro { font-size: 0.9rem; margin: 8px 0 20px; }
+.bakery-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; flex-shrink: 0; }
+.bakery-room-panel { align-self: start; position: sticky; top: 0; }
+.bakery-room { --room-wall: #fff0d9; --room-trim: #ed9477; --room-floor: #e7bd92; background: var(--room-wall); border: 3px solid var(--brown); border-radius: 22px; overflow: hidden; box-shadow: 0 6px 0 #6e45231a; }
+.bakery-room[data-theme="mint"] { --room-wall: #e2f4e8; --room-trim: #67b7a0; --room-floor: #b6cfb1; }
+.bakery-room[data-theme="berry"] { --room-wall: #ffe5ed; --room-trim: #df7c9e; --room-floor: #e3b6bf; }
+.bakery-room[data-theme="starlight"] { --room-wall: #e8e4fa; --room-trim: #9690cf; --room-floor: #c0b6dc; }
+.bakery-awning { height: 30px; background: repeating-linear-gradient(90deg, var(--room-trim) 0 28px, #fff9ee 28px 56px); border-bottom: 4px solid var(--room-trim); }
+.room-title { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px 4px; font-family: 'Fredoka', sans-serif; font-size: 1.2rem; }
+#room-window { background: #fff9ee; border: 3px solid var(--room-trim); border-radius: 50% 50% 8px 8px; padding: 4px 12px; font-size: 1.6rem; }
+.decoration-spots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 8px; padding: 12px 16px 20px; }
+.decoration-spot { min-height: 90px; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ffffff60; border: 1px dashed var(--room-trim); border-bottom: 7px solid var(--room-trim); border-radius: 10px 10px 4px 4px; color: var(--brown); cursor: pointer; font-family: inherit; }
+.decoration-spot span { font-size: 2.2rem; }
+.decoration-spot small { font-size: 0.65rem; padding: 3px; }
+.decoration-spot:hover, .decoration-spot:focus-visible { background: #fff9ee; outline: 2px solid var(--teal); }
+.decoration-spots.placing .decoration-spot { border-color: var(--teal); background: #ffffffa0; }
+.pet-corner { min-height: 106px; padding: 10px; background: var(--room-floor); display: flex; justify-content: center; align-items: center; gap: 16px; border-top: 4px solid var(--room-trim); }
+.pet-adopt { font: inherit; background: #fff9ee; border: 2px dashed var(--brown); border-radius: 16px; padding: 14px; cursor: pointer; color: var(--brown); }
+.pet-cat { position: relative; background: none; border: 0; cursor: pointer; width: 96px; min-height: 85px; }
+.pet-body { display: block; position: relative; font-size: 3rem; z-index: 1; }
+.pet-hat { position: absolute; font-size: 1.4rem; top: -3px; right: 10px; z-index: 2; }
+.pet-bed { position: absolute; font-size: 2.8rem; bottom: -5px; left: 12px; }
+.pet-toy { font-size: 2rem; }
+.pet-mood { position: absolute; top: -7px; left: -15px; font-size: 1.4rem; }
+.pet-cat.pet-nap .pet-body { transform: rotate(-12deg); }
+@keyframes toyRoll { 0%, 100% { transform: translateX(0) rotate(0); } 50% { transform: translateX(-25px) rotate(-160deg); } }
+.pet-toy.pet-roll { animation: toyRoll 0.8s ease; }
+.pet-cat.pet-bounce { animation: celebration 0.6s ease; }
+.pet-actions, .bakery-footer { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.pet-actions button { font: inherit; font-size: 0.8rem; font-weight: 700; padding: 8px 14px; border: 2px solid var(--peach); border-radius: 20px; background: var(--warm-white); color: var(--brown); cursor: pointer; }
+.bakery-help { font-size: 0.8rem; line-height: 1.5; margin: 10px 0; color: var(--brown); }
+.bakery-tabs { display: flex; gap: 4px; background: var(--peach); border-radius: 14px; padding: 4px; }
+.bakery-tabs button { flex: 1; border: 0; border-radius: 10px; padding: 12px 6px; background: none; font: 600 1rem 'Fredoka', sans-serif; color: var(--brown); cursor: pointer; }
+.bakery-tabs button[aria-pressed="true"] { background: var(--warm-white); box-shadow: 0 2px 4px var(--shadow); }
+.shop-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.shop-filters button { font: inherit; font-size: 0.75rem; font-weight: 700; padding: 7px 10px; border: 1px solid var(--peach); border-radius: 20px; background: var(--warm-white); color: var(--brown); cursor: pointer; }
+.shop-filters button[aria-pressed="true"] { background: var(--brown); color: white; }
+.shop-message { min-height: 20px; font-size: 0.85rem; line-height: 1.4; color: var(--teal-dark); margin: 12px 0; }
+#shop-screen #shop-items { display: flex; flex-direction: column; gap: 10px; }
+#shop-screen .shop-item { margin: 0; padding: 12px; gap: 10px; align-items: flex-start; }
+#shop-screen .shop-item.owned { opacity: 1; }
+.shop-item-info { min-width: 0; }
+.prize-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.prize-actions button { padding: 7px 12px; font-size: 0.8rem; box-shadow: none; }
+.prize-actions button:disabled { opacity: 0.55; cursor: default; }
+.prize-state { font-size: 0.7rem; color: var(--teal-dark); font-weight: 700; margin-top: 5px; }
+#shop-screen button:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+.bakery-footer { margin-top: 20px; flex-shrink: 0; }
+@media (max-width: 700px) {
+  #shop-screen { padding: 18px; }
+  .bakery-workspace { grid-template-columns: 1fr; gap: 14px; }
+  .bakery-room-panel { position: static; }
+  .bakery-heading h2 { font-size: 1.6rem; }
+  .bakery-heading .tips-display { padding: 8px 12px; font-size: 0.95rem; }
+  .bakery-intro { margin-bottom: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .pet-cat.pet-bounce, .pet-toy.pet-roll { animation: none; } }
+
 .tricky-facts-box {
   background: #FFF3E0; border-radius: 12px; padding: 14px; text-align: left; margin-top: 12px;
 }
@@ -603,10 +667,39 @@ body::before {
 
 <!-- SHOP SCREEN -->
 <div class="screen" id="shop-screen">
-  <h2 style="font-size: 1.5rem; color: var(--brown); margin-bottom: 4px;">My Bakery</h2>
-  <div class="tips-display" style="margin-bottom: 20px;"><span>💰</span> <span id="shop-tips">0</span> tips saved</div>
-  <div id="shop-items" style="width: 100%;"></div>
-  <button class="btn btn-small btn-back" onclick="showScreen('menu-screen')" style="margin-top: 16px;">Back</button>
+  <div class="bakery-heading">
+    <div><button class="bakery-home" onclick="showScreen('menu-screen')">← Home</button><p class="bakery-eyebrow">MAKE YOURSELF AT HOME</p><h2>My Bakery</h2></div>
+    <div class="tips-display"><span>💰</span> <span id="shop-tips">0</span> tips</div>
+  </div>
+  <p class="bakery-intro">Bake, earn, and make a little place of your own.</p>
+  <div class="bakery-workspace">
+    <div class="bakery-room-panel">
+      <div id="bakery-room" class="bakery-room" aria-label="Your decorated bakery">
+        <div class="bakery-awning" aria-hidden="true"></div>
+        <div class="room-title">Naia’s Bakery <span id="room-window" aria-hidden="true">☀️</span></div>
+        <div id="decoration-spots" class="decoration-spots"></div>
+        <div id="pet-corner" class="pet-corner"></div>
+      </div>
+      <p id="placement-help" class="bakery-help"></p>
+      <div id="pet-actions" class="pet-actions"></div>
+      <p id="pet-message" class="bakery-help" role="status" aria-live="polite"></p>
+    </div>
+    <div class="bakery-collection">
+      <div class="bakery-tabs" aria-label="Bakery activities">
+        <button id="decorate-tab" onclick="setShopView('decorate')">My collection</button>
+        <button id="prizes-tab" onclick="setShopView('shop')">Buy prizes</button>
+      </div>
+      <p id="collection-count" class="bakery-help"></p>
+      <div id="shop-filters" class="shop-filters" aria-label="Prize categories"></div>
+      <p id="shop-message" class="shop-message" role="status" aria-live="polite"></p>
+      <div id="shop-items"></div>
+    </div>
+  </div>
+  <div class="bakery-footer">
+    <button class="btn btn-primary btn-small" onclick="showScreen('level-screen')">Bake for more tips</button>
+    <button class="btn btn-small btn-back" onclick="showScreen('menu-screen')">Home</button>
+  </div>
+  <p class="bakery-help">Your prizes are yours to keep. Decorating and playing are always free.</p>
 </div>
 
 <!-- UNLOCK POPUP -->
@@ -713,6 +806,7 @@ function loadProgress() {
   if (!Array.isArray(progress.upgrades)) progress.upgrades = [];
   if (!progress.sr || typeof progress.sr !== 'object') progress.sr = {};
   if (!Number.isFinite(progress.totalTips)) progress.totalTips = 0;
+  progress.bakery = normalizeBakery(progress);
   return progress;
 }
 
@@ -833,13 +927,36 @@ var TREAT_EMOJI = {
 };
 
 var shopItems = [
-  { id: 'counter', name: 'Marble Counter', icon: '🪨', cost: 30, desc: 'A shiny new counter!' },
-  { id: 'oven', name: 'Golden Oven', icon: '🔥', cost: 50, desc: 'Bake twice as fast!' },
-  { id: 'sign', name: 'Neon Sign', icon: '✨', cost: 40, desc: 'Attract more customers!' },
-  { id: 'flowers', name: 'Flower Pots', icon: '🌸', cost: 25, desc: 'Pretty up the bakery!' },
-  { id: 'chandelier', name: 'Chandelier', icon: '💡', cost: 60, desc: 'Light up the room!' },
-  { id: 'music', name: 'Music Box', icon: '🎵', cost: 35, desc: 'Bakery tunes!' },
+  { id: 'counter', name: 'Marble Counter', icon: '🪨', cost: 30, kind: 'decoration', desc: 'A polished stone display for your room.' },
+  { id: 'oven', name: 'Golden Oven', icon: '🔥', cost: 50, kind: 'decoration', desc: 'A cozy golden glow for your bakery.' },
+  { id: 'sign', name: 'Neon Sign', icon: '✨', cost: 40, kind: 'decoration', desc: 'Give your display a little sparkle.' },
+  { id: 'flowers', name: 'Flower Pots', icon: '🌸', cost: 25, kind: 'decoration', desc: 'Fresh blossoms for a favorite spot.' },
+  { id: 'chandelier', name: 'Chandelier', icon: '💡', cost: 60, kind: 'decoration', desc: 'A bright finishing touch for your room.' },
+  { id: 'music', name: 'Music Box', icon: '🎵', cost: 35, kind: 'decoration', desc: 'A musical keepsake for your shelf.' },
+  { id: 'sunflower', name: 'Sunny Sunflower', icon: '🌻', cost: 15, kind: 'decoration', desc: 'A little sunshine after a good round.' },
+  { id: 'cupcakes', name: 'Cupcake Stand', icon: '🧁', cost: 20, kind: 'decoration', desc: 'Show off a frosted masterpiece.' },
+  { id: 'rainbow', name: 'Rainbow Sign', icon: '🌈', cost: 35, kind: 'decoration', desc: 'A splash of color above the counter.' },
+  { id: 'plant', name: 'Leafy Friend', icon: '🪴', cost: 25, kind: 'decoration', desc: 'A cheerful plant that never needs watering.' },
+  { id: 'cake', name: 'Celebration Cake', icon: '🎂', cost: 65, kind: 'decoration', desc: 'Every day can feel like a party.' },
+  { id: 'castle', name: 'Sugar Castle', icon: '🏰', cost: 100, kind: 'decoration', desc: 'Save up for a fairy-tale centerpiece.' },
+  { id: 'classic', name: 'Peaches & Cream', icon: '🍑', cost: 0, kind: 'theme', desc: 'Your original cozy bakery colors.' },
+  { id: 'mint', name: 'Mint Meadow', icon: '🌿', cost: 30, kind: 'theme', desc: 'Fresh green walls and a minty awning.' },
+  { id: 'berry', name: 'Berry Sweet', icon: '🍓', cost: 55, kind: 'theme', desc: 'Pink walls for a strawberry-sweet room.' },
+  { id: 'starlight', name: 'Starlight Bakery', icon: '🌙', cost: 90, kind: 'theme', desc: 'Dreamy lavender walls and a starry window.' },
+  { id: 'cat', name: 'Sprinkle the Cat', icon: '🐈', cost: 60, kind: 'pet', desc: 'Adopt a bakery friend. Tap to pet, play, or nap!' },
+  { id: 'ball', name: 'Bouncy Ball', icon: '🧶', cost: 15, kind: 'toy', desc: 'Sprinkle loves chasing this ball of yarn.' },
+  { id: 'mouse', name: 'Toy Mouse', icon: '🐁', cost: 30, kind: 'toy', desc: 'A tiny toy for big pounces.' },
+  { id: 'bed', name: 'Cozy Basket', icon: '🧺', cost: 25, kind: 'bed', desc: 'A cozy place for Sprinkle to curl up.' },
+  { id: 'pillow', name: 'Cloud Pillow', icon: '☁️', cost: 50, kind: 'bed', desc: 'The fluffiest nap spot in the bakery.' },
+  { id: 'bow', name: 'Cherry Bow', icon: '🎀', cost: 20, kind: 'hat', desc: 'A sweet bow for your bakery buddy.' },
+  { id: 'crown', name: 'Tiny Crown', icon: '👑', cost: 45, kind: 'hat', desc: 'For the ruler of the cookie counter.' },
+  { id: 'partyhat', name: 'Party Hat', icon: '🥳', cost: 35, kind: 'hat', desc: 'Sprinkle is ready to celebrate!' }
 ];
+var shopView = 'decorate';
+var shopFilter = 'all';
+var selectedDecoration = null;
+var shopMessage = '';
+
 
 // ═══════════════════════════════════════
 // HINT STRATEGIES
@@ -1576,72 +1693,213 @@ document.addEventListener('keydown', function(e) {
 // ═══════════════════════════════════════
 // SHOP
 // ═══════════════════════════════════════
-function renderShop() {
+function prizeById(id) { return shopItems.find(function(item) { return item.id === id; }); }
+function ownsPrize(progress, id) { return id === 'classic' || progress.upgrades.indexOf(id) !== -1; }
+function normalizeBakery(progress) {
+  var old = progress.bakery && typeof progress.bakery === 'object' ? progress.bakery : {};
+  function valid(id, kind) { var item = prizeById(id); return item && item.kind === kind && ownsPrize(progress, id); }
+  var slots = Array.isArray(old.slots) ? old.slots : progress.upgrades.filter(function(id) { return valid(id, 'decoration'); });
+  var used = new Set();
+  var room = { theme: valid(old.theme, 'theme') ? old.theme : 'classic', slots: [] };
+  for (var i = 0; i < 6; i++) {
+    var id = slots[i];
+    room.slots.push(valid(id, 'decoration') && !used.has(id) ? id : null);
+    if (id) used.add(id);
+  }
+  ['hat', 'bed', 'toy'].forEach(function(kind) {
+    room[kind] = ownsPrize(progress, 'cat') && valid(old[kind], kind) ? old[kind] : null;
+  });
+  return room;
+}
+function prizeIsPlaced(progress, item) {
+  if (item.kind === 'decoration') return progress.bakery.slots.indexOf(item.id) !== -1;
+  if (item.kind === 'pet') return ownsPrize(progress, item.id);
+  return progress.bakery[item.kind] === item.id;
+}
+function purchasePrize(id) {
+  var item = prizeById(id), progress = getProgress();
+  if (!item || ownsPrize(progress, id) || progress.totalTips < item.cost) return false;
+  if (['hat', 'bed', 'toy'].indexOf(item.kind) !== -1 && !ownsPrize(progress, 'cat')) return false;
+  progress.totalTips -= item.cost;
+  progress.upgrades.push(id);
+  if (item.kind === 'decoration') {
+    var slot = progress.bakery.slots.indexOf(null);
+    if (slot !== -1) progress.bakery.slots[slot] = id;
+  } else if (item.kind !== 'pet') progress.bakery[item.kind] = id;
+  saveProgressData(progress);
+  state.totalTips = progress.totalTips;
+  return true;
+}
+function equipPrize(id) {
+  var item = prizeById(id), progress = getProgress();
+  if (!item || !ownsPrize(progress, id) || item.kind === 'decoration' || item.kind === 'pet') return false;
+  if (item.kind !== 'theme' && !ownsPrize(progress, 'cat')) return false;
+  progress.bakery[item.kind] = id;
+  saveProgressData(progress);
+  return true;
+}
+function placeDecoration(id, slot) {
+  var item = prizeById(id), progress = getProgress();
+  if (!item || item.kind !== 'decoration' || !ownsPrize(progress, id) || !Number.isInteger(slot) || slot < 0 || slot >= 6) return false;
+  var previous = progress.bakery.slots.indexOf(id);
+  if (previous !== -1) progress.bakery.slots[previous] = progress.bakery.slots[slot];
+  progress.bakery.slots[slot] = id;
+  saveProgressData(progress);
+  return true;
+}
+function putAwayPrize(id) {
+  var item = prizeById(id), progress = getProgress();
+  if (!item || !ownsPrize(progress, id) || item.kind === 'pet') return false;
+  if (item.kind === 'decoration') progress.bakery.slots = progress.bakery.slots.map(function(v) { return v === id ? null : v; });
+  else if (progress.bakery[item.kind] === id) progress.bakery[item.kind] = item.kind === 'theme' ? 'classic' : null;
+  saveProgressData(progress);
+  return true;
+}
+function petReaction(action) {
   var progress = getProgress();
-  document.getElementById('shop-tips').textContent = progress.totalTips || 0;
-
-  var container = document.getElementById('shop-items');
-  while (container.firstChild) container.removeChild(container.firstChild);
-
-  shopItems.forEach(function(item) {
-    var owned = (progress.upgrades || []).indexOf(item.id) !== -1;
-    var canAfford = (progress.totalTips || 0) >= item.cost;
-
-    var row = document.createElement('div');
-    row.className = 'shop-item' + (owned ? ' owned' : '');
-
-    var icon = document.createElement('div');
-    icon.className = 'shop-item-icon';
-    icon.textContent = item.icon;
-    row.appendChild(icon);
-
-    var info = document.createElement('div');
-    info.className = 'shop-item-info';
-    var nameEl = document.createElement('div');
-    nameEl.className = 'shop-item-name';
-    nameEl.textContent = item.name;
-    info.appendChild(nameEl);
-    var descEl = document.createElement('div');
-    descEl.className = 'shop-item-desc';
-    descEl.textContent = item.desc;
-    info.appendChild(descEl);
-    row.appendChild(info);
-
-    if (owned) {
-      var ownedLabel = document.createElement('span');
-      ownedLabel.className = 'shop-owned';
-      ownedLabel.textContent = 'Owned ✓';
-      row.appendChild(ownedLabel);
-    } else {
-      var buyBtn = document.createElement('button');
-      buyBtn.className = 'btn btn-golden btn-small';
-      buyBtn.textContent = '💰 ' + item.cost;
-      if (!canAfford) {
-        buyBtn.disabled = true;
-        buyBtn.style.opacity = '0.4';
-        buyBtn.style.cursor = 'not-allowed';
-      } else {
-        buyBtn.addEventListener('click', function() { buyItem(item.id, item.cost); });
-      }
-      row.appendChild(buyBtn);
-    }
-
-    container.appendChild(row);
+  if (!ownsPrize(progress, 'cat')) return 'Adopt Sprinkle in the prize shop to meet your bakery buddy.';
+  var room = progress.bakery;
+  if (action === 'play') return room.toy === 'ball' ? 'Sprinkle bats the yarn ball, pounces… and rolls right over! 🧶' : room.toy === 'mouse' ? 'Sprinkle stalks the toy mouse… pounce! Got it! 🐁' : 'Sprinkle chases a sunbeam across the bakery floor! ☀️';
+  if (action === 'nap') return room.bed === 'bed' ? 'Sprinkle curls up in the cozy basket. Tiny snores! 💤' : room.bed === 'pillow' ? 'Sprinkle sinks into the cloud pillow. Sweet cupcake dreams! ☁️' : 'Sprinkle stretches out in a sunny spot. Zzz… 💤';
+  var reactions = ['Sprinkle purrs like a tiny mixing machine. Prrrr! 💕', 'Sprinkle gives your hand a gentle head bump. 🐈', 'Happy paws! Sprinkle kneads an imaginary batch of dough. 🐾'];
+  return reactions[Math.floor(Math.random() * reactions.length)];
+}
+function interactWithPet(action) {
+  document.getElementById('pet-message').textContent = petReaction(action);
+  var cat = document.getElementById('bakery-cat');
+  if (cat) {
+    cat.classList.remove('pet-bounce'); cat.classList.toggle('pet-nap', action === 'nap');
+    document.getElementById('pet-mood').textContent = action === 'nap' ? '💤' : action === 'play' ? '🐾' : '💕';
+    if (action !== 'nap') { void cat.offsetWidth; cat.classList.add('pet-bounce'); }
+    var toy = document.querySelector('.pet-toy');
+    if (toy) { toy.classList.remove('pet-roll'); if (action === 'play') { void toy.offsetWidth; toy.classList.add('pet-roll'); } }
+  }
+}
+function setShopView(view) { shopView = view; shopMessage = ''; selectedDecoration = null; renderShop(); }
+function setShopFilter(filter) { shopFilter = filter; renderShop(); }
+function choosePrize(id) {
+  var item = prizeById(id);
+  if (!item || !ownsPrize(getProgress(), id)) return;
+  if (item.kind === 'decoration') {
+    selectedDecoration = selectedDecoration === id ? null : id;
+    shopMessage = selectedDecoration ? 'Now tap a spot in your bakery to place ' + item.name + '.' : 'Placement canceled. Your room is unchanged.';
+  } else if (item.kind === 'pet') { interactWithPet('pet'); return; }
+  else { equipPrize(id); shopMessage = item.name + ' is now in use!'; }
+  renderShop();
+  if (selectedDecoration) document.getElementById('bakery-room').scrollIntoView({ block: 'nearest' });
+}
+function useDecorationSpot(slot) {
+  var progress = getProgress();
+  if (selectedDecoration) {
+    var item = prizeById(selectedDecoration);
+    if (placeDecoration(selectedDecoration, slot)) shopMessage = item.name + ' placed! You can move it again whenever you like.';
+    selectedDecoration = null;
+  } else if (progress.bakery.slots[slot]) {
+    selectedDecoration = progress.bakery.slots[slot];
+    shopMessage = 'Tap another spot to move ' + prizeById(selectedDecoration).name + '. Tap this spot again to keep it here.';
+  } else shopMessage = 'Choose a decoration from My collection first.';
+  renderShop();
+}
+function storePrize(id) {
+  if (putAwayPrize(id)) shopMessage = prizeById(id).name + ' is safely in your collection.';
+  selectedDecoration = null;
+  renderShop();
+}
+function buyItem(id) {
+  if (!purchasePrize(id)) { shopMessage = 'This prize cannot be bought right now. Check your tips and collection.'; renderShop(); return; }
+  var item = prizeById(id);
+  shopMessage = item.kind === 'pet' ? 'Welcome, Sprinkle! Tap your new buddy to say hello.' : item.name + ' is yours!';
+  if (item.kind === 'decoration' && !prizeIsPlaced(getProgress(), item)) {
+    selectedDecoration = id;
+    shopMessage += ' Your shelves are full. Tap a spot to put it there; the old decoration stays in your collection.';
+  }
+  renderShop();
+}
+function renderBakeryRoom(progress) {
+  var room = progress.bakery;
+  document.getElementById('bakery-room').dataset.theme = room.theme;
+  document.getElementById('room-window').textContent = room.theme === 'starlight' ? '🌟' : room.theme === 'berry' ? '🌷' : '☀️';
+  var spots = document.getElementById('decoration-spots');
+  spots.replaceChildren(); spots.classList.toggle('placing', Boolean(selectedDecoration));
+  room.slots.forEach(function(id, index) {
+    var item = prizeById(id), button = document.createElement('button');
+    button.id = 'decoration-spot-' + index; button.className = 'decoration-spot';
+    button.setAttribute('aria-label', 'Spot ' + (index + 1) + ': ' + (item ? item.name : 'empty') + (selectedDecoration ? '. Place selected decoration here' : ''));
+    var icon = document.createElement('span'); icon.textContent = item ? item.icon : '+'; icon.setAttribute('aria-hidden', 'true'); button.appendChild(icon);
+    var label = document.createElement('small'); label.textContent = item ? item.name : 'Spot ' + (index + 1); button.appendChild(label);
+    button.addEventListener('click', function() { useDecorationSpot(index); }); spots.appendChild(button);
+  });
+  document.getElementById('placement-help').textContent = selectedDecoration ? 'Placing ' + prizeById(selectedDecoration).name + ' — tap any of the six spots.' : 'Choose a decoration in My collection, then tap a spot. Tap a placed decoration to move it.';
+  var corner = document.getElementById('pet-corner'), actions = document.getElementById('pet-actions');
+  corner.replaceChildren(); actions.replaceChildren();
+  document.getElementById('pet-message').textContent = '';
+  if (!ownsPrize(progress, 'cat')) {
+    var adopt = document.createElement('button'); adopt.className = 'pet-adopt'; adopt.textContent = '🐾 A cozy corner for a friend';
+    adopt.addEventListener('click', function() { shopView = 'shop'; shopFilter = 'pet'; renderShop(); document.getElementById('shop-items').scrollIntoView({block: 'nearest'}); }); corner.appendChild(adopt);
+    return;
+  }
+  var cat = document.createElement('button'); cat.id = 'bakery-cat'; cat.className = 'pet-cat'; cat.setAttribute('aria-label', 'Pet Sprinkle the cat');
+  if (room.bed) { var bed = document.createElement('span'); bed.className = 'pet-bed'; bed.textContent = prizeById(room.bed).icon; cat.appendChild(bed); }
+  var body = document.createElement('span'); body.className = 'pet-body'; body.textContent = '🐈'; cat.appendChild(body);
+  if (room.hat) { var hat = document.createElement('span'); hat.className = 'pet-hat'; hat.textContent = prizeById(room.hat).icon; cat.appendChild(hat); }
+  var mood = document.createElement('span'); mood.id = 'pet-mood'; mood.className = 'pet-mood'; mood.setAttribute('aria-hidden', 'true'); cat.appendChild(mood);
+  cat.addEventListener('click', function() { interactWithPet('pet'); }); corner.appendChild(cat);
+  if (room.toy) { var toy = document.createElement('span'); toy.className = 'pet-toy'; toy.textContent = prizeById(room.toy).icon; toy.setAttribute('aria-label', prizeById(room.toy).name); corner.appendChild(toy); }
+  [['pet', 'Pet Sprinkle'], ['play', 'Play'], ['nap', 'Nap']].forEach(function(pair) {
+    var button = document.createElement('button'); button.textContent = pair[1]; button.id = 'pet-action-' + pair[0];
+    button.addEventListener('click', function() { interactWithPet(pair[0]); }); actions.appendChild(button);
   });
 }
-
-function buyItem(id, cost) {
+function renderShop() {
+  var focusedId = document.activeElement && document.activeElement.id;
   var progress = getProgress();
-  if ((progress.totalTips || 0) < cost) return;
-  progress.totalTips -= cost;
-  state.totalTips = progress.totalTips;
-  if (!progress.upgrades) progress.upgrades = [];
-  progress.upgrades.push(id);
-  saveProgressData(progress);
-  renderShop();
-
-  var item = shopItems.find(function(i) { return i.id === id; });
-  showUnlock(item.icon, 'New Upgrade!', item.name);
+  document.getElementById('shop-tips').textContent = progress.totalTips;
+  renderBakeryRoom(progress);
+  document.getElementById('decorate-tab').setAttribute('aria-pressed', String(shopView === 'decorate'));
+  document.getElementById('prizes-tab').setAttribute('aria-pressed', String(shopView === 'shop'));
+  var ownedCount = shopItems.filter(function(item) { return item.id !== 'classic' && ownsPrize(progress, item.id); }).length;
+  document.getElementById('collection-count').textContent = ownedCount + ' of ' + (shopItems.length - 1) + ' prizes collected • Room colors, shelf treasures & cat comforts';
+  var filters = document.getElementById('shop-filters'); filters.replaceChildren();
+  [['all', 'All'], ['decoration', 'Decorations'], ['theme', 'Room colors'], ['pet', 'Cat & comforts']].forEach(function(pair) {
+    var btn = document.createElement('button'); btn.id = 'shop-filter-' + pair[0]; btn.textContent = pair[1]; btn.setAttribute('aria-pressed', String(shopFilter === pair[0]));
+    btn.addEventListener('click', function() { setShopFilter(pair[0]); }); filters.appendChild(btn);
+  });
+  document.getElementById('shop-message').textContent = shopMessage || (shopView === 'shop' ? 'Pick a prize to make your bakery yours. All prizes are just for fun!' : 'Choose what to display. Everything you own stays in your collection.');
+  var container = document.getElementById('shop-items'); container.replaceChildren();
+  shopItems.forEach(function(item) {
+    var owned = ownsPrize(progress, item.id), active = prizeIsPlaced(progress, item);
+    if (shopView === 'decorate' && !owned) return;
+    if (shopFilter !== 'all' && (shopFilter === 'pet' ? ['pet', 'hat', 'toy', 'bed'].indexOf(item.kind) === -1 : item.kind !== shopFilter)) return;
+    var row = document.createElement('div'); row.className = 'shop-item' + (owned ? ' owned' : ''); row.dataset.prize = item.id;
+    var icon = document.createElement('span'); icon.className = 'shop-item-icon'; icon.textContent = item.icon; icon.setAttribute('aria-hidden', 'true'); row.appendChild(icon);
+    var info = document.createElement('div'); info.className = 'shop-item-info';
+    var name = document.createElement('div'); name.className = 'shop-item-name'; name.textContent = item.name; info.appendChild(name);
+    var desc = document.createElement('div'); desc.className = 'shop-item-desc'; desc.textContent = item.desc; info.appendChild(desc);
+    var status = document.createElement('div'); status.className = 'prize-state';
+    status.textContent = owned ? (active ? (item.kind === 'pet' ? 'At home in your bakery' : 'In your bakery ✓') : 'In your collection') : item.cost + ' tips'; info.appendChild(status);
+    var actions = document.createElement('div'); actions.className = 'prize-actions';
+    var button = document.createElement('button'); button.id = 'prize-' + item.id; button.className = 'btn btn-small btn-golden';
+    if (owned) {
+      button.textContent = item.kind === 'decoration' ? (selectedDecoration === item.id ? 'Cancel' : active ? 'Move' : 'Place') : item.kind === 'pet' ? 'Pet Sprinkle' : active ? 'Using ✓' : 'Use';
+      button.disabled = active && item.kind !== 'pet' && item.kind !== 'decoration';
+      button.addEventListener('click', function() { choosePrize(item.id); });
+      actions.appendChild(button);
+      if (active && item.kind !== 'pet' && !(item.kind === 'theme' && item.id === 'classic')) {
+        var away = document.createElement('button'); away.className = 'btn btn-small btn-back'; away.textContent = item.kind === 'theme' ? 'Reset color' : 'Put away'; away.setAttribute('aria-label', 'Put away ' + item.name);
+        away.addEventListener('click', function() { storePrize(item.id); }); actions.appendChild(away);
+      }
+    } else {
+      var needsCat = ['hat', 'bed', 'toy'].indexOf(item.kind) !== -1 && !ownsPrize(progress, 'cat');
+      button.disabled = needsCat || progress.totalTips < item.cost;
+      button.textContent = needsCat ? 'Adopt Sprinkle first' : progress.totalTips < item.cost ? 'Save ' + (item.cost - progress.totalTips) + ' more tips' : (item.kind === 'pet' ? 'Adopt · ' : 'Buy · ') + item.cost + ' tips';
+      button.addEventListener('click', function() { buyItem(item.id); }); actions.appendChild(button);
+    }
+    info.appendChild(actions); row.appendChild(info); container.appendChild(row);
+  });
+  if (!container.childElementCount) {
+    var empty = document.createElement('p'); empty.className = 'bakery-help'; empty.textContent = 'No prizes here yet. Visit Buy prizes to find your first favorite!'; container.appendChild(empty);
+  }
+  if (focusedId) { var focus = document.getElementById(focusedId); if (focus && !focus.disabled) focus.focus({preventScroll: true}); }
 }
 
 // ═══════════════════════════════════════

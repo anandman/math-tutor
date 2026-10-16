@@ -16,7 +16,10 @@ Serves customers, earns tips, unlocks upgrades.
 - Bakery story problems with fun characters
 - Timed orders with patience bar
 - Hint system: wrong answer gives a hint + second chance
-- Tips & shop: earn currency, buy bakery upgrades
+- 23 collectible prizes: shelf decorations, room colors, a cat, and pet accessories
+- Arrange six display spots, swap decorations, or put them away for later
+- Adopt Sprinkle the cat, dress it up, play with its toys, and tuck it in for a nap
+- All prizes are cosmetic; arranging and playing are free, with purchases saved
 - Progress saved in browser (localStorage)
 - Works on iPad landscape and mobile
 
@@ -29,7 +32,7 @@ npx serve .
 
 No build step or app dependencies. Just a single `index.html`.
 
-Run the arithmetic, input-validation, and saved-progress regression tests with Node.js:
+Run the arithmetic, input-validation, saved-progress, and prize-shop regression tests with Node.js:
 
 ```bash
 node --test tests/*.test.cjs
