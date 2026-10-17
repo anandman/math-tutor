@@ -14,8 +14,10 @@ Serves customers, earns tips, unlocks upgrades.
 - Every skill starts unlocked; score 7/10 to unlock its next level
 - Decimal and fraction keypad entry, with equivalent fraction answers accepted
 - Bakery story problems with fun characters
-- Timed orders with patience bar
+- Choose 20, 40, or 60 seconds per order, or practice with no timer
+- Prominent Home button during rounds; leaving keeps tips already earned
 - Hint system: wrong answer gives a hint + second chance
+- Timeouts do not count as incorrect answers in adaptive fact practice
 - 23 collectible prizes: shelf decorations, room colors, a cat, and pet accessories
 - Arrange six display spots, swap decorations, or put them away for later
 - Adopt Sprinkle the cat, dress it up, play with its toys, and tuck it in for a nap

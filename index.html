@@ -395,13 +395,11 @@ body::before {
 }
 .peek-chart-btn:active { transform: scale(0.9); }
 
-.quit-game-btn {
-  font-family: 'Quicksand', sans-serif; font-size: 0.75rem; font-weight: 600;
-  color: var(--brown); opacity: 0.45; background: none; border: none;
-  cursor: pointer; padding: 4px 0; margin-top: 4px; align-self: flex-start;
-  transition: opacity 0.2s; -webkit-tap-highlight-color: transparent;
-}
-.quit-game-btn:hover { opacity: 0.7; }
+.round-controls { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; width: 100%; padding: 10px 0; margin-bottom: 8px; background: var(--cream); flex-shrink: 0; }
+.round-controls small { width: 100%; text-align: center; font-size: 0.75rem; }
+.pace-control { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--brown); font-weight: 700; font-size: 0.85rem; margin: 8px 0; flex-shrink: 0; }
+.pace-control select { font: inherit; padding: 9px 6px; border: 2px solid var(--peach); border-radius: 10px; color: var(--brown); background: var(--warm-white); }
+#game-screen { justify-content: flex-start; }
 
 @media (max-height: 700px) {
   .customer-emoji { font-size: 3rem; }
@@ -543,6 +541,8 @@ body::before {
   <div id="skill-picker" aria-label="Practice skills"></div>
   <p class="choice-label" id="level-guide">Choose a level • Get 7 of 10 right to unlock the next!</p>
 
+  <label class="pace-control" for="level-pace">Time per order <select id="level-pace" onchange="setPace(Number(this.value))"><option value="20">20 seconds</option><option value="40">40 seconds</option><option value="60">60 seconds</option><option value="0">No timer</option></select></label>
+  <p class="choice-label">Take your time! Choose No timer to practice without a countdown.</p>
   <div class="level-grid" id="level-grid"></div>
 
   <div id="both-mode-area" style="width: 100%; text-align: center; margin-top: 4px;"></div>
@@ -552,6 +552,7 @@ body::before {
 
 <!-- GAME SCREEN -->
 <div class="screen" id="game-screen">
+  <div class="round-controls"><button id="round-home" class="btn btn-small btn-back" onclick="quitGame()">← Home</button><label class="pace-control" for="round-pace">Time <select id="round-pace" onchange="setPace(Number(this.value))"><option value="20">20 seconds</option><option value="40">40 seconds</option><option value="60">60 seconds</option><option value="0">No timer</option></select></label><small>Leave anytime — keep your earned tips.</small></div>
   <div class="game-layout">
     <div class="game-left">
       <div class="game-header">
@@ -562,8 +563,8 @@ body::before {
         <div class="progress-display">Order <span id="current-order">1</span> / <span id="total-orders">10</span></div>
       </div>
       <div class="patience-bar-container">
-        <div class="patience-label">Customer patience</div>
-        <div class="patience-bar">
+        <div class="patience-label" id="patience-label">Customer patience</div>
+        <div class="patience-bar" id="patience-bar">
           <div class="patience-fill" id="patience-fill"></div>
         </div>
       </div>
@@ -579,7 +580,7 @@ body::before {
 
       <div id="hint-area"></div>
       <div class="feedback" id="feedback"></div>
-      <button class="quit-game-btn" onclick="quitGame()">Quit</button>
+
     </div>
 
     <div class="game-right">
@@ -662,7 +663,7 @@ body::before {
     <button class="btn btn-small btn-back" onclick="toggleGameChart()" style="padding: 6px 14px; font-size: 0.8rem;">Close</button>
   </div>
   <div class="chart-container" id="game-chart-table"></div>
-  <p style="font-size: 0.75rem; color: var(--brown); opacity: 0.6; text-align: center; margin-top: 8px; font-weight: 600;">Timer is still running!</p>
+  <p style="font-size: 0.75rem; color: var(--brown); opacity: 0.6; text-align: center; margin-top: 8px; font-weight: 600;" id="chart-timer-note">Timer is still running!</p>
 </div>
 
 <!-- SHOP SCREEN -->
@@ -676,7 +677,7 @@ body::before {
     <div class="bakery-room-panel">
       <div id="bakery-room" class="bakery-room" aria-label="Your decorated bakery">
         <div class="bakery-awning" aria-hidden="true"></div>
-        <div class="room-title">Naia’s Bakery <span id="room-window" aria-hidden="true">☀️</span></div>
+        <div class="room-title">Bakery Quest <span id="room-window" aria-hidden="true">☀️</span></div>
         <div id="decoration-spots" class="decoration-spots"></div>
         <div id="pet-corner" class="pet-corner"></div>
       </div>
@@ -784,6 +785,10 @@ var state = {
   currentProblem: null,
   patienceRemaining: PATIENCE_SECONDS,
   patienceTimer: null,
+  patienceLimit: PATIENCE_SECONDS,
+  nextOrderTimer: null,
+  feedbackTimer: null,
+  roundActive: false,
   hintShown: false,
   hintPaused: false,
   answered: false,
@@ -806,6 +811,7 @@ function loadProgress() {
   if (!Array.isArray(progress.upgrades)) progress.upgrades = [];
   if (!progress.sr || typeof progress.sr !== 'object') progress.sr = {};
   if (!Number.isFinite(progress.totalTips)) progress.totalTips = 0;
+  if ([0, 20, 40, 60].indexOf(progress.timerSeconds) === -1) progress.timerSeconds = PATIENCE_SECONDS;
   progress.bakery = normalizeBakery(progress);
   return progress;
 }
@@ -1220,6 +1226,7 @@ function renderPracticePicker() {
 }
 
 function renderLevelSelect() {
+  syncPaceControls();
   if (state.track === 'both') state.track = 'multiply';
   renderPracticePicker();
   var progress = getProgress();
@@ -1283,6 +1290,8 @@ function renderLevelSelect() {
 // GAME LOGIC
 // ═══════════════════════════════════════
 function startLevel(track, levelIndex, levelDef) {
+  stopRoundTimers();
+  state.roundActive = true;
   state.track = track;
   state.levelIndex = levelIndex;
   state.levelId = levelDef.id;
@@ -1301,6 +1310,8 @@ function startLevel(track, levelIndex, levelDef) {
 }
 
 function startBothMode() {
+  stopRoundTimers();
+  state.roundActive = true;
   // Collect all facts from all unlocked levels in both tracks
   var progress = getProgress();
   var allFacts = [];
@@ -1334,6 +1345,8 @@ function startBothMode() {
 }
 
 function nextOrder() {
+  if (!state.roundActive) return;
+  clearTimeout(state.nextOrderTimer);
   state.currentOrder++;
   if (state.currentOrder > ORDERS_PER_ROUND) {
     endRound();
@@ -1391,22 +1404,52 @@ function nextOrder() {
   startPatience();
 }
 
+function syncPaceControls() {
+  var seconds = getProgress().timerSeconds;
+  document.getElementById('level-pace').value = String(seconds);
+  document.getElementById('round-pace').value = String(seconds);
+  document.getElementById('chart-timer-note').textContent = seconds === 0 ? 'No timer — take your time!' : 'Timer is still running!';
+}
+function setPace(seconds) {
+  if ([0, 20, 40, 60].indexOf(seconds) === -1) return;
+  var progress = getProgress();
+  progress.timerSeconds = seconds;
+  saveProgressData(progress);
+  syncPaceControls();
+  // Switching pace during an unanswered order gives a fresh full allowance.
+  if (state.roundActive && !state.answered) startPatience();
+}
+function stopRoundTimers() {
+  clearInterval(state.patienceTimer);
+  clearTimeout(state.nextOrderTimer);
+  clearTimeout(state.feedbackTimer);
+  state.patienceTimer = null;
+  state.nextOrderTimer = null;
+  state.feedbackTimer = null;
+}
+function scheduleNextOrder(delay) {
+  clearTimeout(state.nextOrderTimer);
+  state.nextOrderTimer = setTimeout(nextOrder, delay);
+}
 function startPatience() {
-  state.patienceRemaining = PATIENCE_SECONDS;
+  clearInterval(state.patienceTimer);
+  state.patienceTimer = null;
+  state.patienceLimit = getProgress().timerSeconds;
+  state.patienceRemaining = state.patienceLimit;
+  syncPaceControls();
   var fill = document.getElementById('patience-fill');
   fill.style.width = '100%';
   fill.className = 'patience-fill';
-
-  clearInterval(state.patienceTimer);
+  document.getElementById('patience-bar').hidden = state.patienceLimit === 0;
+  document.getElementById('patience-label').textContent = state.patienceLimit === 0 ? 'No timer — your customer is happy to wait!' : 'Customer patience · ' + state.patienceLimit + ' seconds';
+  if (state.patienceLimit === 0) return;
   state.patienceTimer = setInterval(function() {
     state.patienceRemaining -= state.hintPaused ? 0.05 : 0.1;
-    var pct = Math.max(0, (state.patienceRemaining / PATIENCE_SECONDS) * 100);
+    var pct = Math.max(0, (state.patienceRemaining / state.patienceLimit) * 100);
     fill.style.width = pct + '%';
-
     if (pct < 25) fill.className = 'patience-fill danger';
     else if (pct < 50) fill.className = 'patience-fill warning';
     else fill.className = 'patience-fill';
-
     if (state.patienceRemaining <= 0) {
       clearInterval(state.patienceTimer);
       if (!state.answered) timeUp();
@@ -1419,13 +1462,13 @@ function timeUp() {
   document.getElementById('answer-input').className = 'answer-input wrong';
   state.wrongFacts.push(state.currentProblem.display);
   state.streak = 0;
-  srRecordWrong(state.currentProblem.srKey);
+  // Running out of time is not evidence of an incorrect answer.
 
   var fb = document.getElementById('feedback');
-  fb.textContent = "Time's up! The answer was " + state.currentProblem.answer;
+  fb.textContent = "Time ran out. The answer was " + state.currentProblem.answer + ". You can choose more time or No timer above.";
   fb.className = 'feedback wrong-fb';
 
-  setTimeout(nextOrder, 2200);
+  scheduleNextOrder(4000);
 }
 
 function showHint(text, problem, wrongAnswer) {
@@ -1494,8 +1537,8 @@ function checkAnswer() {
     refreshPoolWeights();
 
     var tipAmount = 3;
-    if (state.patienceRemaining > PATIENCE_SECONDS * 0.7) tipAmount = 5;
-    else if (state.patienceRemaining > PATIENCE_SECONDS * 0.4) tipAmount = 4;
+    if (state.patienceLimit === 0 || state.patienceRemaining > state.patienceLimit * 0.7) tipAmount = 5;
+    else if (state.patienceRemaining > state.patienceLimit * 0.4) tipAmount = 4;
     if (state.attempts > 1) tipAmount = Math.max(1, tipAmount - 2);
 
     state.tips += tipAmount;
@@ -1505,11 +1548,11 @@ function checkAnswer() {
     fb.textContent = msgs[Math.floor(Math.random() * msgs.length)] + '  +' + tipAmount + ' tips!';
     fb.className = 'feedback correct-fb';
 
-    setTimeout(nextOrder, 1500);
+    scheduleNextOrder(1500);
 
   } else if (state.attempts === 1) {
     input.className = 'answer-input wrong';
-    setTimeout(function() { input.className = 'answer-input'; }, 600);
+    state.feedbackTimer = setTimeout(function() { input.className = 'answer-input'; }, 600);
     var wrongVal = value;
     input.value = '';
 
@@ -1533,7 +1576,7 @@ function checkAnswer() {
     fb.textContent = 'The answer is ' + state.currentProblem.answer + ". You'll get it next time!";
     fb.className = 'feedback wrong-fb';
 
-    setTimeout(nextOrder, 2500);
+    scheduleNextOrder(2500);
   }
 }
 
@@ -1546,7 +1589,9 @@ function refreshPoolWeights() {
 }
 
 function endRound() {
-  clearInterval(state.patienceTimer);
+  if (!state.roundActive) return;
+  state.roundActive = false;
+  stopRoundTimers();
   var progress = getProgress();
   state.totalTips = (progress.totalTips || 0) + state.tips;
   progress.totalTips = state.totalTips;
@@ -1645,7 +1690,17 @@ function endRound() {
 }
 
 function quitGame() {
-  clearInterval(state.patienceTimer);
+  stopRoundTimers();
+  if (state.roundActive) {
+    var progress = getProgress();
+    progress.totalTips += state.tips;
+    state.totalTips = progress.totalTips;
+    saveProgressData(progress);
+  }
+  state.roundActive = false;
+  state.answered = true;
+  document.getElementById('game-chart').style.display = 'none';
+  document.getElementById('game-chart-overlay').style.display = 'none';
   showScreen('menu-screen');
 }
 
