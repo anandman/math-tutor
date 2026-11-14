@@ -869,7 +869,7 @@ function makePathProblem(level, n) {
   if (k==='quadrilaterals') {var shape=['Square','Rectangle','Rhombus','Triangle','Pentagon','Hexagon'][n%6];q('Which shape family does this cookie belong to?',n%6<3?'Quadrilaterals':shape==='Triangle'?'Triangles':shape==='Pentagon'?'Pentagons':'Hexagons','A quadrilateral has exactly four straight sides. Squares, rectangles, and rhombuses all belong. Triangles have three, pentagons five, and hexagons six.',{kind:'shape',shape:shape},['Triangles','Quadrilaterals','Pentagons','Hexagons']);}
   if (k==='line_types') {var types=['Parallel','Perpendicular','Intersecting, not perpendicular'];q('How are these two straight icing lines related?',types[n%3],'Parallel lines never meet. Perpendicular lines meet at a square corner (90°). Other crossing lines need not make a square corner.',{kind:'lines',relation:n%3},types);}
   if (k==='angle_types') {var angle=[30,60,90,120,150][n%5];q('What kind of angle does this bakery sign have?',angle<90?'Acute':angle===90?'Right':'Obtuse','Compare the opening with a square corner: less than 90° is acute; exactly 90° is right; between 90° and 180° is obtuse.',{kind:'angle',degrees:angle,protractor:false},['Acute','Right','Obtuse']);}
-  if (k==='symmetry') {var shape=['Square','Rectangle','Triangle','Scalene triangle'][n%4];q('How many lines of symmetry does this cookie have?', [4,2,3,0][n%4],'Imagine folding the cookie so both halves match exactly. Count every possible straight fold line.',{kind:'shape',shape:shape,turn:0});}
+  if (k==='symmetry') {var shape=['Square','Rectangle','Triangle','Scalene triangle'][n%4];q('How many lines of symmetry does this cookie have?', [4,2,3,0][n%4],'Imagine folding the cookie so both halves match exactly. Count every possible straight fold line.',{kind:'shape',shape:shape,turn:0,symmetry:true});}
   if (k==='length_compare') q('Which ribbon is longer?',a>b?'A':a<b?'B':'Same length','Both ribbons start at the same line. Compare their other ends.',{kind:'lengths',values:[a,b],units:false},['A','B','Same length']);
   if (k==='unit_count') q('How many equal blocks long is the ribbon?',a,'Count the spaces covered by the blocks, not the boundary lines. Leave no gaps or overlaps.',{kind:'lengths',values:[a],units:true});
   if (k==='length_order') {var values=[a+3,a,a+1];if(n%2)values.reverse();var order=[0,1,2].sort(function(x,y){return values[x]-values[y];}).map(function(i){return ['A','B','C'][i];}).join(', ');q('Choose the ribbons from shortest to longest.',order,'Start with the ribbon whose end is closest to the starting line.',{kind:'lengths',values:values,units:false},['B, C, A','B, A, C','A, B, C','C, B, A']);}
@@ -1378,7 +1378,15 @@ function renderPathVisual(container, v, hint) {
   if(v.kind==='shape' && v.shape!=='Circle') {
     var pts=shapePoints(v.shape),polygon=visualNode('polygon',{points:pts.map(function(p){return p.join(',');}).join(' '),fill:fill,stroke:stroke,'stroke-width':3,transform:'rotate('+(v.turn||0)+' 200 125)'});svg.appendChild(polygon);
     if(v.split){line(pts[0][0],pts[0][1],pts[2][0],pts[2][1],accent,3);}
-    if(hint)pts.forEach(function(p,i){svg.appendChild(visualNode('circle',{cx:p[0],cy:p[1],r:5,fill:accent,transform:'rotate('+(v.turn||0)+' 200 125)'}));var angle=(v.turn||0)*Math.PI/180;var x=200+(p[0]-200)*Math.cos(angle)-(p[1]-125)*Math.sin(angle),y=125+(p[0]-200)*Math.sin(angle)+(p[1]-125)*Math.cos(angle);label(x,y-10,i+1,16,accent);});
+    if(hint && !v.symmetry)pts.forEach(function(p,i){svg.appendChild(visualNode('circle',{cx:p[0],cy:p[1],r:5,fill:accent,transform:'rotate('+(v.turn||0)+' 200 125)'}));var angle=(v.turn||0)*Math.PI/180;var x=200+(p[0]-200)*Math.cos(angle)-(p[1]-125)*Math.sin(angle),y=125+(p[0]-200)*Math.sin(angle)+(p[1]-125)*Math.cos(angle);label(x,y-10,i+1,16,accent);});
+  }
+  if(v.kind==='shape' && hint && v.symmetry) {
+    var folds=[];
+    if(v.shape==='Square') {var r=90/Math.sqrt(2);folds=[[200,125-r,200,125+r],[200-r,125,200+r,125],[200-r,125-r,200+r,125+r],[200-r,125+r,200+r,125-r]];}
+    if(v.shape==='Rectangle')folds=[[200,65,200,185],[75,125,325,125]];
+    if(v.shape==='Triangle'){var points=shapePoints(v.shape);points.forEach(function(p,i){var a=points[(i+1)%3],b=points[(i+2)%3];folds.push([p[0],p[1],(a[0]+b[0])/2,(a[1]+b[1])/2]);});}
+    folds.forEach(function(f){svg.appendChild(visualNode('line',{x1:f[0],y1:f[1],x2:f[2],y2:f[3],stroke:accent,'stroke-width':3,'stroke-dasharray':'7 5','data-fold':'true'}));});
+    label(200,242,folds.length?'Fold along each dashed line.':'No straight fold makes matching halves.',14,accent);
   }
   if(v.kind==='solid') {
     if(v.shape==='Cube'){rect(120,85,120,120);svg.appendChild(visualNode('polygon',{points:'120,85 170,45 290,45 240,85',fill:'#ffe3b5',stroke:stroke,'stroke-width':2}));svg.appendChild(visualNode('polygon',{points:'240,85 290,45 290,165 240,205',fill:'#dba16a',stroke:stroke,'stroke-width':2}));}

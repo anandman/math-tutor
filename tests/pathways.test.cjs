@@ -32,3 +32,12 @@ test('all visual arithmetic answers match the quantities in the diagram',()=>{co
  if(level.skill==='picture_difference')expected=v.values[0]-v.values[1];
  if(expected!==undefined)assert.equal(val(p.answer),expected,level.skill+' variant '+n);
  }}});
+test('symmetry hints draw actual fold lines rather than labeling corners',()=>{
+ const c=app();function node(){return {attrs:{},children:[],setAttribute(k,v){this.attrs[k]=v;},appendChild(child){this.children.push(child);},replaceChildren(){this.children=[];}};}
+ c.document.createElementNS=()=>node();
+ for(const [shape,want] of [['Square',4],['Rectangle',2],['Triangle',3],['Scalene triangle',0]]){
+  const root=node();c.renderPathVisual(root,{kind:'shape',shape,symmetry:true},true);
+  const folds=root.children[0].children.filter(el=>el.attrs['data-fold']==='true');assert.equal(folds.length,want,shape);
+  for(const fold of folds)assert.ok([fold.attrs.x1,fold.attrs.y1,fold.attrs.x2,fold.attrs.y2].every(Number.isFinite));
+ }
+});
