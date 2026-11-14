@@ -27,6 +27,10 @@ Serves customers, earns tips, unlocks upgrades.
 - Arrange six display spots, swap decorations, or put them away for later
 - Adopt Sprinkle the cat, dress it up, play with its toys, and tuck it in for a nap
 - All prizes are cosmetic; arranging and playing are free, with purchases saved
+- My Report Card shows only practiced math topics and skills, with activity grade labels
+- Independent answers, helped answers, review needs, and timeouts shown separately
+- Parent-friendly next steps, recent practice comparisons, and print/PDF or text export
+- Earlier practice retained separately when detailed help/timing records are unavailable
 - Progress saved in browser (localStorage)
 - Works on iPad landscape and mobile
 
@@ -39,7 +43,7 @@ npx serve .
 
 No build step or app dependencies. Just a single `index.html`.
 
-Run the arithmetic, visual-pathway, input-validation, saved-progress, round, and prize-shop tests with Node.js:
+Run the arithmetic, visual-pathway, input-validation, saved-progress, report-card, round, and prize-shop tests with Node.js:
 
 ```bash
 node --test tests/*.test.cjs
@@ -68,3 +72,20 @@ Content is guided by the Common Core [grade 2 geometry](https://www.thecorestand
 [grade 3 measurement/data](https://www.thecorestandards.org/Math/Content/3/MD/),
 [grade 4 measurement/data](https://www.thecorestandards.org/Math/Content/4/MD/),
 and [grade 4 geometry](https://www.thecorestandards.org/Math/Content/4/G/) standards.
+
+## My Report Card
+
+Open **My Report Card** from the home screen or after a round. Only math topics
+and skills actually practiced on that device appear. Untried topics are not
+scored, and grade labels describe the activities, not an overall grade placement.
+
+New practice records correct first tries, correct answers after a hint/chart/retry,
+questions to review, and timeouts separately. Timeouts do not count as incorrect
+answers. Feedback uses recent practice and suggests a next step; small samples
+show “Getting started.” This is a practice report, not a school or STAR grade.
+The app cannot detect help given outside the app.
+
+Show the report to a parent, use **Print / save PDF**, or **Save text copy**.
+Reports stay on the device unless you choose to share a saved copy. Existing
+practice is preserved as earlier history; missing help/timing details are not
+guessed. Guided examples and the optional starting check are not scored.

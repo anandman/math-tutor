@@ -314,6 +314,51 @@ body::before {
 #game-screen.visual-round { justify-content: flex-start; }
 @media (max-width: 600px) { .visual-round .path-diagram { max-height: 225px; } #topic-picker .mode-btn { font-size: 0.85rem; padding: 10px 5px; } }
 
+/* A readable, printable record of practiced skills only. */
+#report-screen { max-width: 900px; max-height: 100dvh; overflow-y: auto; align-items: stretch; gap: 8px; }
+#report-screen > * { flex-shrink: 0; }
+.report-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.report-eyebrow { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; color: var(--teal-dark); }
+#report-screen h2 { font-size: 2rem; }
+.report-intro { font-size: 1rem; line-height: 1.5; margin: 4px 0; }
+.report-note { font-size: 0.8rem; color: var(--brown); line-height: 1.5; }
+.report-subject { margin-top: 16px; font-size: 1.4rem; }
+.report-overview { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin: 12px 0; }
+.report-overview > div { background: var(--warm-white); border: 2px solid var(--peach); border-radius: 14px; padding: 14px 8px; text-align: center; }
+.report-overview strong, .report-overview span { display: block; }
+.report-overview strong { font: 700 1.8rem 'Fredoka', sans-serif; color: var(--teal-dark); }
+.report-overview span { font-size: 0.75rem; font-weight: 700; margin-top: 4px; }
+.report-topic { margin: 20px 0; padding: 18px; border: 2px solid var(--peach); border-radius: 18px; background: var(--warm-white); }
+.report-topic h3 { font-size: 1.2rem; margin-bottom: 12px; }
+.report-topic p { line-height: 1.5; }
+.report-skill { padding: 14px 0; border-top: 1px solid var(--peach); }
+.report-skill-heading { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; justify-content: space-between; }
+.report-skill-heading h4 { font-size: 1rem; }
+.report-status { font-size: 0.75rem; font-weight: 700; background: #e3f2e9; color: #225f4e; padding: 5px 9px; border-radius: 14px; }
+.report-counts { font-size: 0.85rem; margin: 10px 0 6px; }
+.report-next { font-size: 0.9rem; margin: 8px 0; }
+.report-skill button { margin-top: 10px; }
+.report-history { border-top: 1px dashed var(--peach); padding-top: 12px; font-size: 0.85rem; }
+.report-history p { margin-top: 8px; }
+.report-key { background: #fff3dd; padding: 16px; border-radius: 14px; margin-bottom: 20px; }
+.report-key p { font-size: 0.8rem; line-height: 1.5; margin-top: 10px; }
+#menu-screen { max-height: 100dvh; overflow-y: auto; }
+#menu-screen > * { flex-shrink: 0; }
+@media (max-width: 600px) { .report-overview { grid-template-columns: repeat(2,minmax(0,1fr)); } .report-actions .btn { padding: 9px 12px; } .report-topic { padding: 12px; } }
+@media print {
+  html, body { height: auto !important; min-height: 0 !important; overflow: visible !important; display: block !important; background: white !important; }
+  body::before, .screen, .treat-unlock-overlay, .treat-unlock, #game-chart { display: none !important; }
+  #report-screen { display: block !important; max-width: none; width: 100%; max-height: none; height: auto; overflow: visible; padding: 0; animation: none; color: #222; }
+  .report-no-print { display: none !important; }
+  .report-topic, .report-overview > div, .report-key { border: 1px solid #bbb; box-shadow: none; background: white; }
+  .report-topic { break-inside: auto; }
+  .report-skill, .report-history, .report-key, .report-overview { break-inside: avoid; }
+  .report-topic h3, .report-subject { break-after: avoid; }
+  .report-note { color: #333; }
+  .report-status { background: white; border: 1px solid #888; color: #222; }
+  @page { margin: 15mm; }
+}
+
 /* A room to arrange and a collection to keep. */
 #shop-screen { max-width: 1060px; max-height: 100dvh; overflow-y: auto; align-items: stretch; }
 .bakery-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; }
@@ -549,8 +594,24 @@ body::before {
       Math Chart
     </button>
   </div>
+  <button id="menu-report" class="btn btn-small btn-back" onclick="showScreen('report-screen')" style="margin-top: 14px;">My Report Card</button>
 </div>
 
+<!-- REPORT CARD -->
+<div class="screen" id="report-screen">
+  <div class="report-actions report-no-print">
+    <button class="btn btn-small btn-back" onclick="showScreen('menu-screen')">← Home</button>
+    <button class="btn btn-small btn-teal" onclick="window.print()">Print / save PDF</button>
+    <button class="btn btn-small btn-golden" onclick="downloadReport()">Save text copy</button>
+  </div>
+  <p class="report-eyebrow">BAKERY QUEST · FOR MY FAMILY</p>
+  <h2>My Report Card</h2>
+  <p id="report-date" class="report-note"></p>
+  <p class="report-intro">Here’s the math I’ve been practicing. My card grows with what I try!</p>
+  <p class="report-note report-no-print">Show this screen to a parent, or print/save a copy to share with them. Nothing is sent automatically.</p>
+  <h3 class="report-subject">Math</h3>
+  <div id="report-content"></div>
+</div>
 <!-- LEVEL SELECT -->
 <div class="screen" id="level-screen">
   <h2 style="font-size: 1.5rem; color: var(--brown); margin-bottom: 6px;">Choose Your Order</h2>
@@ -676,6 +737,7 @@ body::before {
     <div id="tricky-facts"></div>
 
     <div id="path-recommendation"></div>
+    <button class="btn btn-small btn-back" onclick="showScreen('report-screen')" style="margin: 12px 0;">Show my report card</button>
     <div class="results-buttons">
       <button class="btn btn-primary btn-small" onclick="showScreen('level-screen')">More Orders</button>
       <button class="btn btn-golden btn-small" onclick="showScreen('menu-screen')">Home</button>
@@ -952,6 +1014,143 @@ var state = {
   factsPool: [],         // facts eligible for this round (from level + SR)
 };
 
+// Report card: actual practice only; old records are kept as a separate snapshot.
+var REPORT_TOPICS = {addition:'Addition',subtraction:'Subtraction',multiply:'Multiplication',divide:'Division',decimals:'Decimals',fractions:'Fractions',shapes:'Shapes & Space',measurement:'Measurement',data:'Data & Graphs'};
+function reportLevel(id) {
+  var result=null;
+  Object.keys(TRACK_LEVELS).some(function(track){var level=TRACK_LEVELS[track].find(function(l){return l.id===id;});if(level){result={level:level,track:track};return true;}return false;});
+  return result;
+}
+function reportHistory(progress) {
+  var earlier=[], facts={};
+  Object.keys(progress.pathProgress).forEach(function(id){
+    var record=progress.pathProgress[id],found=reportLevel(id);
+    if(found && found.level.pathway && record && record.rounds>0)earlier.push({topic:found.level.pathway,label:found.level.name,grade:found.level.grade,rounds:record.rounds,independent:record.lastIndependent,correct:record.lastCorrect,kind:'round'});
+  });
+  Object.keys(progress.sr).forEach(function(key){
+    var record=progress.sr[key];if(!record || !(record.correct>0 || record.wrong>0))return;
+    var topic=key.startsWith('mul:')?'multiply':key.startsWith('div:')?'divide':key.split(':')[0],label,grade=null;
+    if(topic==='path'){
+      var id=key.split(':')[1],found=reportLevel(id);
+      if(!found)return;
+      if(progress.pathProgress[id] && progress.pathProgress[id].rounds>0)return;
+      topic=found.level.pathway;label=found.level.name;grade=found.level.grade;
+    }
+    if(!REPORT_TOPICS[topic])return;
+    var group=topic+':'+(label||'earlier');
+    if(!facts[group])facts[group]={topic:topic,label:label||REPORT_TOPICS[topic]+' practice',grade:grade,correct:0,kind:'facts'};
+    facts[group].correct+=Math.max(0,Number(record.correct)||0);
+  });
+  return earlier.concat(Object.values(facts));
+}
+function normalizeReport(progress) {
+  if(!progress.report || typeof progress.report!=='object' || Array.isArray(progress.report))return {version:1,startedAt:Date.now(),skills:{},earlier:reportHistory(progress)};
+  var report=progress.report;
+  if(!report.skills || typeof report.skills!=='object' || Array.isArray(report.skills))report.skills={};
+  if(!Array.isArray(report.earlier))report.earlier=[];
+  if(!Number.isFinite(report.startedAt))report.startedAt=Date.now();
+  return report;
+}
+function reportSkillLabel(level) {
+  if(level.pathway)return level.name;
+  var operation=level.topic==='fractions' || level.topic==='decimals' ? level.operation.charAt(0).toUpperCase()+level.operation.slice(1)+' · ' : '';
+  return operation+level.name+' · '+level.desc;
+}
+function recordReportOutcome(outcome) {
+  if(!state.roundActive || !state.currentProblem || state.reportRecorded || ['independent','supported','incorrect','timeout'].indexOf(outcome)===-1)return;
+  var found=reportLevel(state.levelId),mixed=state.track==='both',topic=mixed?state.currentProblem.type:state.track.split('_')[0];
+  if(!REPORT_TOPICS[topic])return;
+  var level=found && found.level;
+  if(!level && !mixed)return;
+  var progress=getProgress(),id=mixed?'mixed_'+topic:state.levelId,now=Date.now();
+  var skill=progress.report.skills[id];
+  if(!skill)skill=progress.report.skills[id]={id:id,topic:topic,track:mixed?topic:state.track,label:mixed?'Mixed '+REPORT_TOPICS[topic].toLowerCase():reportSkillLabel(level),grade:level && level.pathway?level.grade:null,independent:0,supported:0,incorrect:0,timeouts:0,recent:[],firstSeen:now,lastSeen:now};
+  skill[outcome==='timeout'?'timeouts':outcome]++;
+  skill.lastSeen=now;skill.recent.push(outcome);skill.recent=skill.recent.slice(-20);
+  saveProgressData(progress);
+  state.reportRecorded=true;
+}
+function reportStatus(recent) {
+  var answered=recent.filter(function(v){return v!=='timeout';}).slice(-10),timeouts=recent.filter(function(v){return v==='timeout';}).length;
+  if(timeouts>=3 && timeouts>answered.length)return 'Try more time';
+  if(answered.length<5)return 'Getting started';
+  var independent=answered.filter(function(v){return v==='independent';}).length,supported=answered.filter(function(v){return v==='supported';}).length;
+  if(independent/answered.length>=0.8)return 'Growing confidence';
+  if((independent+supported)/answered.length>=0.8)return 'Building independence';
+  return 'Practice together';
+}
+function reportNextStep(skill) {
+  if(skill.status==='Try more time')return 'Choose No timer so there is time to read, think, and use a hint.';
+  if(skill.status==='Getting started')return 'Try a few more questions. There is not enough practice yet to spot a pattern.';
+  if(skill.status==='Building independence')return 'Try a short round again. Think through the first step before asking for a hint.';
+  if(skill.status==='Practice together')return skill.grade?'Look at the worked example together, then try with help and No timer.':'Practice this level together with No timer. Talk through the hint before trying again.';
+  var found=reportLevel(skill.id),next=found && found.level.pathway && nextPathSkill(found.level);
+  return next?'A possible next step: '+next.name+' (Grade '+next.grade+').':'Keep practicing with varied questions, or try the next level when it feels comfortable.';
+}
+function buildReportData(progress) {
+  var report=progress.report||normalizeReport(progress),groups={},questions=0,answered=0,independent=0,supported=0,incorrect=0,timeouts=0;
+  function topic(id){if(!groups[id])groups[id]={id:id,name:REPORT_TOPICS[id],skills:[],earlier:[]};return groups[id];}
+  Object.keys(report.skills).forEach(function(id){
+    var raw=report.skills[id];if(!raw||!REPORT_TOPICS[raw.topic])return;
+    var skill=Object.assign({},raw);
+    ['independent','supported','incorrect','timeouts'].forEach(function(k){skill[k]=Math.max(0,Number(skill[k])||0);});
+    skill.answered=skill.independent+skill.supported+skill.incorrect;
+    skill.questions=skill.answered+skill.timeouts;if(!skill.questions)return;
+    skill.recent=Array.isArray(skill.recent)?skill.recent.filter(function(v){return ['independent','supported','incorrect','timeout'].indexOf(v)!==-1;}):[];
+    skill.status=reportStatus(skill.recent);skill.nextStep=reportNextStep(skill);
+    topic(skill.topic).skills.push(skill);questions+=skill.questions;answered+=skill.answered;independent+=skill.independent;supported+=skill.supported;incorrect+=skill.incorrect;timeouts+=skill.timeouts;
+  });
+  report.earlier.forEach(function(item){if(item&&REPORT_TOPICS[item.topic])topic(item.topic).earlier.push(item);});
+  var topics=Object.keys(REPORT_TOPICS).filter(function(id){return groups[id];}).map(function(id){var group=groups[id];group.skills.sort(function(a,b){return (a.grade||0)-(b.grade||0)||a.label.localeCompare(b.label);});return group;});
+  return {startedAt:report.startedAt,generatedAt:Date.now(),topics:topics,questions:questions,answered:answered,independent:independent,supported:supported,incorrect:incorrect,timeouts:timeouts};
+}
+function reportDate(timestamp){return new Date(timestamp).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}
+function earlierReportText(item){
+  var label=item.label+(item.grade?' · Grade '+item.grade:'');
+  if(item.kind==='round')return label+': '+item.rounds+' completed '+(item.rounds===1?'round':'rounds')+'. Last round: '+item.independent+'/10 on my own, '+item.correct+'/10 correct including help.';
+  return label+': '+(item.correct?item.correct+' recorded correct answers.':'Earlier practice recorded.')+' Help and timing details were not recorded.';
+}
+function reportText(report){
+  var lines=['BAKERY QUEST — MY REPORT CARD','Prepared '+reportDate(report.generatedAt),'Subject: Math','Only practice on this device is included. Untried topics are not scored.','Detailed recording began '+reportDate(report.startedAt)+'.',report.questions+' questions recorded: '+report.independent+' on my own, '+report.supported+' with help, '+report.incorrect+' to review, '+report.timeouts+' ran out of time.',''];
+  report.topics.forEach(function(topic){lines.push(topic.name.toUpperCase());topic.skills.forEach(function(skill){lines.push(skill.label+(skill.grade?' · Grade '+skill.grade:''),skill.status,skill.independent+'/'+skill.answered+' answered on my own; '+skill.supported+' with help; '+skill.incorrect+' to review; '+skill.timeouts+' ran out of time.','Next time: '+skill.nextStep,'Last practiced: '+reportDate(skill.lastSeen),'');});if(topic.earlier.length){lines.push('Earlier practice (separate from the detailed counts above):');topic.earlier.forEach(function(item){lines.push(earlierReportText(item));});lines.push('');}});
+  if(!report.topics.length)lines.push('No practice recorded yet. Try any topic to begin your report card.');
+  lines.push('On my own = correct first try without an in-app hint or chart. With help = correct after a hint, chart, or retry. Outside help cannot be detected.','Feedback uses up to the last 10 answered questions; fewer than 5 means Getting started. Timeouts do not count as incorrect answers.','This is a practice report, not a school grade or an assessment of everything a child knows. Grade labels describe the activities practiced, not the child’s overall grade level.');return lines.join('\n');
+}
+function downloadReport(){
+  var report=buildReportData(getProgress()),blob=new Blob([reportText(report)],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download='bakery-quest-report.txt';document.body.appendChild(link);link.click();link.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+function renderReport(){
+  var progress=getProgress();saveProgressData(progress); // Keep the pre-report history snapshot stable.
+  var report=buildReportData(progress),content=document.getElementById('report-content');content.replaceChildren();
+  document.getElementById('report-date').textContent='Prepared '+reportDate(report.generatedAt)+' · Practice on this device';
+  function el(tag,text,className){var node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;}
+  var overview=el('div',undefined,'report-overview');
+  [[report.independent,'On my own'],[report.supported,'With help'],[report.incorrect,'To review'],[report.timeouts,'Ran out of time']].forEach(function(pair){var box=el('div');box.appendChild(el('strong',String(pair[0])));box.appendChild(el('span',pair[1]));overview.appendChild(box);});content.appendChild(overview);
+  content.appendChild(el('p','Detailed practice recorded since '+reportDate(report.startedAt)+'. Earlier records appear separately below.','report-note'));
+  if(!report.topics.length){var empty=el('section',undefined,'report-topic');empty.appendChild(el('h3','Your report starts with what you try!'));empty.appendChild(el('p','Practice any topic. We’ll show what you did, what is getting easier, and what to try next. Untried topics won’t get a score.'));var start=el('button','Choose some practice','btn btn-small btn-teal');start.addEventListener('click',function(){showScreen('level-screen');});empty.appendChild(start);content.appendChild(empty);}
+  report.topics.forEach(function(topic){
+    var section=el('section',undefined,'report-topic');section.dataset.topic=topic.id;section.appendChild(el('h3',topic.name));
+    topic.skills.forEach(function(skill){
+      var card=el('article',undefined,'report-skill'),heading=el('div',undefined,'report-skill-heading');
+      heading.appendChild(el('h4',skill.label+(skill.grade?' · Grade '+skill.grade:'')));heading.appendChild(el('span',skill.status,'report-status'));card.appendChild(heading);
+      card.appendChild(el('p',skill.independent+' of '+skill.answered+' answered on my own · '+skill.supported+' with help · '+skill.incorrect+' to review','report-counts'));
+      if(skill.timeouts)card.appendChild(el('p',skill.timeouts+' '+(skill.timeouts===1?'question ran':'questions ran')+' out of time. These are separate from the answered questions.','report-note'));
+      var answered=skill.recent.filter(function(v){return v!=='timeout';});
+      if(answered.length>=10){var recent=answered.slice(-5).filter(function(v){return v==='independent';}).length,previous=answered.slice(-10,-5).filter(function(v){return v==='independent';}).length;card.appendChild(el('p','Recent practice: '+recent+' of the last 5 on my own; '+previous+' of the previous 5.','report-note'));}
+      card.appendChild(el('p','Next time: '+skill.nextStep,'report-next'));
+      card.appendChild(el('p','Last practiced '+reportDate(skill.lastSeen),'report-note'));
+      var practice=el('button','Practice this skill','btn btn-small btn-back report-no-print');practice.addEventListener('click',function(){var found=reportLevel(skill.id);if(found && found.level.pathway)openPathLesson(found.level);else{setTrack(skill.track);showScreen('level-screen');}});card.appendChild(practice);section.appendChild(card);
+    });
+    if(topic.earlier.length){var history=el('div',undefined,'report-history');history.appendChild(el('h4','Earlier practice'));topic.earlier.forEach(function(item){history.appendChild(el('p',earlierReportText(item)));});section.appendChild(history);}
+    content.appendChild(section);
+  });
+  var key=el('section',undefined,'report-key');key.appendChild(el('h3','How to read this card'));
+  key.appendChild(el('p','On my own means a correct first try without an in-app hint or chart. With help means a correct answer after a hint, chart, or retry. Help given outside the app is not detected.'));
+  key.appendChild(el('p','Feedback uses up to the last 10 answered questions in each skill; fewer than 5 means “Getting started.” Timeouts are shown separately and do not count as incorrect answers.'));
+  key.appendChild(el('p','Grade labels describe the activities practiced, not the child’s overall grade level. This is a practice report, not a school grade. Only topics tried on this device appear.'));content.appendChild(key);
+}
+
 // ═══════════════════════════════════════
 // PERSISTENCE
 // ═══════════════════════════════════════
@@ -970,6 +1169,7 @@ function loadProgress() {
   if ([0, 20, 40, 60].indexOf(progress.timerSeconds) === -1) progress.timerSeconds = PATIENCE_SECONDS;
   if (!progress.pathProgress || typeof progress.pathProgress !== 'object') progress.pathProgress = {};
   progress.bakery = normalizeBakery(progress);
+  progress.report = normalizeReport(progress);
   return progress;
 }
 
@@ -1342,9 +1542,11 @@ function generateProblem() {
 // SCREEN MANAGEMENT
 // ═══════════════════════════════════════
 function showScreen(id) {
+  if(id!=='results-screen'){clearTimeout(state.unlockTimer);state.unlockTimer=null;}
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
   if (id === 'shop-screen') renderShop();
+  if (id === 'report-screen') renderReport();
   if (id === 'level-screen') renderLevelSelect();
   if (id === 'chart-screen') buildChartTable('chart-table');
 }
@@ -1726,6 +1928,8 @@ function nextOrder() {
   }
 
   state.currentProblem = generateProblem();
+  state.reportRecorded = false;
+  state.reportHelpUsed = document.getElementById('game-chart').style.display !== 'none';
   state.attempts = 0;
   state.hintShown = false;
   state.hintPaused = false;
@@ -1844,6 +2048,7 @@ function startPatience() {
 }
 
 function timeUp() {
+  recordReportOutcome('timeout');
   state.answered = true;
   document.getElementById('answer-input').className = 'answer-input wrong';
   state.wrongFacts.push(state.currentProblem.type==='pathway' ? state.currentProblem.story : state.currentProblem.display);
@@ -1919,6 +2124,7 @@ function checkAnswer() {
     state.streak++;
     if (state.streak > state.bestStreak) state.bestStreak = state.streak;
 
+    recordReportOutcome(state.attempts===1 && !state.hintShown && !state.reportHelpUsed ? 'independent' : 'supported');
     // SR: promote the fact
     srRecordCorrect(state.currentProblem.srKey);
     // Refresh pool weights for next pick
@@ -1958,6 +2164,7 @@ function checkAnswer() {
     state.wrongFacts.push(state.currentProblem.type==='pathway' ? state.currentProblem.story : state.currentProblem.display);
     state.streak = 0;
 
+    recordReportOutcome('incorrect');
     // SR: demote the fact
     srRecordWrong(state.currentProblem.srKey);
     refreshPoolWeights();
@@ -2079,7 +2286,7 @@ function endRound() {
   showScreen('results-screen');
 
   if (unlockName) {
-    setTimeout(function() {
+    state.unlockTimer = setTimeout(function() {
       showUnlock(unlockName.icon, unlockName.name + ' Unlocked!', unlockName.desc);
     }, 800);
   }
@@ -2416,6 +2623,7 @@ function toggleGameChart() {
     chart.style.display = 'none';
     overlay.style.display = 'none';
   } else {
+    if(state.roundActive && !state.answered)state.reportHelpUsed=true;
     buildChartTable('game-chart-table');
     chart.style.display = 'block';
     overlay.style.display = 'block';
