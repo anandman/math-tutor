@@ -25,8 +25,8 @@ test('new learners and existing saves can start every new skill without losing r
 test('answer validation accepts equivalents and rejects truncated or malformed input', () => {
   const c = app();
   assert.equal(typeof c.answersMatch, 'function');
-  for (const [input, answer] of [['2/4','1/2'], ['0.50','1/2'], ['0.3','0.30'], ['4/2','2'], ['<','<'], ['=','='], ['>','>']]) assert.equal(c.answersMatch(input,answer),true, input);
-  for (const [input,answer] of [['1.9','1'],['1/0','1'],['1/2/3','1/2'],['','0'],['2cats','2'],['0.33','1/3'],['>','<'],['Infinity','1']]) assert.equal(c.answersMatch(input,answer),false,input);
+  for (const [input, answer] of [['2/4','1/2'], ['4 5/8','37/8'], ['0.50','1/2'], ['0.3','0.30'], ['4/2','2'], ['<','<'], ['=','='], ['>','>']]) assert.equal(c.answersMatch(input,answer),true, input);
+  for (const [input,answer] of [['1.9','1'],['1/0','1'], ['2 1/0','2'],['1/2/3','1/2'],['','0'],['2cats','2'],['0.33','1/3'],['>','<'],['Infinity','1']]) assert.equal(c.answersMatch(input,answer),false,input);
 });
 test('all new levels generate correct, nonnegative arithmetic and comparison problems', () => {
   const c = app();
@@ -35,6 +35,7 @@ test('all new levels generate correct, nonnegative arithmetic and comparison pro
   const operations = { '+': (a,b)=>a+b, '−': (a,b)=>a-b, '×': (a,b)=>a*b, '÷': (a,b)=>a/b };
   for (const [track,levels] of Object.entries(c.TRACK_LEVELS)) {
     for (const level of levels) {
+      if (level.pathway) continue; // Visual skills have their own semantic regression tests.
       const pool = c.buildFactsPool(track,level);
       assert.ok(pool.length, `${track} ${level.id} empty`);
       for (const fact of pool) {

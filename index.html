@@ -295,6 +295,25 @@ body::before {
 .shop-item-desc { font-size: 0.8rem; color: var(--brown); opacity: 0.7; font-weight: 600; }
 .shop-owned { font-family: 'Fredoka', sans-serif; font-weight: 700; color: var(--teal); }
 
+.path-diagram { display: block; width: 100%; max-width: 430px; max-height: 270px; margin: 8px auto; background: #fffaf2; border: 1px solid var(--peach); border-radius: 12px; }
+.path-answers { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%; }
+.path-answers > div { width: 100%; }
+.path-answers .btn { white-space: normal; }
+.graph-builder > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; }
+.graph-builder button { min-width: 40px; min-height: 40px; font-size: 1.3rem; background: var(--peach); border: 1px solid var(--brown); border-radius: 8px; cursor: pointer; }
+#lesson-screen { max-height: 100dvh; overflow-y: auto; gap: 12px; max-width: 650px; }
+#lesson-screen > * { flex-shrink: 0; }
+#lesson-title { margin-top: 10px; font-size: 1.3rem; text-align: center; }
+#lesson-question, #lesson-explanation, #lesson-feedback { line-height: 1.5; }
+#lesson-visual { width: 100%; }
+.lesson-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.grade-picker { margin: 10px 0; }
+#results-screen { max-height: 100dvh; overflow-y: auto; }
+.visual-round .customer-emoji, .visual-round .customer-name { display: none; }
+.visual-round .speech-bubble { margin-top: 0; }
+#game-screen.visual-round { justify-content: flex-start; }
+@media (max-width: 600px) { .visual-round .path-diagram { max-height: 225px; } #topic-picker .mode-btn { font-size: 0.85rem; padding: 10px 5px; } }
+
 /* A room to arrange and a collection to keep. */
 #shop-screen { max-width: 1060px; max-height: 100dvh; overflow-y: auto; align-items: stretch; }
 .bakery-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; }
@@ -542,7 +561,7 @@ body::before {
   <p class="choice-label" id="level-guide">Choose a level • Get 7 of 10 right to unlock the next!</p>
 
   <label class="pace-control" for="level-pace">Time per order <select id="level-pace" onchange="setPace(Number(this.value))"><option value="20">20 seconds</option><option value="40">40 seconds</option><option value="60">60 seconds</option><option value="0">No timer</option></select></label>
-  <p class="choice-label">Take your time! Choose No timer to practice without a countdown.</p>
+  <p class="choice-label" id="pace-advice">Take your time! Choose No timer to practice without a countdown.</p>
   <div class="level-grid" id="level-grid"></div>
 
   <div id="both-mode-area" style="width: 100%; text-align: center; margin-top: 4px;"></div>
@@ -550,6 +569,17 @@ body::before {
   <button class="btn btn-small btn-back" onclick="showScreen('menu-screen')" style="margin-top: 12px;">Back</button>
 </div>
 
+<!-- WORKED EXAMPLE / GUIDED PRACTICE -->
+<div class="screen" id="lesson-screen">
+  <button class="btn btn-small btn-back" onclick="showScreen('level-screen')">← Choose a skill</button>
+  <h2 id="lesson-title"></h2>
+  <p id="lesson-note" class="choice-label">Watch an example, try with help, or jump into practice. No timer here.</p>
+  <p id="lesson-question"></p><div id="lesson-visual"></div>
+  <p id="lesson-explanation" class="hint-box"></p>
+  <div id="lesson-answers" class="path-answers"></div>
+  <p id="lesson-feedback" role="status"></p>
+  <div class="lesson-actions"><button id="guided-try" class="btn btn-small btn-back" onclick="tryGuidedLesson()">Try with help</button><button class="btn btn-small btn-teal" id="start-path-practice" onclick="beginPathPractice()">Start practice</button></div>
+</div>
 <!-- GAME SCREEN -->
 <div class="screen" id="game-screen">
   <div class="round-controls"><button id="round-home" class="btn btn-small btn-back" onclick="quitGame()">← Home</button><label class="pace-control" for="round-pace">Time <select id="round-pace" onchange="setPace(Number(this.value))"><option value="20">20 seconds</option><option value="40">40 seconds</option><option value="60">60 seconds</option><option value="0">No timer</option></select></label><small>Leave anytime — keep your earned tips.</small></div>
@@ -574,6 +604,7 @@ body::before {
         <div class="speech-bubble" id="speech-bubble">
           I need 4 trays with 6 muffins each!
         </div>
+        <div id="path-visual" hidden></div>
         <div class="math-problem" id="math-problem">4 x 6 = ?</div>
         <div id="question-array"></div>
       </div>
@@ -585,6 +616,8 @@ body::before {
 
     <div class="game-right">
       <div class="answer-area">
+        <div id="path-answers" class="path-answers" hidden></div>
+        <button id="path-hint" class="btn btn-small btn-back" onclick="showPathHint()" hidden>Show me a hint</button>
         <input type="text" class="answer-input" id="answer-input" inputmode="numeric" autocomplete="off" aria-label="Your answer" aria-describedby="answer-help" maxlength="12">
         <p id="answer-help" class="answer-help"></p>
         <div id="comparison-pad" class="comparison-pad" hidden>
@@ -606,6 +639,7 @@ body::before {
           <button class="numpad-btn" onclick="numpadPress(0)">0</button>
           <button class="numpad-btn submit-btn" onclick="checkAnswer()">GO</button>
           <button class="numpad-btn" id="decimal-key" aria-label="Decimal point" onclick="numpadPress('.')" hidden>.</button>
+          <button class="numpad-btn" id="mixed-space-key" aria-label="Space between whole number and fraction" onclick="numpadPress(' ')" hidden>Space</button>
           <button class="numpad-btn" id="fraction-key" aria-label="Fraction slash" onclick="numpadPress('/')" hidden>/</button>
         </div>
       </div>
@@ -641,6 +675,7 @@ body::before {
 
     <div id="tricky-facts"></div>
 
+    <div id="path-recommendation"></div>
     <div class="results-buttons">
       <button class="btn btn-primary btn-small" onclick="showScreen('level-screen')">More Orders</button>
       <button class="btn btn-golden btn-small" onclick="showScreen('menu-screen')">Home</button>
@@ -768,6 +803,127 @@ var SKILL_GROUPS = [
   });
 });
 
+// Visual pathways: grade labels are entry points, never gates.
+var PATHWAYS = {
+  shapes: {name: 'Shapes & Space', grades: [
+    [['shape_name','Cookie shapes','Name shapes in different sizes and positions'],['shape_build','Shape puzzles','See the whole made from smaller pieces'],['equal_two','Fair shares','Tell equal shares from unequal shares']],
+    [['shape_sides','Sides & corners','Count sides and vertices'],['solid_name','Bakery packages','Recognize cubes, spheres, cylinders, and cones'],['equal_shares','Share the brownies','Halves, thirds, and fourths'],['tile_count','Brownie trays','Count equal squares in rows and columns']],
+    [['quadrilaterals','Shape families','Squares, rectangles, and rhombuses'],['unit_fraction','One equal share','Connect one piece to a unit fraction'],['shaded_fraction','Fraction designs','Name the fraction of a whole that is shaded']],
+    [['line_types','Lines in the bakery','Parallel, perpendicular, and intersecting lines'],['angle_types','Corner detective','Acute, right, and obtuse angles'],['symmetry','Symmetry studio','Count lines that fold a shape into matching halves']]
+  ]},
+  measurement: {name: 'Measurement', grades: [
+    [['length_compare','Longer or shorter','Compare two ribbons'],['unit_count','Measure with blocks','Count equal units without gaps'],['length_order','Ribbon lineup','Order three ribbons by length']],
+    [['ruler_read','Ruler workshop','Measure from zero in centimeters'],['ruler_offset','Length differences','Measure ribbons that start beyond zero'],['choose_units','Choose a unit','Pick a sensible unit for a real object']],
+    [['area_count','Tile the bakery','Measure area in square units'],['perimeter','Frame the tray','Find the distance around a rectangle'],['mass_volume','Weigh & pour','Solve problems with grams and liters']],
+    [['angle_measure','Angle workshop','Read a protractor in degrees'],['convert_units','Unit exchange','Convert within metric or customary units'],['area_missing','Design the floor','Find a missing side from the area'],['compound_area','Two-room bakery','Add the areas of adjoining rectangles']]
+  ]},
+  data: {name: 'Data & Graphs', grades: [
+    [['picture_count','Count the orders','Read a picture chart'],['picture_most','Favorite treats','Compare categories'],['picture_difference','How many more?','Compare two groups of treats']],
+    [['bars_read','Read the sales chart','Read a bar graph with a scale of one'],['graph_build','Build the sales chart','Set bars to match an order list'],['line_whole','Baguette lengths','Read a whole-number line plot']],
+    [['scaled_bars','Bigger sales charts','Read bars with scales of two or five'],['scaled_picture','Picture keys','Use a key where one picture means several treats'],['line_quarter','Ribbons on a line plot','Read halves and quarters of an inch']],
+    [['line_eighth','Precise measurements','Read a plot marked in eighths'],['plot_range','Longest and shortest','Subtract fractional measurements'],['plot_total','Ribbon inventory','Add measurements from a fractional line plot']]
+  ]}
+};
+Object.keys(PATHWAYS).forEach(function(topic) {
+  TOPICS.push([topic, PATHWAYS[topic].name]);
+  PATHWAYS[topic].grades.forEach(function(skills, i) {
+    var track = topic + '_g' + (i + 1);
+    TRACK_LEVELS[track] = skills.map(function(s, j) {
+      return {id: track + '_' + s[0], track: track, pathway: topic, grade: i + 1, skill: s[0], name: s[1], desc: s[2], icon: ['🍪','📏','📊'][Object.keys(PATHWAYS).indexOf(topic)], open: true, step: j};
+    });
+  });
+});
+var selectedLesson = null;
+var lessonProblem = null;
+var lessonGuided = false;
+var lessonRevealed = false;
+var selectedPathGrade = {shapes: 1, measurement: 1, data: 1};
+
+function measureText(n,d){var whole=Math.floor(n/d),remainder=n%d;return whole && remainder ? whole+' '+fractionText(remainder,d) : fractionText(n,d);}
+function makePathProblem(level, n) {
+  var k = level.skill, a = 3 + n % 5, b = 2 + n % 3;
+  var p = {type: 'pathway', skill: k, display: '', story: '', answer: '', hintText: '', explanation: '', visual: null};
+  function q(story, answer, hint, visual, choices) {
+    p.story = story; p.answer = String(answer); p.hintText = hint; p.visual = visual;
+    p.explanation = hint + ' The answer is ' + answer + '.';
+    if (choices) p.choices = choices;
+  }
+  var shapes = ['Triangle','Square','Rectangle','Pentagon','Hexagon','Circle'];
+  var sides = [3,4,4,5,6,0];
+  var si = n % shapes.length;
+  if (k === 'shape_name') q('Which cookie-cutter shape is this?', shapes[si], 'Count the straight sides and corners. Turning a shape does not change its name.', {kind:'shape',shape:shapes[si],turn:n%2?20:0}, shapes);
+  if (k === 'shape_build') {
+    var square = n%2===0;
+    q('Two pieces fit together without gaps. What shape is the whole cookie?',square?'Square':'Rectangle','Look at the outside edge, not the line between the pieces.',{kind:'shape',shape:square?'Square':'Rectangle',split:true},['Triangle','Square','Rectangle','Hexagon']);
+  }
+  if (k === 'equal_two') q('Could these two brownie pieces be fair shares?',n%2===0?'Yes':'No','Fair shares have equal area. A bigger piece is not an equal share.',{kind:'shares',parts:2,shaded:1,unequal:n%2===1},['Yes','No']);
+  if (k === 'shape_sides') q('How many '+(n%2?'corners':'straight sides')+' does this cookie have?',sides[si],'Trace around the outside once. Count each straight side or corner just once.',{kind:'shape',shape:shapes[si],turn:n%2?20:0});
+  if (k === 'equal_shares' || k === 'unit_fraction' || k === 'shaded_fraction') {
+    var parts=2+n%(k==='shaded_fraction'?5:3), shaded=k==='shaded_fraction'?1+n%parts:1;
+    var answer=k==='equal_shares'?['','', 'Halves','Thirds','Fourths'][parts]:fractionText(shaded,parts);
+    q(k==='equal_shares'?'What do we call these equal shares of a brownie?':'What fraction of the whole brownie is shaded?',answer,'The denominator counts ALL equal pieces. The numerator counts the shaded pieces.',{kind:'shares',parts:parts,shaded:shaded},k==='equal_shares'?['Halves','Thirds','Fourths']:null);
+    p.fractionInput=k!=='equal_shares';
+  }
+  if (k==='tile_count' || k==='area_count') q(k==='tile_count'?'How many equal brownie squares fill this tray?':'Each tile covers 1 square meter. What is the floor area in square meters?',a*b,'Count rows and columns. There are '+b+' rows with '+a+' squares in each. Multiply or count all the squares.',{kind:'grid',cols:a,rows:b,unit:k==='area_count'?'m':'squares'});
+  if (k==='solid_name') {var solid=['Cube','Sphere','Cylinder','Cone'][n%4];q('Which solid shape does this bakery package look like?',solid,'A cube has six square faces. A sphere is round all over. A cylinder has two circular ends. A cone has a circular base and a point.',{kind:'solid',shape:solid},['Cube','Sphere','Cylinder','Cone']);}
+  if (k==='quadrilaterals') {var shape=['Square','Rectangle','Rhombus','Triangle','Pentagon','Hexagon'][n%6];q('Which shape family does this cookie belong to?',n%6<3?'Quadrilaterals':shape==='Triangle'?'Triangles':shape==='Pentagon'?'Pentagons':'Hexagons','A quadrilateral has exactly four straight sides. Squares, rectangles, and rhombuses all belong. Triangles have three, pentagons five, and hexagons six.',{kind:'shape',shape:shape},['Triangles','Quadrilaterals','Pentagons','Hexagons']);}
+  if (k==='line_types') {var types=['Parallel','Perpendicular','Intersecting, not perpendicular'];q('How are these two straight icing lines related?',types[n%3],'Parallel lines never meet. Perpendicular lines meet at a square corner (90°). Other crossing lines need not make a square corner.',{kind:'lines',relation:n%3},types);}
+  if (k==='angle_types') {var angle=[30,60,90,120,150][n%5];q('What kind of angle does this bakery sign have?',angle<90?'Acute':angle===90?'Right':'Obtuse','Compare the opening with a square corner: less than 90° is acute; exactly 90° is right; between 90° and 180° is obtuse.',{kind:'angle',degrees:angle,protractor:false},['Acute','Right','Obtuse']);}
+  if (k==='symmetry') {var shape=['Square','Rectangle','Triangle','Scalene triangle'][n%4];q('How many lines of symmetry does this cookie have?', [4,2,3,0][n%4],'Imagine folding the cookie so both halves match exactly. Count every possible straight fold line.',{kind:'shape',shape:shape,turn:0});}
+  if (k==='length_compare') q('Which ribbon is longer?',a>b?'A':a<b?'B':'Same length','Both ribbons start at the same line. Compare their other ends.',{kind:'lengths',values:[a,b],units:false},['A','B','Same length']);
+  if (k==='unit_count') q('How many equal blocks long is the ribbon?',a,'Count the spaces covered by the blocks, not the boundary lines. Leave no gaps or overlaps.',{kind:'lengths',values:[a],units:true});
+  if (k==='length_order') {var values=[a+3,a,a+1];if(n%2)values.reverse();var order=[0,1,2].sort(function(x,y){return values[x]-values[y];}).map(function(i){return ['A','B','C'][i];}).join(', ');q('Choose the ribbons from shortest to longest.',order,'Start with the ribbon whose end is closest to the starting line.',{kind:'lengths',values:values,units:false},['B, C, A','B, A, C','A, B, C','C, B, A']);}
+  if (k==='ruler_read' || k==='ruler_offset') {var start=k==='ruler_offset'?2+n%3:0;q('How long is the gift ribbon in centimeters?',a,'Subtract the starting mark from the ending mark: '+(start+a)+' − '+start+'. Count centimeter spaces, not tick marks.',{kind:'ruler',start:start,end:start+a,max:12,step:1,unit:'cm'});}
+  if (k==='choose_units') {var contexts=[['a cookie','Centimeters'],['the length of the bakery room','Meters'],['a short gift ribbon','Inches'],['the height of a doorway','Feet']][n%4];q('Which unit is more sensible for measuring '+contexts[0]+'?',contexts[1],'Small objects need small units. Room-sized lengths need larger units. Use the unit system in the choices.',{kind:'label',text:contexts[0],icon:n%2?'🏠':'🍪'},n%4<2?['Centimeters','Meters']:['Inches','Feet']);}
+  if (k==='perimeter') q('How many centimeters of trim go all the way around this tray?',2*(a+b),'Add all four sides: '+a+' + '+b+' + '+a+' + '+b+'. Opposite sides of a rectangle are equal.',{kind:'rectangle',width:a,height:b,unit:'cm'});
+  if (k==='mass_volume') {var liquid=n%2===0;q(liquid?'We pour '+a+' liters of milk and then '+b+' more liters. How many liters altogether?':'We have '+(a*b)+' grams of sugar and split it equally among '+b+' bowls. How many grams per bowl?',liquid?a+b:a,liquid?'Both amounts use liters. Add the amounts.':'Divide the total grams by the number of equal bowls.',{kind:'quantities',values:liquid?[a,b]:[a*b,b],labels:liquid?['liters','liters']:['grams','bowls'],icon:liquid?'🥛':'🥣'});}
+  if (k==='angle_measure') {var degrees=30+n%6*20;q('Measure the opening of the sign in degrees.',degrees,'Start at 0° on the right-hand ray. Follow the protractor scale upward to the other ray.',{kind:'angle',degrees:degrees,protractor:true});}
+  if (k==='convert_units') {var units=[['m','cm',100],['kg','g',1000],['L','mL',1000],['ft','in',12],['lb','oz',16]][n%5],count=2+n%5;q('We have '+count+' '+units[0]+' of '+(n%5===1||n%5===4?'flour':n%5===2?'milk':'ribbon')+'. How many '+units[1]+' is that?',count*units[2],'Each '+units[0]+' contains '+units[2]+' '+units[1]+'. Multiply the number of larger units by '+units[2]+'.',{kind:'label',text:'1 '+units[0]+' = '+units[2]+' '+units[1],icon:'📏'});}
+  if (k==='area_missing') q('This bakery floor has area '+a*b+' square meters and height '+b+' meters. What is its width in meters?',a,'Area = width × height. Divide the area by the known side.',{kind:'rectangle',width:a,height:b,unit:'m',hideWidth:true,area:a*b});
+  if (k==='compound_area') q('These two rooms share an edge without overlapping. What is their total area in square meters?',a*b+(b+1)*b,'Find each rectangle’s area, then add the areas. Do not count their shared edge as extra space.',{kind:'compound',left:a,right:b+1,height:b});
+  var dataSkills=['picture_count','picture_most','picture_difference','bars_read','graph_build','scaled_bars','scaled_picture'];
+  if (dataSkills.indexOf(k)!==-1) {
+    var counts=[4+n%4,2+n%3,3+n%2],scale=k==='scaled_bars'||k==='scaled_picture'?(n%2?5:2):1;
+    var values=counts.map(function(v){return v*scale;}),labels=['Cookies','Muffins','Donuts'];
+    var visual={kind:k.indexOf('picture')===0||k==='scaled_picture'?'picture':'bars',values:values,labels:labels,scale:scale};
+    if(k==='picture_most') {values=[a+3,a,a+1];if(n%2)values.reverse();visual.values=values;q('Which treat sold the most?',labels[values.indexOf(Math.max.apply(null,values))],'Compare the number of pictures in each row.',visual,labels);}
+    else if(k==='picture_difference')q('How many more cookies than muffins were sold?',values[0]-values[1],'Match one cookie with one muffin. Count the extra cookies, or subtract.',visual);
+    else if(k==='graph_build') {q('Build a bar graph for these orders: '+values.map(function(v,i){return labels[i]+' '+v;}).join(', ')+'.',values.join(','),'Use + and − to make each bar match its order count. One step is one treat.',{kind:'order_list',values:values,labels:labels});p.builder={values:values,labels:labels};}
+    else q('How many '+labels[n%3].toLowerCase()+' were sold?',values[n%3],scale===1?'Read the category and count pictures or follow the bar to the scale.':'Check the key or scale: each picture or interval means '+scale+' treats.',visual);
+  }
+  if (['line_whole','line_quarter','line_eighth','plot_range','plot_total'].indexOf(k)!==-1) {
+    var denominator=k==='line_whole'?1:k==='line_quarter'?4:8;
+    var base=(k==='line_whole'?2:denominator)+n%3, high=3+n%3;
+    var positions=[base,base+1,base+1,base+high],counts=[1,2,0,0,0,0];counts[high]=1;
+    var visual={kind:'plot',base:base,denominator:denominator,counts:counts,unit:'inches'};
+    if (k==='plot_range') q('What is the difference in inches between the longest and shortest ribbons?',fractionText(high,denominator),'Find the rightmost and leftmost X. Subtract their lengths; keep the common denominator.',visual);
+    else if(k==='plot_total') q('What is the total length of all four ribbons in inches?',fractionText(positions.reduce(function(x,y){return x+y;},0),denominator),'Each X is one ribbon. Add the four lengths, counting the repeated length twice.',visual);
+    else {var at=n%4;q('How many ribbons measure '+measureText(base+at,denominator)+' inches?',counts[at],'Each X means one ribbon. Find the labeled length, then count the Xs directly above it.',visual);}
+    p.fractionInput=k==='plot_range'||k==='plot_total';
+  }
+  if (!p.visual) throw new Error('Unknown pathway skill: '+k);
+  if(p.fractionInput && /^\d+\/\d+$/.test(p.answer)){var parts=p.answer.split('/').map(Number);p.explanation=p.hintText+' The answer is '+measureText(parts[0],parts[1])+'.';}
+  p.srKey='path:'+level.id+':'+n;
+  return p;
+}
+function buildPathPool(level) {
+  var progress=getProgress();
+  return Array.from({length:24},function(_,n){var p=makePathProblem(level,n);return {key:p.srKey,weight:SR_WEIGHTS[getSRData(progress,p.srKey).box],problem:p};});
+}
+function pathAnswerMatches(problem, raw) {
+  if (problem.choices || problem.builder) return String(raw)===String(problem.answer);
+  return answersMatch(raw,problem.answer);
+}
+function nextPathSkill(level) {
+  var levels=TRACK_LEVELS[level.track],i=levels.findIndex(function(l){return l.id===level.id;});
+  return levels[i+1] || (TRACK_LEVELS[level.pathway+'_g'+(level.grade+1)]||[])[0] || null;
+}
+function recordPathResult(level, correct, independent) {
+  var progress=getProgress(),old=progress.pathProgress[level.id]||{rounds:0,bestIndependent:0};
+  progress.pathProgress[level.id]={rounds:old.rounds+1,lastCorrect:correct,lastIndependent:independent,bestIndependent:Math.max(old.bestIndependent,independent),ready:independent>=8};
+  saveProgressData(progress);
+}
+
 // ═══════════════════════════════════════
 // GAME STATE
 // ═══════════════════════════════════════
@@ -812,6 +968,7 @@ function loadProgress() {
   if (!progress.sr || typeof progress.sr !== 'object') progress.sr = {};
   if (!Number.isFinite(progress.totalTips)) progress.totalTips = 0;
   if ([0, 20, 40, 60].indexOf(progress.timerSeconds) === -1) progress.timerSeconds = PATIENCE_SECONDS;
+  if (!progress.pathProgress || typeof progress.pathProgress !== 'object') progress.pathProgress = {};
   progress.bakery = normalizeBakery(progress);
   return progress;
 }
@@ -864,6 +1021,7 @@ function srRecordWrong(key) {
 
 // Build weighted pool of facts for a given level
 function buildFactsPool(track, levelDef) {
+  if (levelDef.pathway) return buildPathPool(levelDef);
   if (levelDef.topic) return buildTopicPool(levelDef);
   var progress = getProgress();
   var pool = [];
@@ -1130,6 +1288,8 @@ function buildTopicPool(level) {
 function parseAnswer(text) {
   text = String(text).trim();
   if (/^[<=>]$/.test(text)) return text;
+  var mixed=text.match(/^(\d{1,4})\s+(\d{1,4})\s*\/\s*(\d{1,4})$/);
+  if(mixed){var whole=Number(mixed[1]),top=Number(mixed[2]),bottom=Number(mixed[3]);return bottom>0?[whole*bottom+top,bottom]:null;}
   if (/^\d{1,5}\s*\/\s*\d{1,5}$/.test(text)) {
     var parts = text.split('/').map(Number);
     return parts[1] > 0 ? parts : null;
@@ -1191,8 +1351,196 @@ function showScreen(id) {
 
 function setTrack(track) {
   state.track = track;
+  if (PATHWAYS[track.split('_')[0]]) selectedPathGrade[track.split('_')[0]]=Number(track.split('_g')[1]);
   renderLevelSelect();
 }
+function visualNode(tag,attrs,text) {
+  var node=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  Object.keys(attrs||{}).forEach(function(k){node.setAttribute(k,attrs[k]);});
+  if(text!==undefined)node.textContent=text;
+  return node;
+}
+function renderPathVisual(container, v, hint) {
+  container.replaceChildren();
+  var svg=visualNode('svg',{viewBox:'0 0 400 250',role:'img','aria-label':v.description||'Bakery math diagram: '+v.kind,'class':'path-diagram'+(hint?' diagram-hint':'')});
+  var stroke='#69452e',fill='#f3b97c',accent='#287963';
+  function line(x1,y1,x2,y2,color,width){svg.appendChild(visualNode('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:color||stroke,'stroke-width':width||2}));}
+  function rect(x,y,w,h,color){svg.appendChild(visualNode('rect',{x:x,y:y,width:w,height:h,fill:color||fill,stroke:stroke,'stroke-width':2}));}
+  function label(x,y,text,size,color){svg.appendChild(visualNode('text',{x:x,y:y,'text-anchor':'middle','font-size':size||16,fill:color||stroke,'font-family':'sans-serif'},text));}
+  function shapePoints(name){
+    if(name==='Rectangle')return [[75,65],[325,65],[325,185],[75,185]];
+    if(name==='Rhombus')return [[75,125],[200,65],[325,125],[200,185]];
+    if(name==='Scalene triangle')return [[65,190],[330,190],[130,50]];
+    var sides={Triangle:3,Square:4,Pentagon:5,Hexagon:6}[name];
+    return Array.from({length:sides},function(_,i){var angle=(i*360/sides-90+(name==='Square'?45:0))*Math.PI/180;return [200+90*Math.cos(angle),125+90*Math.sin(angle)];});
+  }
+  if(v.kind==='shape' && v.shape==='Circle'){svg.appendChild(visualNode('circle',{cx:200,cy:125,r:85,fill:fill,stroke:stroke,'stroke-width':3}));}
+  if(v.kind==='shape' && v.shape!=='Circle') {
+    var pts=shapePoints(v.shape),polygon=visualNode('polygon',{points:pts.map(function(p){return p.join(',');}).join(' '),fill:fill,stroke:stroke,'stroke-width':3,transform:'rotate('+(v.turn||0)+' 200 125)'});svg.appendChild(polygon);
+    if(v.split){line(pts[0][0],pts[0][1],pts[2][0],pts[2][1],accent,3);}
+    if(hint)pts.forEach(function(p,i){svg.appendChild(visualNode('circle',{cx:p[0],cy:p[1],r:5,fill:accent,transform:'rotate('+(v.turn||0)+' 200 125)'}));var angle=(v.turn||0)*Math.PI/180;var x=200+(p[0]-200)*Math.cos(angle)-(p[1]-125)*Math.sin(angle),y=125+(p[0]-200)*Math.sin(angle)+(p[1]-125)*Math.cos(angle);label(x,y-10,i+1,16,accent);});
+  }
+  if(v.kind==='solid') {
+    if(v.shape==='Cube'){rect(120,85,120,120);svg.appendChild(visualNode('polygon',{points:'120,85 170,45 290,45 240,85',fill:'#ffe3b5',stroke:stroke,'stroke-width':2}));svg.appendChild(visualNode('polygon',{points:'240,85 290,45 290,165 240,205',fill:'#dba16a',stroke:stroke,'stroke-width':2}));}
+    if(v.shape==='Sphere'){svg.appendChild(visualNode('circle',{cx:200,cy:125,r:80,fill:fill,stroke:stroke,'stroke-width':2}));svg.appendChild(visualNode('ellipse',{cx:180,cy:100,rx:30,ry:50,fill:'#ffe3b5'}));}
+    if(v.shape==='Cylinder'){rect(125,65,150,120);svg.appendChild(visualNode('ellipse',{cx:200,cy:185,rx:75,ry:25,fill:fill,stroke:stroke,'stroke-width':2}));svg.appendChild(visualNode('ellipse',{cx:200,cy:65,rx:75,ry:25,fill:'#ffe3b5',stroke:stroke,'stroke-width':2}));}
+    if(v.shape==='Cone'){svg.appendChild(visualNode('polygon',{points:'200,35 110,195 290,195',fill:fill,stroke:stroke,'stroke-width':2}));svg.appendChild(visualNode('ellipse',{cx:200,cy:195,rx:90,ry:25,fill:'#ffe3b5',stroke:stroke,'stroke-width':2}));}
+  }
+  if(v.kind==='shares') {
+    var widths=v.unequal?[75,225]:Array(v.parts).fill(300/v.parts),x=50;
+    widths.forEach(function(w,i){rect(x,65,w,120,i<v.shaded?accent:'#fff6e8');if(hint)label(x+w/2,130,i+1,18,i<v.shaded?'white':stroke);x+=w;});
+  }
+  if(v.kind==='grid') {
+    var cell=Math.min(40,300/v.cols,170/v.rows),left=(400-v.cols*cell)/2,top=35;
+    for(var row=0;row<v.rows;row++)for(var col=0;col<v.cols;col++){rect(left+col*cell,top+row*cell,cell,cell);if(hint)label(left+(col+0.5)*cell,top+(row+0.65)*cell,row*v.cols+col+1,12);}
+    label(200,top+v.rows*cell+25,v.cols+' columns · '+v.rows+' rows');
+  }
+  if(v.kind==='lengths') {
+    v.values.forEach(function(value,i){var y=38+i*62;label(20,y+22,['A','B','C'][i]);rect(40,y,value*26,25,accent);if(v.units){for(var j=0;j<value;j++){rect(40+j*26,y+30,26,25,'#fff6e8');if(hint)label(53+j*26,y+48,j+1,13);}}});
+    if(!v.units)line(40,25,40,225,'#ba6956',2);
+  }
+  if(v.kind==='ruler') {
+    rect(35+v.start*27,60,(v.end-v.start)*27,26,accent);
+    rect(35,100,v.max*27,65,'#fff0ce');
+    for(var i=0;i<=v.max;i++){var x=35+i*27;line(x,100,x,120);label(x,145,i,16);}
+    label(200,195,'Ruler marked in '+v.unit+' (drawing, not actual size)',13);
+    if(hint)for(var i=v.start;i<v.end;i++)label(48.5+i*27,95,i-v.start+1,13,accent);
+  }
+  if(v.kind==='lines') {
+    if(v.relation===0){line(65,80,335,80);line(65,170,335,170);}
+    else {line(50,130,350,130);if(v.relation===1){line(200,30,200,225);line(200,110,220,110,accent);line(220,110,220,130,accent);}else line(75,220,325,40);}
+    label(200,245,'Imagine the straight lines extending further.',13);
+  }
+  if(v.kind==='angle') {
+    var cx=190,cy=210,r=150;
+    if(v.protractor){svg.appendChild(visualNode('path',{d:'M '+(cx-r)+' '+cy+' A '+r+' '+r+' 0 0 1 '+(cx+r)+' '+cy,fill:'#fff6e8',stroke:stroke}));
+      for(var d=0;d<=180;d+=10){var a=d*Math.PI/180;line(cx+(r-8)*Math.cos(a),cy-(r-8)*Math.sin(a),cx+r*Math.cos(a),cy-r*Math.sin(a));if(d%30===0||d===v.degrees)label(cx+(r+17)*Math.cos(a),cy-(r+17)*Math.sin(a)+5,d+'°',12);}
+    }
+    var a=v.degrees*Math.PI/180;
+    line(cx,cy,cx+r,cy,accent,4);line(cx,cy,cx+r*Math.cos(a),cy-r*Math.sin(a),accent,4);
+    svg.appendChild(visualNode('circle',{cx:cx,cy:cy,r:4,fill:stroke}));
+    if(!v.protractor && v.degrees===90){line(cx+20,cy,cx+20,cy-20);line(cx+20,cy-20,cx,cy-20);}
+    label(200,244,v.protractor?'Start at 0° on the right.':'Compare the opening to a square corner.',13);
+  }
+  if(v.kind==='rectangle') {
+    var w=v.width*32,h=v.height*32,x=(400-w)/2,y=(225-h)/2;rect(x,y,w,h);
+    label(200,y-12,(v.hideWidth?'?':v.width)+' '+v.unit);label(x+w+28,y+h/2,v.height+' '+v.unit,14);
+    if(v.area)label(200,y+h/2,v.area+' m²');
+    if(hint&&!v.hideWidth){label(200,y+h+24,v.width+' '+v.unit);label(x-28,y+h/2,v.height+' '+v.unit,14);}
+  }
+  if(v.kind==='compound') {
+    var scale=300/(v.left+v.right),y=65,h=v.height*scale;
+    rect(50,y,v.left*scale,h,fill);rect(50+v.left*scale,y,v.right*scale,h,'#b8e6d0');
+    label(50+v.left*scale/2,50,v.left+' m');label(50+(v.left+v.right/2)*scale,50,v.right+' m');label(25,y+h/2,v.height+' m',13);
+  }
+  if(v.kind==='label') {label(200,105,v.icon,55);label(200,160,v.text,19);}
+  if(v.kind==='quantities'){v.values.forEach(function(value,i){label(110+i*180,95,v.icon,50);label(110+i*180,155,value+' '+v.labels[i],22);});}
+  if(v.kind==='picture') {
+    label(200,22,'Key: each ● = '+v.scale+' '+(v.scale===1?'treat':'treats'),15,accent);
+    v.values.forEach(function(value,i){label(55,65+i*61,v.labels[i],13);for(var j=0;j<value/v.scale;j++)svg.appendChild(visualNode('circle',{cx:120+j*30,cy:60+i*61,r:10,fill:accent}));});
+  }
+  if(v.kind==='bars') {
+    var max=Math.max.apply(null,v.values),step=v.scale,top=Math.max(step,Math.ceil(max/step)*step);
+    for(var tick=0;tick<=top;tick+=step){var y=208-tick/top*165;line(48,y,370,y,'#d8c7b4',1);label(29,y+5,tick,13);}
+    v.values.forEach(function(value,i){var h=value/top*165;rect(75+i*105,208-h,55,h,accent);label(102+i*105,235,v.labels[i],13);});
+    label(200,20,'Treats sold · each interval = '+step,14);
+  }
+  if(v.kind==='plot') {
+    line(30,200,370,200);
+    v.counts.forEach(function(count,i){var x=35+i*66;line(x,195,x,207);label(x,229,measureText(v.base+i,v.denominator),14);for(var j=0;j<count;j++)label(x,180-j*32,'×',29,accent);});
+    label(200,30,'Ribbon lengths ('+v.unit+')',17);label(200,55,'Each × represents one ribbon.',13);
+  }
+  if(v.kind==='order_list') {label(200,35,'Today’s orders',20);v.values.forEach(function(value,i){label(200,85+i*55,v.labels[i]+': '+value,23);});}
+  container.appendChild(svg);
+}
+function renderPathAnswer(container, problem, submit) {
+  container.replaceChildren();
+  if(problem.choices) {
+    // Rotate choices to avoid a predictable correct-answer position.
+    var choices=problem.choices.slice(),offset=Math.floor(Math.random()*choices.length);
+    choices=choices.slice(offset).concat(choices.slice(0,offset));
+    choices.forEach(function(choice){var button=document.createElement('button');button.className='btn btn-small btn-back';button.textContent=choice;button.addEventListener('click',function(){submit(choice);});container.appendChild(button);});
+  } else if(problem.builder) {
+    var values=problem.builder.values.map(function(){return 0;});
+    var graph=document.createElement('div');container.appendChild(graph);
+    var controls=document.createElement('div');controls.className='graph-builder';container.appendChild(controls);
+    var counts=[];
+    function draw(){renderPathVisual(graph,{kind:'bars',values:values.map(function(v){return v;}),labels:problem.builder.labels,scale:1});counts.forEach(function(el,i){el.textContent=values[i];});}
+    problem.builder.labels.forEach(function(label,i){var row=document.createElement('div');var name=document.createElement('span');name.textContent=label;row.appendChild(name);
+      [-1,1].forEach(function(change){var button=document.createElement('button');button.textContent=change===1?'+':'−';button.setAttribute('aria-label',(change===1?'Add one to ':'Remove one from ')+label);button.addEventListener('click',function(){values[i]=Math.max(0,Math.min(12,values[i]+change));draw();});row.appendChild(button);});
+      var count=document.createElement('output');counts.push(count);row.appendChild(count);controls.appendChild(row);
+    });
+    var check=document.createElement('button');check.className='btn btn-small btn-teal';check.textContent='Check my graph';check.addEventListener('click',function(){submit(values.join(','));});container.appendChild(check);draw();
+  } else {
+    var input=document.createElement('input');input.className='answer-input';input.type='text';input.inputMode=problem.fractionInput?'text':'numeric';input.setAttribute('aria-label','Guided practice answer');input.placeholder=problem.fractionInput?'e.g. 3/4':'Answer';
+    var check=document.createElement('button');check.className='btn btn-small btn-teal';check.textContent='Check';check.addEventListener('click',function(){submit(input.value);});input.addEventListener('keydown',function(e){if(e.key==='Enter')submit(input.value);});container.appendChild(input);container.appendChild(check);
+  }
+}
+function openPathLesson(level) {
+  pathCheck=null;
+  document.getElementById('lesson-note').textContent='Watch an example, try with help, or jump into practice. No timer here.';
+  document.getElementById('lesson-explanation').hidden=false;
+  document.getElementById('start-path-practice').hidden=false;
+  selectedLesson=level;state.track=level.track;selectedPathGrade[level.pathway]=level.grade;lessonGuided=false;lessonRevealed=false;
+  lessonProblem=makePathProblem(level,0);showScreen('lesson-screen');renderLesson();
+}
+function renderLesson() {
+  var p=lessonProblem;
+  document.getElementById('lesson-title').textContent=selectedLesson.name+' · Grade '+selectedLesson.grade;
+  document.getElementById('lesson-question').textContent=p.story;
+  renderPathVisual(document.getElementById('lesson-visual'),p.builder && !lessonGuided ? {kind:'bars',values:p.builder.values,labels:p.builder.labels,scale:1} : p.visual,!lessonGuided);
+  document.getElementById('lesson-explanation').textContent=lessonGuided?p.hintText:p.explanation;
+  var answers=document.getElementById('lesson-answers');answers.replaceChildren();
+  document.getElementById('lesson-feedback').textContent='';
+  document.getElementById('guided-try').hidden=lessonGuided;
+  if(lessonGuided)renderPathAnswer(answers,p,function(raw){
+    if(pathAnswerMatches(p,raw)){document.getElementById('lesson-feedback').textContent='That’s it! You can start practice when you’re ready.';}
+    else {document.getElementById('lesson-feedback').textContent=lessonRevealed?p.explanation:'Let’s look together. '+p.hintText;lessonRevealed=true;renderPathVisual(document.getElementById('lesson-visual'),p.visual,true);}
+  });
+}
+function tryGuidedLesson(){lessonGuided=true;lessonRevealed=false;lessonProblem=makePathProblem(selectedLesson,1);renderLesson();}
+function beginPathPractice(){var levels=TRACK_LEVELS[selectedLesson.track];startLevel(selectedLesson.track,levels.indexOf(selectedLesson),selectedLesson);}
+function showPathHint(){
+  if(!state.roundActive||state.answered)return;
+  state.hintShown=true;state.hintPaused=true;showHint(state.currentProblem.hintText,state.currentProblem);
+  renderPathVisual(document.getElementById('path-visual'),state.currentProblem.visual,true);
+}
+
+var pathCheck=null;
+function suggestPathGrade(scores){var gap=scores.findIndex(function(score){return score<2;});return gap===-1?4:gap+1;}
+function startPathCheck(topic){
+  pathCheck={topic:topic,index:0,scores:[0,0,0,0],answered:false};
+  showScreen('lesson-screen');renderPathCheck();
+}
+function renderPathCheck(){
+  var check=pathCheck,grade=Math.floor(check.index/2)+1,levels=TRACK_LEVELS[check.topic+'_g'+grade];
+  document.getElementById('lesson-title').textContent='Find a starting point · '+(check.index+1)+' of 8';
+  document.getElementById('lesson-note').textContent='A short sample, not an assessment. No timer, no effect on tips or progress. You can choose any grade.';
+  document.getElementById('guided-try').hidden=true;
+  document.getElementById('start-path-practice').hidden=true;
+  var level=levels[check.index%2===0?0:levels.length-1];
+  lessonProblem=makePathProblem(level,2+check.index);check.answered=false;
+  document.getElementById('lesson-question').textContent=lessonProblem.story;
+  document.getElementById('lesson-explanation').hidden=true;
+  document.getElementById('lesson-feedback').textContent='';
+  renderPathVisual(document.getElementById('lesson-visual'),lessonProblem.visual,false);
+  renderPathAnswer(document.getElementById('lesson-answers'),lessonProblem,function(raw){
+    if(check.answered)return;check.answered=true;
+    if(pathAnswerMatches(lessonProblem,raw))check.scores[grade-1]++;
+    document.getElementById('lesson-feedback').textContent=lessonProblem.explanation;
+    var next=document.createElement('button');next.className='btn btn-small btn-teal';next.textContent=check.index===7?'See suggestion':'Next question';
+    next.addEventListener('click',function(){
+      check.index++;
+      if(check.index<8)renderPathCheck();
+      else{
+        var suggested=suggestPathGrade(check.scores),topic=check.topic;pathCheck=null;
+        selectedPathGrade[topic]=suggested;setTrack(topic+'_g'+suggested);showScreen('level-screen');
+        document.getElementById('level-guide').textContent='Suggested starting point: Grade '+suggested+'. This was only a small sample. Choose any skill or grade that feels right.';
+      }
+    });document.getElementById('lesson-answers').replaceChildren(next);
+  });
+}
+
 function renderPracticePicker() {
   var topic = state.track.split('_')[0];
   if (topic === 'both') topic = 'multiply';
@@ -1207,10 +1555,17 @@ function renderPracticePicker() {
     return btn;
   }
   TOPICS.forEach(function(t) {
-    picker.appendChild(button(t[1], t[0] === 'fractions' || t[0] === 'decimals' ? t[0] + '_compare' : t[0], topic === t[0]));
+    picker.appendChild(button(t[1], PATHWAYS[t[0]] ? t[0]+'_g'+selectedPathGrade[t[0]] : t[0] === 'fractions' || t[0] === 'decimals' ? t[0] + '_compare' : t[0], topic === t[0]));
   });
   var skills = document.getElementById('skill-picker');
   skills.replaceChildren();
+  if (PATHWAYS[topic]) {
+    var label=document.createElement('p');label.className='choice-label';label.textContent='Choose a starting grade — every skill is open. Work upward or jump ahead.';skills.appendChild(label);
+    var row=document.createElement('div');row.className='skill-buttons grade-picker';
+    for(var grade=1;grade<=4;grade++){var track=topic+'_g'+grade;row.appendChild(button('Grade '+grade,track,state.track===track));}
+    skills.appendChild(row);
+    var check=document.createElement('button');check.className='btn btn-small btn-back';check.textContent='Help me choose a starting point';check.addEventListener('click',function(){startPathCheck(topic);});skills.appendChild(check);return;
+  }
   if (topic !== 'decimals' && topic !== 'fractions') return;
   SKILL_GROUPS.forEach(function(group) {
     var section = document.createElement('div'); section.className = 'skill-group';
@@ -1234,8 +1589,12 @@ function renderLevelSelect() {
   while (grid.firstChild) grid.removeChild(grid.firstChild);
 
   var levels = TRACK_LEVELS[state.track] || [];
+  var pathway=levels[0] && levels[0].pathway;
+  document.getElementById('level-guide').textContent=pathway?'Choose a skill. Start untimed, learn with hints, and earn tips.':'Choose a level • Get 7 of 10 right to unlock the next!';
+  document.getElementById('level-pace').parentElement.hidden=Boolean(pathway);
+  document.getElementById('pace-advice').hidden=Boolean(pathway);
   levels.forEach(function(lvl, idx) {
-    var unlocked = progress.unlockedLevels.indexOf(lvl.id) !== -1;
+    var unlocked = lvl.open || progress.unlockedLevels.indexOf(lvl.id) !== -1;
     var card = document.createElement('button');
     card.type = 'button';
     card.disabled = !unlocked;
@@ -1253,6 +1612,7 @@ function renderLevelSelect() {
 
     var p = document.createElement('p');
     p.textContent = lvl.desc + (unlocked ? '' : ' • Finish Level ' + idx + ' first');
+    if(lvl.pathway && progress.pathProgress[lvl.id])p.textContent+=' · Best: '+progress.pathProgress[lvl.id].bestIndependent+'/10 without hints';
     card.appendChild(p);
 
     if (!unlocked) {
@@ -1264,7 +1624,7 @@ function renderLevelSelect() {
 
     card.addEventListener('click', function() {
       if (!unlocked) return;
-      startLevel(state.track, idx, lvl);
+      if(lvl.pathway)openPathLesson(lvl);else startLevel(state.track, idx, lvl);
     });
 
     grid.appendChild(card);
@@ -1292,6 +1652,9 @@ function renderLevelSelect() {
 function startLevel(track, levelIndex, levelDef) {
   stopRoundTimers();
   state.roundActive = true;
+  state.pathLevel = levelDef.pathway ? levelDef : null;
+  state.independentCorrect = 0;
+  state.roundPace = levelDef.pathway ? 0 : null;
   state.track = track;
   state.levelIndex = levelIndex;
   state.levelId = levelDef.id;
@@ -1310,6 +1673,7 @@ function startLevel(track, levelIndex, levelDef) {
 }
 
 function startBothMode() {
+  state.pathLevel=null;state.roundPace=null;
   stopRoundTimers();
   state.roundActive = true;
   // Collect all facts from all unlocked levels in both tracks
@@ -1389,32 +1753,46 @@ function nextOrder() {
   input.value = '';
   input.className = 'answer-input';
   var comparison = state.currentProblem.operation === 'compare';
-  var fractional = state.currentProblem.type === 'fractions';
+  var fractional = state.currentProblem.type === 'fractions' || state.currentProblem.fractionInput;
   var decimal = state.currentProblem.type === 'decimals';
   document.getElementById('comparison-pad').hidden = !comparison;
   document.getElementById('number-pad').hidden = comparison;
   document.getElementById('decimal-key').hidden = !decimal;
   document.getElementById('fraction-key').hidden = !fractional;
+  document.getElementById('mixed-space-key').hidden = !fractional;
   input.hidden = comparison;
   input.inputMode = fractional ? 'text' : decimal ? 'decimal' : 'numeric';
-  document.getElementById('answer-help').textContent = comparison ? 'Compare the first amount with the second. Choose <, =, or >.' : fractional ? 'Enter a fraction like 3/4 or 5/4, or a whole number. Equivalent fractions count!' : decimal ? 'Use the decimal point, like 0.25.' : 'Type your answer or use the buttons.';
-  if (!comparison) input.focus();
+  document.getElementById('answer-help').textContent = comparison ? 'Compare the first amount with the second. Choose <, =, or >.' : fractional ? 'Use a fraction (3/4), mixed number (1 1/4), or whole number. Equivalent answers count!' : decimal ? 'Use the decimal point, like 0.25.' : 'Type your answer or use the buttons.';
+  if (!comparison) input.focus({preventScroll:true});
   else document.querySelector('#comparison-pad button').focus();
 
+  var path=state.currentProblem.type==='pathway', custom=path && (state.currentProblem.choices || state.currentProblem.builder);
+  document.getElementById('game-screen').classList.toggle('visual-round',path);
+  document.getElementById('path-visual').hidden=!path || Boolean(state.currentProblem.builder);
+  document.getElementById('path-hint').hidden=!path;
+  document.getElementById('path-answers').hidden=!custom;
+  if(path){
+    renderPathVisual(document.getElementById('path-visual'),state.currentProblem.visual,false);
+    if(custom){input.hidden=true;document.getElementById('number-pad').hidden=true;document.getElementById('answer-help').textContent=state.currentProblem.builder?'Use the controls to build your graph, then check it.':'Tap your answer.';
+      renderPathAnswer(document.getElementById('path-answers'),state.currentProblem,function(raw){if(!state.roundActive||state.answered)return;input.value=raw;state.hintPaused=false;checkAnswer();});
+    }
+  }
+  if(path)document.getElementById('game-screen').scrollTop=0;
   startPatience();
 }
 
 function syncPaceControls() {
   var seconds = getProgress().timerSeconds;
   document.getElementById('level-pace').value = String(seconds);
-  document.getElementById('round-pace').value = String(seconds);
-  document.getElementById('chart-timer-note').textContent = seconds === 0 ? 'No timer — take your time!' : 'Timer is still running!';
+  document.getElementById('round-pace').value = String(state.roundActive && state.roundPace != null ? state.roundPace : seconds);
+  document.getElementById('chart-timer-note').textContent = (state.roundActive && state.roundPace != null ? state.roundPace : seconds) === 0 ? 'No timer — take your time!' : 'Timer is still running!';
 }
 function setPace(seconds) {
   if ([0, 20, 40, 60].indexOf(seconds) === -1) return;
   var progress = getProgress();
   progress.timerSeconds = seconds;
   saveProgressData(progress);
+  if(state.roundActive)state.roundPace=seconds;
   syncPaceControls();
   // Switching pace during an unanswered order gives a fresh full allowance.
   if (state.roundActive && !state.answered) startPatience();
@@ -1434,7 +1812,7 @@ function scheduleNextOrder(delay) {
 function startPatience() {
   clearInterval(state.patienceTimer);
   state.patienceTimer = null;
-  state.patienceLimit = getProgress().timerSeconds;
+  state.patienceLimit = state.roundActive && state.roundPace != null ? state.roundPace : getProgress().timerSeconds;
   state.patienceRemaining = state.patienceLimit;
   syncPaceControls();
   var fill = document.getElementById('patience-fill');
@@ -1460,7 +1838,7 @@ function startPatience() {
 function timeUp() {
   state.answered = true;
   document.getElementById('answer-input').className = 'answer-input wrong';
-  state.wrongFacts.push(state.currentProblem.display);
+  state.wrongFacts.push(state.currentProblem.type==='pathway' ? state.currentProblem.story : state.currentProblem.display);
   state.streak = 0;
   // Running out of time is not evidence of an incorrect answer.
 
@@ -1513,21 +1891,23 @@ function checkAnswer() {
 
   var input = document.getElementById('answer-input');
   var parsed = parseAnswer(input.value);
-  if (parsed === null) {
+  var customAnswer=state.currentProblem.choices || state.currentProblem.builder;
+  if (parsed === null && (!customAnswer || !input.value)) {
     document.getElementById('feedback').textContent = 'Enter a number or fraction with a nonzero denominator.';
     return;
   }
-  var value = typeof parsed === 'string' ? parsed : parsed[0] / parsed[1];
+  var value = customAnswer ? input.value : typeof parsed === 'string' ? parsed : parsed[0] / parsed[1];
 
   state.attempts++;
   var fb = document.getElementById('feedback');
 
-  if (answersMatch(input.value, state.currentProblem.answer)) {
+  if (state.currentProblem.type==='pathway' ? pathAnswerMatches(state.currentProblem,input.value) : answersMatch(input.value, state.currentProblem.answer)) {
     state.answered = true;
     clearInterval(state.patienceTimer);
     input.className = 'answer-input correct';
 
     state.correct++;
+    if(state.pathLevel && state.attempts===1 && !state.hintShown)state.independentCorrect++;
     state.streak++;
     if (state.streak > state.bestStreak) state.bestStreak = state.streak;
 
@@ -1539,7 +1919,7 @@ function checkAnswer() {
     var tipAmount = 3;
     if (state.patienceLimit === 0 || state.patienceRemaining > state.patienceLimit * 0.7) tipAmount = 5;
     else if (state.patienceRemaining > state.patienceLimit * 0.4) tipAmount = 4;
-    if (state.attempts > 1) tipAmount = Math.max(1, tipAmount - 2);
+    if (state.attempts > 1 || (state.pathLevel && state.hintShown)) tipAmount = Math.max(1, tipAmount - 2);
 
     state.tips += tipAmount;
     document.getElementById('tips-count').textContent = state.tips;
@@ -1559,6 +1939,7 @@ function checkAnswer() {
     state.hintShown = true;
     state.hintPaused = true;
     showHint(state.currentProblem.hintText, state.currentProblem, wrongVal);
+    if(state.pathLevel)renderPathVisual(document.getElementById('path-visual'),state.currentProblem.visual,true);
     fb.textContent = 'Not quite \u2014 try again!';
     fb.className = 'feedback wrong-fb';
 
@@ -1566,7 +1947,7 @@ function checkAnswer() {
     state.answered = true;
     clearInterval(state.patienceTimer);
     input.className = 'answer-input wrong';
-    state.wrongFacts.push(state.currentProblem.display);
+    state.wrongFacts.push(state.currentProblem.type==='pathway' ? state.currentProblem.story : state.currentProblem.display);
     state.streak = 0;
 
     // SR: demote the fact
@@ -1599,7 +1980,7 @@ function endRound() {
   // Unlock next level in the current track
   var pct = state.correct / ORDERS_PER_ROUND;
   var unlockName = null;
-  if (pct >= 0.7 && state.track !== 'both') {
+  if (pct >= 0.7 && state.track !== 'both' && !state.pathLevel) {
     var levels = TRACK_LEVELS[state.track];
     var nextIdx = state.levelIndex + 1;
     if (nextIdx < levels.length) {
@@ -1626,6 +2007,13 @@ function endRound() {
   document.getElementById('stat-tips').textContent = state.tips;
   document.getElementById('stat-streak').textContent = state.bestStreak;
 
+  var rec=document.getElementById('path-recommendation');rec.replaceChildren();
+  if(state.pathLevel){
+    recordPathResult(state.pathLevel,state.correct,state.independentCorrect);
+    var next=nextPathSkill(state.pathLevel),ready=state.independentCorrect>=8;
+    var summary=document.createElement('p');summary.className='bakery-help';summary.textContent=state.independentCorrect+'/10 solved independently. '+(ready?(next?'Ready for a next step: '+next.name+' (Grade '+next.grade+').':'You completed the last step in this path. Try another path or practice again!'):'Try this skill again with the worked example. You can also choose an earlier grade.');rec.appendChild(summary);
+    var action=document.createElement('button');action.className='btn btn-small btn-teal';action.textContent=ready&&next?'Try the next skill':'Practice this skill';action.addEventListener('click',function(){openPathLesson(ready&&next?next:state.pathLevel);});rec.appendChild(action);
+  }
   // Show tricky facts + pattern insights
   var trickyEl = document.getElementById('tricky-facts');
   while (trickyEl.firstChild) trickyEl.removeChild(trickyEl.firstChild);
@@ -1676,7 +2064,7 @@ function endRound() {
   } else {
     var perfect = document.createElement('p');
     perfect.className = 'perfect-round';
-    perfect.textContent = 'Perfect round \u2014 no mistakes!';
+    perfect.textContent = state.pathLevel && state.independentCorrect<ORDERS_PER_ROUND ? 'You finished the round. Keep practicing with the hints!' : 'Perfect round \u2014 no mistakes!';
     trickyEl.appendChild(perfect);
   }
 
@@ -1732,6 +2120,7 @@ document.getElementById('answer-input').addEventListener('input', function() {
 document.addEventListener('keydown', function(e) {
   if (!document.getElementById('game-screen').classList.contains('active') || state.answered) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if(state.currentProblem.choices || state.currentProblem.builder)return;
   if (state.currentProblem.operation === 'compare') {
     if (['<', '=', '>'].indexOf(e.key) !== -1) { e.preventDefault(); submitComparison(e.key); }
     return;
