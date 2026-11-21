@@ -165,6 +165,10 @@ body::before {
 .skill-group { margin-bottom: 8px; }
 .skill-group p { font-size: 0.8rem; margin-bottom: 4px; color: var(--brown); }
 .skill-buttons { display: flex; gap: 6px; }
+.number-form-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
+.number-form-picker .mode-btn { white-space: normal; }
+.number-form-picker small { display: block; font-size: 1rem; margin-top: 6px; }
+@media (max-width: 600px) { .number-form-picker { grid-template-columns: 1fr; } }
 .skill-buttons .mode-btn { background: var(--warm-white); border: 2px solid var(--peach); border-radius: 12px; padding: 8px; }
 .level-card { font-family: inherit; }
 .level-card:focus-visible, .mode-btn:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
@@ -844,10 +848,20 @@ var SKILL_GROUPS = [
   { label: '2. Add & subtract', skills: [['add', 'Add'], ['subtract', 'Subtract']] },
   { label: '3. Multiply & divide', skills: [['multiply', 'Multiply'], ['divide', 'Divide']] }
 ];
-['addition', 'subtraction'].forEach(function(track) {
-  TRACK_LEVELS[track] = [10, 20, 100].map(function(limit, i) {
-    return { id: track + (i + 1), name: 'Level ' + (i + 1), desc: 'Within ' + limit,
-      icon: ['🧁', '🍪', '🎂'][i], topic: track, operation: track === 'addition' ? 'add' : 'subtract', difficulty: i, limit: limit };
+var NUMBER_FORMS = [
+  {position:'result', label:'Missing result', addition:'3 + 4 = ?', subtraction:'7 − 4 = ?'},
+  {position:'second', label:'Missing second number', addition:'3 + ? = 7', subtraction:'7 − ? = 3'},
+  {position:'first', label:'Missing first number', addition:'? + 4 = 7', subtraction:'? − 4 = 3'}
+];
+function numberFormTrack(topic, position) { return position==='result' ? topic : topic+'_missing_'+position; }
+['addition', 'subtraction'].forEach(function(topic) {
+  NUMBER_FORMS.forEach(function(form) {
+    var track=numberFormTrack(topic,form.position);
+    TRACK_LEVELS[track] = [10, 20, 100].map(function(limit, i) {
+      return { id: track + (i + 1), name: 'Level ' + (i + 1), desc: 'Within ' + limit,
+        icon: ['🧁', '🍪', '🎂'][i], topic: topic, operation: topic === 'addition' ? 'add' : 'subtract',
+        unknownPosition:form.position, formLabel:form.label, difficulty: i, limit: limit };
+    });
   });
 });
 ['decimals', 'fractions'].forEach(function(topic) {
@@ -1053,6 +1067,7 @@ function normalizeReport(progress) {
 }
 function reportSkillLabel(level) {
   if(level.pathway)return level.name;
+  if(level.formLabel)return level.formLabel+' · '+level.desc;
   var operation=level.topic==='fractions' || level.topic==='decimals' ? level.operation.charAt(0).toUpperCase()+level.operation.slice(1)+' · ' : '';
   return operation+level.name+' · '+level.desc;
 }
@@ -1093,6 +1108,12 @@ function buildReportData(progress) {
   Object.keys(report.skills).forEach(function(id){
     var raw=report.skills[id];if(!raw||!REPORT_TOPICS[raw.topic])return;
     var skill=Object.assign({},raw);
+    // Existing addition/subtraction records always tested the missing result.
+    var found=reportLevel(id);
+    if(found && found.level.formLabel){
+      skill.label=reportSkillLabel(found.level);
+      skill.practiceOrder=NUMBER_FORMS.findIndex(function(form){return form.position===found.level.unknownPosition;})*3+found.level.difficulty;
+    }
     ['independent','supported','incorrect','timeouts'].forEach(function(k){skill[k]=Math.max(0,Number(skill[k])||0);});
     skill.answered=skill.independent+skill.supported+skill.incorrect;
     skill.questions=skill.answered+skill.timeouts;if(!skill.questions)return;
@@ -1101,7 +1122,10 @@ function buildReportData(progress) {
     topic(skill.topic).skills.push(skill);questions+=skill.questions;answered+=skill.answered;independent+=skill.independent;supported+=skill.supported;incorrect+=skill.incorrect;timeouts+=skill.timeouts;
   });
   report.earlier.forEach(function(item){if(item&&REPORT_TOPICS[item.topic])topic(item.topic).earlier.push(item);});
-  var topics=Object.keys(REPORT_TOPICS).filter(function(id){return groups[id];}).map(function(id){var group=groups[id];group.skills.sort(function(a,b){return (a.grade||0)-(b.grade||0)||a.label.localeCompare(b.label);});return group;});
+  var topics=Object.keys(REPORT_TOPICS).filter(function(id){return groups[id];}).map(function(id){var group=groups[id];group.skills.sort(function(a,b){
+    if(a.practiceOrder!==undefined && b.practiceOrder!==undefined)return a.practiceOrder-b.practiceOrder;
+    return (a.grade||0)-(b.grade||0)||a.label.localeCompare(b.label);
+  });return group;});
   return {startedAt:report.startedAt,generatedAt:Date.now(),topics:topics,questions:questions,answered:answered,independent:independent,supported:supported,incorrect:incorrect,timeouts:timeouts};
 }
 function reportDate(timestamp){return new Date(timestamp).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}
@@ -1421,13 +1445,34 @@ function buildTopicPool(level) {
       if (op === 'divide') { n = an * bd; d = ad * bn; symbol = '÷'; }
       answer = format(n, d);
     }
+    var wholeNumber=topic==='addition' || topic==='subtraction';
+    var position=wholeNumber ? level.unknownPosition || 'result' : null;
     var key = topic + ':' + op + ':' + left + ':' + right;
+    if(wholeNumber && position!=='result')key+=':missing_'+position;
     if (seen.has(key)) return;
     seen.add(key);
-    var hint, story;
+    var hint, story, display=left + ' ' + symbol + ' ' + right + (op === 'compare' ? '' : ' = ?');
     if (topic === 'addition' || topic === 'subtraction') {
       hint = op === 'add' ? 'Start at ' + left + ' and count on ' + right + '. Make a group of ten if it helps.' : 'Start at ' + left + ' and count back ' + right + '. You can take away tens, then ones.';
       story = op === 'add' ? 'We baked ' + left + ' cookies, then ' + right + ' more. How many cookies now?' : 'We had ' + left + ' cookies and sold ' + right + '. How many are left?';
+      if(position!=='result') {
+        var result=answer;
+        display=(position==='first'?'?':left)+' '+symbol+' '+(position==='second'?'?':right)+' = '+result;
+        answer=position==='first'?left:right;
+        if(op==='add') {
+          var known=position==='first'?right:left;
+          story=position==='first'
+            ? 'We had some cookies, then baked '+right+' more. Now we have '+result+' cookies. How many did we start with?'
+            : 'We had '+left+' cookies and baked some more. Now we have '+result+' cookies. How many more did we bake?';
+          hint='Find the missing part of the total. Count on from '+known+' to '+result+', or try '+result+' − '+known+'.';
+        } else if(position==='second') {
+          story='We had '+left+' cookies. After selling some, we have '+result+' left. How many did we sell?';
+          hint='Find the gap between the cookies left and the starting amount. Count on from '+result+' to '+left+', or try '+left+' − '+result+'.';
+        } else {
+          story='We had some cookies and sold '+right+'. Now we have '+result+' left. How many did we start with?';
+          hint='Put back the cookies that were sold. The starting amount is the cookies left plus those sold. Try '+result+' + '+right+'.';
+        }
+      }
     } else {
       if (op === 'compare') {
         story = 'Two recipes need ' + left + ' cup and ' + right + ' cup of flour. Is the first amount less, equal, or greater?';
@@ -1446,7 +1491,7 @@ function buildTopicPool(level) {
     }
     pool.push({ key: key, weight: SR_WEIGHTS[getSRData(progress, key).box], problem: {
       type: topic, operation: op, answer: answer, srKey: key,
-      display: left + ' ' + symbol + ' ' + right + (op === 'compare' ? '' : ' = ?'),
+      display: display, unknownPosition: position,
       story: story, hintText: hint
     }});
   }
@@ -1775,6 +1820,15 @@ function renderPracticePicker() {
     for(var grade=1;grade<=4;grade++){var track=topic+'_g'+grade;row.appendChild(button('Grade '+grade,track,state.track===track));}
     skills.appendChild(row);
     var check=document.createElement('button');check.className='btn btn-small btn-back';check.textContent='Help me choose a starting point';check.addEventListener('click',function(){startPathCheck(topic);});skills.appendChild(check);return;
+  }
+  if(topic==='addition' || topic==='subtraction') {
+    var label=document.createElement('p');label.className='choice-label';label.textContent='Choose where the missing number goes. Each choice grows from 10 to 20 to 100.';skills.appendChild(label);
+    var row=document.createElement('div');row.className='skill-buttons number-form-picker';
+    NUMBER_FORMS.forEach(function(form){
+      var track=numberFormTrack(topic,form.position),btn=button(form.label,track,state.track===track);
+      var example=document.createElement('small');example.textContent=form[topic];btn.appendChild(example);row.appendChild(btn);
+    });
+    skills.appendChild(row);return;
   }
   if (topic !== 'decimals' && topic !== 'fractions') return;
   SKILL_GROUPS.forEach(function(group) {

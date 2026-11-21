@@ -8,6 +8,8 @@ Serves customers, earns tips, unlocks upgrades.
 ## Features
 
 - Addition & subtraction: levels within 10, 20, and 100, with no negative answers
+- Choose a missing result, second number, or first number, with matching stories and hints
+- Each equation form has its own 10 → 20 → 100 unlocks, adaptive practice, and report entries
 - Multiplication & division: four levels of fact practice
 - Decimals & fractions: compare first, then add/subtract, then multiply/divide
 - Topic and skill pickers, with three increasingly challenging levels per new skill
@@ -89,3 +91,11 @@ Show the report to a parent, use **Print / save PDF**, or **Save text copy**.
 Reports stay on the device unless you choose to share a saved copy. Existing
 practice is preserved as earlier history; missing help/timing details are not
 guessed. Guided examples and the optional starting check are not scored.
+
+Addition and subtraction reports distinguish **Missing result**, **Missing second
+number**, and **Missing first number**, then list practiced ranges in numeric
+order. Existing addition/subtraction records remain under Missing result; no
+credit is transferred to the new forms. Earn 7/10 in a form to unlock its next range.
+
+See [Math coverage and next checks, grades 1–4](docs/GRADE-COVERAGE.md) for the
+current practice coverage and recommended additions, with links to the standards.

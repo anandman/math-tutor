@@ -41,10 +41,19 @@ test('all new levels generate correct, nonnegative arithmetic and comparison pro
       for (const fact of pool) {
         c.state.factsPool = [fact];
         const p = c.generateProblem();
-        const parts = p.display.split(' '), a=val(parts[0]), b=val(parts[2]);
-        assert.ok(Number.isFinite(a) && Number.isFinite(b), p.display);
-        if (parts[1] === '?') assert.equal(p.answer, a < b ? '<' : a > b ? '>' : '=');
-        else { const expected = operations[parts[1]](a,b); assert.ok(Number.isFinite(expected)); assert.ok(Math.abs(val(p.answer)-expected)<1e-9, p.display+' -> '+p.answer); assert.ok(val(p.answer)>=0); }
+        const parts = p.display.split(' ');
+        if (parts[1] === '?') {
+          const a=val(parts[0]),b=val(parts[2]);
+          assert.ok(Number.isFinite(a) && Number.isFinite(b),p.display);
+          assert.equal(p.answer, a < b ? '<' : a > b ? '>' : '=');
+        } else {
+          assert.equal(parts.filter(part=>part==='?').length,1);
+          const filled=parts.map(part=>part==='?'?p.answer:part);
+          const a=val(filled[0]),b=val(filled[2]),result=val(filled[4]);
+          assert.ok([a,b,result].every(Number.isFinite),p.display);
+          assert.ok(Math.abs(operations[parts[1]](a,b)-result)<1e-9,p.display+' -> '+p.answer);
+          assert.ok(val(p.answer)>=0);
+        }
         assert.ok(p.hintText && p.story && p.srKey);
       }
     }
