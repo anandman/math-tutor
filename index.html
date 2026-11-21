@@ -126,6 +126,7 @@ body::before {
   -webkit-tap-highlight-color: transparent;
 }
 .btn:active { transform: scale(0.96) !important; }
+.btn[data-g5v-coordinate]:active { transform: translate(-50%, -50%) scale(0.96) !important; }
 .btn-primary { background: var(--coral); color: var(--warm-white); box-shadow: 0 5px 0 var(--coral-dark), 0 8px 16px var(--shadow); }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 7px 0 var(--coral-dark), 0 12px 20px var(--shadow); }
 .btn-teal { background: var(--teal); color: var(--warm-white); box-shadow: 0 5px 0 var(--teal-dark), 0 8px 16px var(--shadow); }
@@ -311,7 +312,8 @@ body::before {
 #lesson-question, #lesson-explanation, #lesson-feedback { line-height: 1.5; }
 #lesson-visual { width: 100%; }
 .lesson-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-.grade-picker { margin: 10px 0; }
+.grade-picker { margin: 10px 0; flex-wrap:wrap; }
+.grade-picker .mode-btn { flex:1 0 44px; min-width:0; }
 #results-screen { max-height: 100dvh; overflow-y: auto; }
 .visual-round .customer-emoji, .visual-round .customer-name { display: none; }
 .visual-round .speech-bubble { margin-top: 0; }
@@ -565,8 +567,8 @@ body::before {
 .learning-heading { display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
 .learning-heading h2 { font-size:1.8rem; }
 .learning-intro { line-height:1.55; color:var(--brown); font-size:.95rem; }
-.learning-grade-picker { display:flex; gap:6px; background:var(--peach); padding:5px; border-radius:14px; }
-.learning-grade-picker .mode-btn { border-radius:10px; }
+.learning-grade-picker { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; background:var(--peach); padding:5px; border-radius:14px; }
+.learning-grade-picker .mode-btn { border-radius:10px; min-width:0; padding:12px 4px; }
 .learning-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
 #learning-next { grid-template-columns:repeat(3,minmax(0,1fr)); }
 .recommendation-card { background:#edf7f0; padding:15px; }
@@ -638,6 +640,7 @@ body::before {
 <div class="screen learning-screen" id="pathways-screen">
   <div class="learning-heading"><h2>Math Pathways</h2><button class="btn btn-small btn-back" onclick="showScreen('menu-screen')">← Home</button></div>
   <p class="learning-intro">Explore an example, try with guidance, then practice on your own. Every grade is open. Choose what fits today.</p>
+  <p class="choice-label">Choose a grade</p>
   <div id="learning-grades" class="learning-grade-picker" aria-label="Choose a grade"></div>
   <h3>Choose a pathway</h3><div id="pathway-cards" class="learning-grid"></div>
   <h3>Try next</h3><div id="learning-next" class="learning-grid"></div>
@@ -647,6 +650,7 @@ body::before {
 <div class="screen learning-screen" id="challenges-screen">
   <div class="learning-heading"><h2>Bakery Challenges</h2><button class="btn btn-small btn-back" onclick="showScreen('menu-screen')">← Home</button></div>
   <p class="learning-intro">Try a mix of skills for bakery jobs. Each challenge starts without a timer. Hints are here whenever you need them, and every task can earn tips.</p>
+  <p class="choice-label">Choose a grade</p>
   <div id="challenge-grades" class="learning-grade-picker" aria-label="Choose a challenge grade"></div>
   <div id="challenge-cards" class="learning-grid"></div>
   <button class="btn btn-small btn-teal" onclick="showScreen('pathways-screen')">Learn a skill first</button>
@@ -1976,14 +1980,558 @@ function renderVisualExtensionAnswer(container,p,submit,reveal) {
   return true;
 }
 
+// Kindergarten and fifth-grade extensions.
+// Kindergarten: concrete models, short prompts, and touch-friendly construction.
+var EARLY_PATHWAY_SKILLS = {
+  place:[['k_count20','Count the cookies','Count 0–20 objects in tidy rows'],['k_scattered','Cookie search','Count up to 10 scattered objects'],['k_count_out','Fill an order','Count out a requested set of up to 20'],['k_count100','Count along','Count forward by ones or tens toward 100'],['k_compare','More, fewer, same','Compare sets and numerals within 10'],['k_teen','Ten and some more','Build 11–19 with one ten and extra ones']],
+  strategies:[['k_add5','Put together to 5','Add with pictures within 5'],['k_take5','Take away to 5','Subtract with pictures within 5'],['k_add10','Put together to 10','Add with pictures within 10'],['k_take10','Take away to 10','Subtract with pictures within 10'],['k_make10','Fill the ten-frame','Find the number that makes 10'],['k_parts','Two cookie plates','Break a number into two parts in different ways']],
+  stories:[['k_join_story','More cookies arrive','Solve short joining stories with pictures'],['k_leave_story','Cookies for a friend','Solve short taking-away stories with pictures'],['k_parts_story','Two kinds of treats','Find the whole from two pictured parts']],
+  shapes:[['k_shape_names','Shape cookies','Name flat shapes even when turned'],['k_solid_shapes','Flat or solid?','Recognize flat shapes and common solid shapes'],['k_position','Where is the cookie?','Use above, below, beside, inside, and behind'],['k_compose','Build a bigger shape','Fit two shapes together to make a new shape'],['k_shape_compare','Shape detective','Describe straight sides and corners']],
+  measurement:[['k_length','Longer ribbons','Compare lengths from the same starting point'],['k_height','Taller stacks','Compare heights from the same floor'],['k_weight','The balance scale','Use a balance to compare heavier and lighter']],
+  data:[['k_sort','Sort the cookies','Sort by color or shape with other features changing'],['k_category_count','Count a group','Count a sorted category with up to 10 objects'],['k_category_compare','Compare groups','Find the group with more, fewer, or the same number']]
+};
+function early_choices(answer,max,n) {
+  var values=[answer],candidates=[answer-1,answer+1,answer-2,answer+2,0,max];
+  candidates.forEach(function(x){if(x>=0&&x<=max&&values.indexOf(x)===-1&&values.length<4)values.push(x);});
+  var offset=n%values.length;return values.slice(offset).concat(values.slice(0,offset)).map(String);
+}
+function early_items(n,count) {
+  return Array.from({length:count},function(_,i){return {color:(i+n)%3===0?'red':'blue',shape:(i*3+n)%4<2?'circle':'triangle',size:(i+n)%2?13:18};});
+}
+function makeEarlyProblem(level,n) {
+  var skill=level.skill,p=null;n=((n%24)+24)%24;
+  function set(story,answer,hint,visual,choices,explanation) {p={story:story,answer:String(answer),hintText:hint,explanation:explanation,visual:visual};if(choices)p.choices=choices;}
+  function numeric(story,answer,max,hint,visual,explanation){set(story,answer,hint,visual,early_choices(answer,max,n),explanation);}
+  function widget(kind,values,extra) {p.widget={kind:kind,solution:JSON.stringify(values)};Object.keys(extra||{}).forEach(function(k){p.widget[k]=extra[k];});p.answer=p.widget.solution;p.hideVisual=p.visual.kind==='k_notice';}
+  if(skill==='k_count20'||skill==='k_scattered'){
+    var count=skill==='k_count20'?n%21:n%11;
+    numeric('How many cookies?',count,skill==='k_count20'?20:10,'Touch each cookie once. The last number tells how many.',{kind:'k_count',count:count,scattered:skill==='k_scattered',variant:n},count===0?'The tray is empty. There are 0 cookies.':'Count each cookie once. There are '+count+' cookies.');
+  }
+  if(skill==='k_count_out'){
+    var target=n%21;
+    set('Put '+target+' cookies on the tray.','',target===0?'Zero means no cookies. Leave the tray empty.':'Tap one spot for each cookie you need.',{kind:'k_notice',text:'Tap spots to add cookies.'},null,target===0?'Zero cookies means an empty tray.':'This tray has '+target+' cookies.');
+    widget('k_count_out',Array.from({length:target},function(_,i){return i;}),{target:target,capacity:20});
+  }
+  if(skill==='k_count100'){
+    var byTens=n%2===1,step=byTens?10:1,index=Math.floor(n/2),starts=[0,7,17,27,37,47,57,67,77,87,97,98],start=byTens?(index%9)*10:starts[index],jumps=byTens?2:(start===98?2:3),answer=start+step*jumps;
+    numeric('Count by '+(byTens?'tens':'ones')+'. What comes next?',answer,100,'Say each number in order. '+(byTens?'Each step adds ten.':'Each step adds one.'),{kind:'k_sequence',start:start,step:step,jumps:jumps},'The next number is '+answer+'.');
+  }
+  if(skill==='k_compare'){
+    var a=n%11,b=n%4===0?a:(n*7+3)%11,more=n%2===0,numerals=n%3===2,answer=a===b?'Same number':((more?a>b:a<b)?'A':'B');
+    set(numerals?'Which number is '+(more?'greater':'less')+'?':'Which tray has '+(more?'more':'fewer')+' cookies?',answer,'Match one cookie in A with one in B. Check what is left.',{kind:'k_compare_sets',a:a,b:b,numerals:numerals},['A','B','Same number'],a===b?'Both have the same number.':answer+' has '+(more?'more':'fewer')+'.');
+  }
+  if(skill==='k_teen'){
+    var target=11+n%9;
+    set('Make '+target+' with one full tray of ten and extra cookies.','','A full tray has ten cookies. Add single cookies for the rest.',{kind:'k_notice',text:'One full tray = ten cookies.'},null,target+' is one ten and '+(target-10)+' extra ones.');
+    widget('k_group',[1,target-10],{target:target,max:[1,9]});
+  }
+  if(['k_add5','k_take5','k_add10','k_take10','k_join_story','k_leave_story','k_parts_story'].indexOf(skill)!==-1){
+    var max=/5$/.test(skill)?5:10,take=skill==='k_take5'||skill==='k_take10'||skill==='k_leave_story',total=n%(max+1),part=total===0?0:(n*3+1)%(total+1),a=take?total:part,b=take?part:total-part,answer=take?a-b:a+b;
+    var story=take?'How many cookies are left?':'How many cookies in all?';
+    if(skill==='k_join_story')story='Naia has '+a+' cookies. '+b+' more arrive. How many now?';
+    if(skill==='k_leave_story')story='Naia has '+a+' cookies. She gives away '+b+'. How many are left?';
+    if(skill==='k_parts_story')story='There are '+a+' round cookies and '+b+' triangle cookies. How many treats?';
+    numeric(story,answer,max,take?'The crossed-out cookies are gone. Count the cookies that stay.':'Count both groups together, one cookie at a time.',{kind:'k_operation',a:a,b:b,take:take,parts:skill==='k_parts_story'},take?a+' take away '+b+' leaves '+answer+'.':a+' and '+b+' make '+answer+'.');
+  }
+  if(skill==='k_make10'){
+    var given=n%11,missing=10-given;
+    numeric('How many more cookies will fill the tray?',missing,10,'This tray holds ten. Count its empty spots.',{kind:'k_tenframe',filled:given,variant:n},given+' and '+missing+' make 10.');
+  }
+  if(skill==='k_parts'){
+    var target=2+n%9,first=Math.floor(target/2);
+    set('Put '+target+' cookies on two plates. Find your own way.','','You can share the cookies between the plates. An empty plate is allowed.',{kind:'k_notice',text:'Two parts make one whole.'},null,'One way is '+first+' and '+(target-first)+'. Other ways can work too.');
+    widget('k_parts',[first,target-first],{target:target,max:[10,10]});
+  }
+  if(skill==='k_shape_names'){
+    var names=['circle','triangle','square','rectangle','hexagon'],shape=names[n%5];
+    set('What shape is this cookie?',shape,'Look at the outline. Turning a shape does not change its name.',{kind:'k_shape',shape:shape,rotation:n%4*30},names,'This is a '+shape+'.');
+  }
+  if(skill==='k_solid_shapes'){
+    var names=['sphere','cube','cylinder','cone'],classify=n%3===0,flat=n%2===0,shape=classify?(flat?['circle','triangle','square'][Math.floor(n/6)%3]:names[Math.floor(n/3)%4]):names[n%4];
+    set(classify?'Is this shape flat or solid?':'What solid shape is this?',classify?(flat?'Flat':'Solid'):shape,classify?'Flat shapes are like drawings. Solid shapes take up space.':'Look at flat faces and curved surfaces.',{kind:'k_shape',shape:shape,rotation:0},classify?['Flat','Solid']:names,classify?'This shape is '+(flat?'flat.':'solid.'):'This is a '+shape+'.');
+  }
+  if(skill==='k_position'){
+    var words=['above','below','beside','inside','behind'],position=words[n%5];
+    set('Where is the cookie compared with the box?',position,'Look at the cookie and the box together.',{kind:'k_position',position:position,side:n%2},words,'The cookie is '+position+' the box.');
+  }
+  if(skill==='k_compose'){
+    var square=n%2===0,shape=square?'square':'rectangle',piece=square?0:1;
+    set('Build the '+shape+'. Choose a piece for each space.','','Try the pieces. Choose pieces that fill the outline without gaps.',{kind:'k_notice',text:'Fit two pieces into the outline.'},null,square?'Two triangles fit together to make this square.':'Two squares fit together to make this rectangle.');
+    widget('k_compose',[piece,piece],{targetShape:shape,diagonal:n%4<2?'down':'up'});
+  }
+  if(skill==='k_shape_compare'){
+    var shapes=['triangle','square','rectangle','hexagon'],shape=shapes[n%4],corners=n%2===0,count={triangle:3,square:4,rectangle:4,hexagon:6}[shape];
+    numeric('How many '+(corners?'corners':'straight sides')+' does this shape have?',count,6,corners?'Touch each corner once. A corner is where two sides meet.':'Trace the outline. Count each straight side once.',{kind:'k_shape',shape:shape,rotation:n%4*30},'This '+shape+' has '+count+' '+(corners?'corners.':'straight sides.'));
+  }
+  if(skill==='k_length'||skill==='k_height'||skill==='k_weight'){
+    var a=2+n%5,b=n%4===0?a:2+(n*3+1)%5;if(n%4!==0&&a===b)b=b===6?2:b+1;
+    var wantMore=n%2===0,answer=a===b?'Same':((wantMore?a>b:a<b)?'A':'B'),word=skill==='k_length'?(wantMore?'longer':'shorter'):skill==='k_height'?(wantMore?'taller':'shorter'):(wantMore?'heavier':'lighter');
+    set('Which is '+word+'?',answer,skill==='k_weight'?'The heavier side hangs lower. A level balance means the same weight.':'Both start at the same line. Look at where they end.',{kind:skill,a:a,b:b},['A','B','Same'],a===b?(skill==='k_weight'?'The balance is level. Both have the same weight.':'Both reach the same place.'):'Object '+answer+' is '+word+'.');
+  }
+  if(skill==='k_sort'){
+    var items=early_items(n,4+n%7),attribute=n%2?'shape':'color',groups=attribute==='color'?['red','blue']:['circle','triangle'],values=items.map(function(item){return groups.indexOf(item[attribute]);});
+    set('Sort each cookie by '+attribute+'.','','Tap a cookie to move it into a group. Keep tapping to switch groups.',{kind:'k_notice',text:'Sort by '+attribute+'.'},null,'Cookies in each group share the same '+attribute+'.');
+    widget('k_sort',values,{items:items,attribute:attribute,groups:groups});
+  }
+  if(skill==='k_category_count'||skill==='k_category_compare'){
+    var a=n%11,b=n%4===0?a:(n*3+2)%11,requested=n%2?'Triangles':'Circles',more=n%2===0;
+    var visual={kind:'k_categories',a:a,b:b};
+    if(skill==='k_category_count')numeric('How many '+requested.toLowerCase()+'?',requested==='Circles'?a:b,10,'Count only the shapes in the named group.',visual,'There are '+(requested==='Circles'?a:b)+' '+requested.toLowerCase()+'.');
+    else {var answer=a===b?'Same number':((more?a>b:a<b)?'Circles':'Triangles');set('Which group has '+(more?'more':'fewer')+'?',answer,'Match one shape from each group. See which group has shapes left over.',visual,['Circles','Triangles','Same number'],a===b?'Both groups have the same number.':answer+' have '+(more?'more.':'fewer.'));}
+  }
+  return p;
+}
+function early_array(raw) {try{var a=JSON.parse(String(raw));return Array.isArray(a)&&a.every(function(x){return Number.isInteger(x);})?a:null;}catch(e){return null;}}
+function matchEarlyAnswer(p,raw) {
+  var w=p.widget;if(!w||['k_count_out','k_group','k_parts','k_compose','k_sort'].indexOf(w.kind)===-1)return null;
+  var a=early_array(raw);if(!a)return false;
+  if(w.kind==='k_count_out')return a.length===w.target&&new Set(a).size===a.length&&a.every(function(x){return x>=0&&x<w.capacity;});
+  if(w.kind==='k_group')return a.length===2&&a[0]===1&&a[1]>=0&&a[1]<=9&&10*a[0]+a[1]===w.target;
+  if(w.kind==='k_parts')return a.length===2&&a.every(function(x){return x>=0&&x<=10;})&&a[0]+a[1]===w.target;
+  if(w.kind==='k_compose')return a.length===2&&a.every(function(x){return x===(w.targetShape==='square'?0:1);});
+  return a.length===w.items.length&&a.every(function(x,i){return x>=0&&x<w.groups.length&&w.groups[x]===w.items[i][w.attribute];});
+}
+function early_svg(tag,attrs,text){var e=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.keys(attrs||{}).forEach(function(k){e.setAttribute(k,attrs[k]);});if(text!==undefined)e.textContent=text;return e;}
+function early_shape(parent,shape,x,y,size,rotation,color,extra) {
+  var g=early_svg('g',{transform:'translate('+x+' '+y+') rotate('+(rotation||0)+')'}),fill=color||'#f3b97c',ink='#69452e';Object.keys(extra||{}).forEach(function(k){g.setAttribute(k,extra[k]);});parent.appendChild(g);
+  function add(tag,attrs){attrs.fill=attrs.fill||fill;attrs.stroke=ink;attrs['stroke-width']=2;g.appendChild(early_svg(tag,attrs));}
+  if(shape==='circle'||shape==='sphere'){add('circle',{cx:0,cy:0,r:size});if(shape==='sphere')g.appendChild(early_svg('ellipse',{cx:0,cy:0,rx:size*.45,ry:size,fill:'none',stroke:ink,'stroke-dasharray':'5 3'}));}
+  if(shape==='triangle')add('polygon',{points:'0,'+(-size)+' '+size+','+size+' '+(-size)+','+size});
+  if(shape==='square')add('rect',{x:-size,y:-size,width:2*size,height:2*size});
+  if(shape==='rectangle')add('rect',{x:-size*1.4,y:-size*.7,width:size*2.8,height:size*1.4});
+  if(shape==='hexagon')add('polygon',{points:Array.from({length:6},function(_,i){var a=i*Math.PI/3;return size*Math.cos(a)+','+size*Math.sin(a);}).join(' ')});
+  if(shape==='cube'){var s=size*.8;add('polygon',{points:(-s)+','+(-s*.5)+' 0,'+(-s)+' '+s+','+(-s*.5)+' 0,0'});add('polygon',{points:(-s)+','+(-s*.5)+' 0,0 0,'+s+' '+(-s)+','+(s*.5)});add('polygon',{points:'0,0 '+s+','+(-s*.5)+' '+s+','+(s*.5)+' 0,'+s});}
+  if(shape==='cylinder'){add('path',{d:'M '+(-size*.65)+' '+(-size*.7)+' L '+(-size*.65)+' '+(size*.7)+' A '+(size*.65)+' '+(size*.25)+' 0 0 0 '+(size*.65)+' '+(size*.7)+' L '+(size*.65)+' '+(-size*.7)});add('ellipse',{cx:0,cy:-size*.7,rx:size*.65,ry:size*.25});}
+  if(shape==='cone'){add('path',{d:'M 0 '+(-size)+' L '+(-size*.75)+' '+(size*.7)+' A '+(size*.75)+' '+(size*.25)+' 0 0 0 '+(size*.75)+' '+(size*.7)+' Z'});g.appendChild(early_svg('path',{d:'M '+(-size*.75)+' '+(size*.7)+' A '+(size*.75)+' '+(size*.25)+' 0 0 1 '+(size*.75)+' '+(size*.7),fill:'none',stroke:ink,'stroke-dasharray':'4 3'}));}
+  return g;
+}
+function renderEarlyVisual(container,v,hint) {
+  var kinds=['k_notice','k_count','k_sequence','k_compare_sets','k_operation','k_tenframe','k_shape','k_position','k_length','k_height','k_weight','k_categories'];if(!v||kinds.indexOf(v.kind)===-1)return false;
+  container.replaceChildren();var svg=early_svg('svg',{viewBox:'0 0 400 250',role:'img','class':'path-diagram'}),ink='#69452e',teal='#287963',description='';
+  function label(x,y,text,size){svg.appendChild(early_svg('text',{x:x,y:y,'text-anchor':'middle','font-family':'sans-serif','font-size':size||18,fill:ink},text));}
+  function line(x1,y1,x2,y2,attrs){svg.appendChild(early_svg('line',Object.assign({x1:x1,y1:y1,x2:x2,y2:y2,stroke:ink,'stroke-width':3},attrs||{})));}
+  function rect(x,y,w,h,fill,attrs){svg.appendChild(early_svg('rect',Object.assign({x:x,y:y,width:w,height:h,rx:4,fill:fill||'#fff8eb',stroke:ink,'stroke-width':2},attrs||{})));}
+  function cookies(count,x,y,columns,spacing,shape,color){for(var i=0;i<count;i++)early_shape(svg,shape||'circle',x+i%columns*spacing,y+Math.floor(i/columns)*spacing,Math.min(13,spacing*.3),0,color,{'data-cookie':'true'});}
+  function words(count,shape){return count===0?'empty':Array.from({length:count},function(){return shape||'cookie';}).join(', ');}
+  if(v.kind==='k_notice'){svg.setAttribute('viewBox','0 0 400 65');label(200,38,v.text,17);description=v.text;}
+  if(v.kind==='k_count'){
+    rect(30,25,340,195);var spots=[[67,65],[174,55],[295,70],[118,115],[242,125],[333,136],[64,188],[160,183],[265,190],[330,45]];
+    if(v.scattered)for(var i=0;i<v.count;i++){var point=spots[(i+v.variant)%spots.length];early_shape(svg,'circle',point[0],point[1],14,0,null,{'data-cookie':'true'});}
+    else cookies(v.count,90,53,5,47,'circle',v.variant%2?'#e6b880':'#f3b97c');
+    if(v.count===0)label(200,130,'Empty tray',21);description='Tray: '+words(v.count)+'. Count each cookie once.';
+  }
+  if(v.kind==='k_sequence'){
+    for(var i=0;i<=v.jumps;i++)label(55+i*290/v.jumps,123,i===v.jumps?'?':v.start+i*v.step,30);
+    label(200,195,v.step===10?'Count by tens':'Count by ones');description='Count '+(v.step===10?'by tens':'by ones')+': '+Array.from({length:v.jumps},function(_,i){return v.start+i*v.step;}).join(', ')+', missing number.';
+  }
+  if(v.kind==='k_compare_sets'||v.kind==='k_categories'){
+    label(100,30,v.kind==='k_categories'?'Circles':'A');label(300,30,v.kind==='k_categories'?'Triangles':'B');
+    rect(12,45,180,185);rect(208,45,180,185);
+    if(v.numerals){label(100,148,v.a,42);label(300,148,v.b,42);description='A: '+v.a+'. B: '+v.b+'.';}
+    else {cookies(v.a,38,80,5,31);cookies(v.b,234,80,5,31,v.kind==='k_categories'?'triangle':'circle');description=(v.kind==='k_categories'?'Circles':'Tray A')+': '+words(v.a,'circle')+'. '+(v.kind==='k_categories'?'Triangles':'Tray B')+': '+words(v.b,v.kind==='k_categories'?'triangle':'circle')+'.';}
+  }
+  if(v.kind==='k_operation'){
+    if(v.take){rect(35,25,330,190);cookies(v.a,72,75,5,60);for(var i=0;i<v.b;i++){var ix=v.a-1-i,x=72+ix%5*60,y=75+Math.floor(ix/5)*60;line(x-17,y-17,x+17,y+17,{stroke:'#a33b41'});line(x+17,y-17,x-17,y+17,{stroke:'#a33b41'});}description='Start with '+v.a+' cookies; '+v.b+' crossed-out cookies are given away. Count those remaining.';}
+    else {rect(12,45,180,155);rect(208,45,180,155);cookies(v.a,38,80,5,31);cookies(v.b,234,80,5,31,v.parts?'triangle':'circle');label(200,226,'Count both groups');description='First group: '+words(v.a)+'. Second group: '+words(v.b,v.parts?'triangle cookie':'cookie')+'.';}
+  }
+  if(v.kind==='k_tenframe'){
+    for(var i=0;i<10;i++){var x=55+i%5*58,y=54+Math.floor(i/5)*58;rect(x,y,58,58);if(i<v.filled)early_shape(svg,'circle',x+29,y+29,17,0,null,{'data-cookie':'true'});}description='Ten spots in two rows of five. '+words(v.filled)+' placed in the tray. Count the empty spots.';
+  }
+  if(v.kind==='k_shape'){early_shape(svg,v.shape,200,125,62,v.rotation);description=['sphere','cube','cylinder','cone'].indexOf(v.shape)!==-1?({sphere:'Solid model with one round curved surface and no flat faces.',cube:'Solid model with square faces, all the same size.',cylinder:'Solid model with two flat circular ends and a curved side.',cone:'Solid model with one circular base and a curved surface that meets at a point.'}[v.shape]):({circle:'Round flat outline with no straight sides or corners.',triangle:'Flat outline with three straight sides and three corners.',square:'Flat outline with four equal straight sides and four square corners.',rectangle:'Flat outline with four square corners. Two long sides and two shorter sides.',hexagon:'Flat outline with six straight sides and six corners.'}[v.shape]);}
+  if(v.kind==='k_position'){
+    var x=200,y=125;if(v.position==='above')y=43;if(v.position==='below')y=212;if(v.position==='beside')x=v.side?65:335;
+    if(v.position==='behind'){early_shape(svg,'circle',200,84,30);rect(125,90,150,95,'#b8e6d0');}
+    else {rect(125,80,150,95,'#b8e6d0');early_shape(svg,'circle',x,y,24);}
+    label(200,162,'box',14);description=v.position==='behind'?'Part of the cookie is hidden by the box in front of it.':'Cookie '+(v.position==='above'?'higher than the top':v.position==='below'?'lower than the bottom':v.position==='inside'?'within the outline':'next to the side')+' of the box.';
+  }
+  if(v.kind==='k_length'){
+    line(70,40,70,215,{'stroke-dasharray':'5 4'});label(35,90,'A');label(35,175,'B');rect(70,60,v.a*45,40,'#f3b97c',{'data-object':'A'});rect(70,145,v.b*45,40,'#b8e6d0',{'data-object':'B'});description='Ribbons A and B start at the same vertical line. '+(v.a===v.b?'Their right ends line up.':(v.a>v.b?'A':'B')+' extends farther to the right.');
+  }
+  if(v.kind==='k_height'){
+    line(45,210,355,210);rect(85,210-v.a*26,65,v.a*26,'#f3b97c',{'data-object':'A'});rect(250,210-v.b*26,65,v.b*26,'#b8e6d0',{'data-object':'B'});label(117,240,'A');label(282,240,'B');description='Stacks A and B rest on the same floor. '+(v.a===v.b?'Their tops line up.':(v.a>v.b?'A':'B')+' reaches higher.');
+  }
+  if(v.kind==='k_weight'){
+    var delta=v.a===v.b?0:v.a>v.b?22:-22,left=80+delta,right=80-delta;
+    line(90,left,310,right,{'data-balance':'beam'});svg.appendChild(early_svg('polygon',{points:'200,75 170,205 230,205',fill:'#b8e6d0',stroke:ink,'stroke-width':2}));
+    [90,310].forEach(function(x,i){var y=i?right:left;line(x,y,x,y+57);line(x-36,y+57,x+36,y+57);rect(x-23,y+16,46,40,i?'#b8e6d0':'#f3b97c',{'data-pan':i?'B':'A'});label(x,y+44,i?'B':'A',21);});description='Balance scale. '+(v.a===v.b?'Both pans are level.':(v.a>v.b?'A':'B')+' pan hangs lower.');
+  }
+  svg.setAttribute('aria-label',description);container.appendChild(svg);return true;
+}
+function renderEarlyAnswer(container,p,submit,reveal) {
+  var w=p.widget;if(!w||['k_count_out','k_group','k_parts','k_compose','k_sort'].indexOf(w.kind)===-1)return false;
+  container.replaceChildren();var wrap=document.createElement('div');wrap.style.cssText='width:100%;max-width:400px;margin:0 auto;display:flex;flex-direction:column;gap:10px;';container.appendChild(wrap);
+  function el(tag,text,parent){var e=document.createElement(tag);if(text!==undefined)e.textContent=text;(parent||wrap).appendChild(e);return e;}
+  function button(text,label,fn,parent){var b=el('button',text,parent);b.type='button';b.className='btn btn-small btn-back';b.style.cssText='min-width:44px;min-height:44px;padding:6px;';b.disabled=!!reveal;b.setAttribute('aria-label',label);if(!reveal)b.addEventListener('click',fn);return b;}
+  function check(fn){var b=button('Check my work','Check my work',function(){submit(JSON.stringify(fn()));});b.className='btn btn-small btn-teal';}
+  if(reveal)el('p','One completed model.');
+  if(w.kind==='k_count_out'){
+    var selected=reveal?JSON.parse(w.solution):[],grid=el('div'),buttons=[];grid.style.cssText='display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;';
+    for(var i=0;i<w.capacity;i++)(function(i){var b=button('','Cookie spot '+(i+1),function(){var at=selected.indexOf(i);if(at===-1)selected.push(i);else selected.splice(at,1);draw();},grid);b.setAttribute('data-early-spot',i);buttons.push(b);})(i);
+    function draw(){buttons.forEach(function(b,i){var active=selected.indexOf(i)!==-1;b.textContent=active?'🍪':'·';b.setAttribute('aria-pressed',String(active));b.style.background=active?'#b8e6d0':'#fff8eb';});}check(function(){return selected;});draw();
+  }
+  if(w.kind==='k_group'||w.kind==='k_parts'){
+    var values=reveal?JSON.parse(w.solution):[0,0],model=el('div'),outputs=[],names=w.kind==='k_group'?['full tray of ten','single cookie']:['cookie on plate A','cookie on plate B'];
+    function draw(){model.replaceChildren();var s=early_svg('svg',{viewBox:'0 0 400 180',role:'img','aria-label':w.kind==='k_group'?'Your model: '+values[0]+' full tray of ten and '+values[1]+' single cookies.':'Your plates: '+values[0]+' cookies on A and '+values[1]+' cookies on B.'});model.appendChild(s);
+      values.forEach(function(value,i){var x=i?215:15;s.appendChild(early_svg('rect',{x:x,y:8,width:170,height:156,rx:12,fill:'#fff8eb',stroke:'#69452e','stroke-width':2}));var count=w.kind==='k_group'&&i===0?value*10:value;for(var j=0;j<count;j++)early_shape(s,'circle',x+18+j%5*33,39+Math.floor(j/5)*45,11);outputs[i].textContent=String(value);});
+    }
+    names.forEach(function(name,i){var row=el('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;';el('span',w.kind==='k_group'?(i?'Single cookies':'Full tray of ten'):'Plate '+(i?'B':'A'),row);button('−','Remove one '+name,function(){values[i]=Math.max(0,values[i]-1);draw();},row);outputs.push(el('output','',row));button('+','Add one '+name,function(){values[i]=Math.min(w.max[i],values[i]+1);draw();},row);});check(function(){return values;});draw();
+  }
+  if(w.kind==='k_compose'){
+    var values=reveal?JSON.parse(w.solution):[-1,-1],model=el('div'),buttons=[],names=['triangle','square','circle'];
+    function draw(){model.replaceChildren();var s=early_svg('svg',{viewBox:'0 0 400 220',role:'img','aria-label':'Build a '+w.targetShape+' from two pieces.'});model.appendChild(s);var sq=w.targetShape==='square',points=w.diagonal==='down'?['100,30 280,30 280,210','100,30 280,210 100,210']:['100,30 280,30 100,210','280,30 280,210 100,210'];
+      for(var i=0;i<2;i++){var fill=values[i]===(sq?0:1)?(i?'#b8e6d0':'#f3b97c'):'#fff8eb';if(sq)s.appendChild(early_svg('polygon',{points:points[i],fill:fill,stroke:'#69452e','stroke-width':3,'data-piece':i}));else s.appendChild(early_svg('rect',{x:40+i*150,y:35,width:150,height:150,fill:fill,stroke:'#69452e','stroke-width':3,'data-piece':i}));
+        if(values[i]>=0&&values[i]!== (sq?0:1))early_shape(s,names[values[i]],sq?(w.diagonal==='down'?(i?160:220):(i?220:160)):115+i*150,sq?(i?155:85):110,25);
+        buttons[i].textContent='Piece '+(i+1)+': '+(values[i]<0?'empty':names[values[i]]);buttons[i].setAttribute('aria-label',buttons[i].textContent+'. Tap to change.');
+      }
+    }
+    for(var i=0;i<2;i++)(function(i){buttons.push(button('','Choose piece '+(i+1),function(){values[i]=(values[i]+2)%4-1;draw();}));})(i);
+    el('p','Tap a piece button: empty → triangle → square → circle.');check(function(){return values;});draw();
+  }
+  if(w.kind==='k_sort'){
+    var values=reveal?JSON.parse(w.solution):w.items.map(function(){return -1;}),grid=el('div'),buttons=[],bins=[];grid.style.cssText='display:flex;flex-direction:column;gap:8px;';
+    ['Unsorted'].concat(w.groups).forEach(function(name){var section=el('div',undefined,grid);section.style.cssText='padding:6px;border:2px solid #dbcbb9;border-radius:8px;';el('strong',name,section);var bin=el('div',undefined,section);bin.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;min-height:24px;';bins.push(bin);});
+    w.items.forEach(function(item,i){var b=button('','Cookie '+(i+1),function(){values[i]=(values[i]+2)%3-1;draw();},bins[0]);b.style.display='flex';b.style.alignItems='center';b.style.gap='8px';var s=early_svg('svg',{viewBox:'0 0 50 50',width:42,height:42,'aria-hidden':'true'});early_shape(s,item.shape,25,25,item.size,0,item.color==='red'?'#c75454':'#4e79b9');b.appendChild(s);var label=el('span','',b);buttons.push({button:b,label:label});});
+    function draw(){var active=document.activeElement;bins.forEach(function(bin){bin.replaceChildren();});buttons.forEach(function(entry,i){bins[values[i]+1].appendChild(entry.button);var item=w.items[i],group=values[i]<0?'Unsorted':w.groups[values[i]];entry.label.textContent=group;entry.button.setAttribute('aria-label',(item.size===13?'Small ':'Large ')+item.color+' '+item.shape+' cookie. Group: '+group+'. Tap to move.');entry.button.style.background=values[i]<0?'#fff8eb':'#e1efdf';});if(active&&buttons.some(function(entry){return entry.button===active;}))active.focus({preventScroll:true});}
+    el('p','Tap each cookie: Unsorted → '+w.groups[0]+' → '+w.groups[1]+'.');check(function(){return values;});draw();
+  }
+  return true;
+}
+
+// Grade 5 number sense, operations, and fraction models. All arithmetic is exact.
+var FIFTH_NUMBER_SKILLS = {
+  place: [
+    ['g5n_digit','Decimal place values','Read the value of digits through thousandths'],
+    ['g5n_expanded','Build a decimal','Compose decimals with ones, tenths, hundredths, and thousandths'],
+    ['g5n_compare','Compare precise amounts','Compare decimals through thousandths using place value'],
+    ['g5n_round','Round decimal measures','Use neighboring benchmarks to round decimal measurements'],
+    ['g5n_powers','Powers of ten','Multiply and divide by powers of ten using place-value shifts'],
+    ['g5n_relationship','Ten times or one tenth','Explain how a digit’s value changes in adjacent places']
+  ],
+  strategies: [
+    ['g5n_multiply','Large batch products','Use place-value partial products for multi-digit multiplication'],
+    ['g5n_divide','Two-digit batch sizes','Divide four-digit totals by two-digit group sizes'],
+    ['g5n_expression','Recipe expressions','Interpret expressions and evaluate parentheses and brackets'],
+    ['g5n_patterns','Related order patterns','Compare two numerical patterns with different rules'],
+    ['g5n_decimal_add','Add precise amounts','Add decimals to hundredths by combining equal units'],
+    ['g5n_decimal_subtract','Subtract precise amounts','Subtract decimals to hundredths with exchanges'],
+    ['g5n_decimal_multiply','Multiply decimal measures','Use whole-number products and scaled units'],
+    ['g5n_decimal_divide','Divide decimal measures','Make equal groups by rescaling both quantities']
+  ],
+  stories: [
+    ['g5n_shopping','The supply bill','Combine multiplication and addition of decimal prices'],
+    ['g5n_packages','Enough delivery boxes','Interpret a division remainder in a packaging story'],
+    ['g5n_recipe','Changing the recipe','Solve fraction addition and subtraction stories with different units'],
+    ['g5n_batches','Part of a batch','Multiply fractional recipe amounts and check the size'],
+    ['g5n_sharing','Fair shares and portions','Distinguish sharing a unit fraction from counting unit-fraction portions']
+  ],
+  fractionmodels: [
+    ['g5n_fraction_add','Add unlike fractions','Rename different-sized pieces with a common denominator'],
+    ['g5n_fraction_subtract','Subtract unlike fractions','Rename fractions before taking away pieces'],
+    ['g5n_mixed','Mixed-number combinations','Add and subtract mixed numbers with unlike denominators'],
+    ['g5n_fraction_division','A fraction is division','Share whole amounts equally and name each share as a fraction'],
+    ['g5n_fraction_product','Build a fraction product','Use crossing partitions to model a fraction of a fraction'],
+    ['g5n_scaling','Will the amount grow?','Predict how multiplying by less than, equal to, or more than one changes size'],
+    ['g5n_unit_divide','Share a small amount','Divide a unit fraction by a whole number using equal shares'],
+    ['g5n_whole_divide','Count fractional portions','Divide a whole number by a unit fraction'],
+    ['g5n_benchmark','Fraction estimate check','Use zero, one half, and one to judge a fraction sum']
+  ]
+};
+function fifthNumber_gcd(a,b){while(b){var t=a%b;a=b;b=t;}return a;}
+function fifthNumber_fraction(a,b){var d=fifthNumber_gcd(a,b);return b/d===1?String(a/d):a/d+'/'+b/d;}
+function fifthNumber_mixed(a,b){return a>=b&&a%b?Math.floor(a/b)+' '+fifthNumber_fraction(a%b,b):fifthNumber_fraction(a,b);}
+function fifthNumber_decimal(units,places){var text=String(units).padStart(places+1,'0');return places?text.slice(0,-places)+'.'+text.slice(-places):text;}
+function makeFifthNumberProblem(level,n){
+  var k=level.skill,p=null,a,b,c,d,answer,v,mode=n%2;
+  function q(story,result,hint,explanation,visual,choices){p={skill:k,story:story,answer:String(result),hintText:hint,explanation:explanation,visual:visual};if(choices)p.choices=choices;}
+  function decimal(){p.decimalInput=true;}
+  function fraction(){p.fractionInput=true;}
+  function operands(kind,a,b,operation,extra){var out={kind:kind,a:a,b:b,operation:operation};Object.keys(extra||{}).forEach(function(key){out[key]=extra[key];});return out;}
+  var pairs=[[3,4],[4,5],[4,6],[5,8],[3,8],[6,8]],pair=pairs[n%pairs.length];
+  if(k==='g5n_digit'){
+    a=1234+(n*317)%7654;b=1+n%3;var digit=Math.floor(a/Math.pow(10,3-b))%10,place=['ones','tenths','hundredths','thousandths'][b];answer=fifthNumber_decimal(digit,b);
+    q('In '+fifthNumber_decimal(a,3)+' kilograms of flour, what is the value of the digit in the '+place+' place?',answer,'Count places to the right of the decimal point: tenths, hundredths, thousandths.',digit+' in the '+place+' place means '+digit+'/'+Math.pow(10,b)+' = '+answer+'.',{kind:'g5n_place',units:a,places:3,focus:b});decimal();
+  }
+  if(k==='g5n_expanded'){
+    a=1023+(n*137)%6960;var digits=[Math.floor(a/1000),Math.floor(a/100)%10,Math.floor(a/10)%10,a%10];
+    q('Build '+fifthNumber_decimal(a,3)+' using the place-value controls. You may trade ten smaller units for one larger unit.',JSON.stringify(digits),'A one is 1,000 thousandths; a tenth is 100; a hundredth is 10; a thousandth is 1.',fifthNumber_decimal(a,3)+' = '+digits[0]+' × 1 + '+digits[1]+' × 0.1 + '+digits[2]+' × 0.01 + '+digits[3]+' × 0.001.',{kind:'g5n_target',value:fifthNumber_decimal(a,3),caption:'Compose this amount with place-value units.'});
+    p.widget={kind:'g5n_decimal_build',target:a,solution:p.answer};p.hideVisual=true;
+  }
+  if(k==='g5n_compare'){
+    a=1200+n*113;b=n%3===0?a:a+(n%3===1?1:-10)*(1+n%7);answer=a===b?'=':a>b?'>':'<';
+    q('Compare the amounts: '+fifthNumber_decimal(a,3)+' L □ '+fifthNumber_decimal(b,3)+' L.',answer,'Align the decimal points. Compare from the greatest place; extra trailing zeros do not change value.',fifthNumber_decimal(a,3)+' is '+(a===b?'equal to':a>b?'greater than':'less than')+' '+fifthNumber_decimal(b,3)+'. Compare the first place with different digits.',{kind:'g5n_compare',a:a,b:b,places:3},['<','=','>']);
+  }
+  if(k==='g5n_round'){
+    a=1245+n*137;b=n%3;var unit=Math.pow(10,3-b),low=Math.floor(a/unit)*unit,high=low+unit,rounded=a-low<unit/2?low:high;answer=fifthNumber_decimal(rounded/Math.pow(10,3-b),b);
+    q('Round '+fifthNumber_decimal(a,3)+' meters of ribbon to the nearest '+['whole meter','tenth of a meter','hundredth of a meter'][b]+'.',answer,'Find the two neighboring benchmarks. At the midpoint or above, choose the higher one.',fifthNumber_decimal(a,3)+' lies between '+fifthNumber_decimal(low,3)+' and '+fifthNumber_decimal(high,3)+'. The midpoint is '+fifthNumber_decimal(low+unit/2,3)+', so it rounds to '+answer+'.',{kind:'g5n_round',units:a,low:low,high:high,places:3});decimal();
+  }
+  if(k==='g5n_powers'){
+    a=12+n*7;b=1+n%3;c=Math.pow(10,b);answer=mode?fifthNumber_decimal(a, b):String(a*c);
+    q('Calculate '+a+' '+(mode?'÷':'×')+' 10^'+b+'.',answer,'10^'+b+' means '+c+'. Each place is ten times the value of the place to its right.',(mode?'Dividing':'Multiplying')+' by '+c+' makes each digit worth '+(mode?'1/'+c:c)+' as much: '+a+' '+(mode?'÷':'×')+' '+c+' = '+answer+'.',{kind:'g5n_power',value:a,power:b,divide:!!mode});decimal();
+  }
+  if(k==='g5n_relationship'){
+    a=1+n%6;b=1+Math.floor(n/6)%2;mode=Math.floor(n/12);c=mode?b+1:b-1;var first=fifthNumber_decimal(a,b),second=fifthNumber_decimal(a,c);answer=mode?'one tenth as much':'ten times as much';
+    q('The digit '+a+' moves from '+first+' to '+second+'. How does its value change?',answer,'Moving one place left multiplies a digit’s value by ten. Moving one place right divides its value by ten.',second+' '+(mode?'× 10 = ':'÷ 10 = ')+first+', so the new value is '+answer+'.',{kind:'g5n_move',from:first,to:second},['ten times as much','one tenth as much']);
+  }
+  if(k==='g5n_multiply'){
+    a=123+n*17;b=12+n%18;var tens=Math.floor(b/10)*10,ones=b%10;answer=a*b;
+    q('A bakery packs '+b+' trays with '+a+' small treats on each tray. How many treats is that?',answer,'Split '+b+' into '+tens+' + '+ones+'. Multiply each part, then combine the partial products.',a+' × '+b+' = '+a+' × '+tens+' + '+a+' × '+ones+' = '+(a*tens)+' + '+(a*ones)+' = '+answer+'.',{kind:'g5n_product',a:a,b:b,tens:tens,ones:ones});
+  }
+  if(k==='g5n_divide'){
+    b=12+n%19;c=84+n*3;a=b*c;answer=c;
+    q('Pack '+a+' cookies into equal boxes of '+b+'. How many full boxes can be made?',answer,'Break the total into convenient multiples of '+b+'. Add the partial quotients.',b+' × '+(Math.floor(c/10)*10)+' = '+(b*Math.floor(c/10)*10)+'; the remaining '+(b*(c%10))+' makes '+c%10+' more boxes. There are '+answer+' boxes.',{kind:'g5n_quotient',total:a,size:b,remainder:0});
+  }
+  if(k==='g5n_expression'){
+    a=3+n%6;b=2+Math.floor(n/3)%5;c=2+n%4;d=1+n%3;mode=n%3;
+    var expression=mode===1?'['+a+' + ('+b+' × '+c+')] × '+d:'('+a+' + '+b+') × '+c+' − '+d;
+    answer=mode===1?(a+b*c)*d:(a+b)*c-d;
+    q('A recipe card shows '+expression+'. What is its value?',answer,'Work inside parentheses first, then brackets. Multiply before subtracting outside the grouping symbols.',mode===1?'First '+b+' × '+c+' = '+b*c+'. Then '+a+' + '+b*c+' = '+(a+b*c)+'. Finally multiply by '+d+' to get '+answer+'.':'First '+a+' + '+b+' = '+(a+b)+'. Multiply by '+c+' to get '+((a+b)*c)+', then subtract '+d+' to get '+answer+'.',{kind:'g5n_expression',a:a,b:b,c:c,d:d,mode:mode,expression:expression});
+    if(mode===2){p.story='Which expression means: add '+a+' and '+b+', multiply that sum by '+c+', then subtract '+d+'?';p.answer=expression;p.choices=[expression,a+' + '+b+' × '+c+' − '+d,'('+a+' + '+b+') × ('+c+' − '+d+')','('+a+' − '+b+') × '+c+' + '+d];p.hintText='Group the sum in parentheses so it is completed before multiplying. Then subtract outside the parentheses.';p.explanation='The words “that sum” refer to ('+a+' + '+b+'). Multiplying the whole sum gives ('+a+' + '+b+') × '+c+'. Subtracting '+d+' last gives '+expression+'.';p.visual={kind:'g5n_story',operation:'expression_plan',a:a,b:b,c:c,d:d,labels:['Add '+a+' and '+b,'Multiply that sum by '+c,'Then subtract '+d]};}
+  }
+  if(k==='g5n_patterns'){
+    a=2+n%5;b=2+Math.floor(n/5);c=4+n%4;
+    q('Both patterns start at 0. Pattern A adds '+a+' each step; Pattern B adds '+a*b+'. When A reaches '+a*c+', what number does B reach?',a*b*c,'Compare corresponding entries. Pattern B adds '+b+' times as much each step.',a*c+' is step '+c+' in A. Each B entry is '+b+' times its matching A entry, so '+a*c+' × '+b+' = '+a*b*c+'.',{kind:'g5n_patterns',stepA:a,stepB:a*b,step:c});
+  }
+  if(/^g5n_decimal_(add|subtract|multiply|divide)$/.test(k)){
+    var op=k.slice(12),placesA=2,placesB=2,resultPlaces=2;
+    if(op==='add'||op==='subtract'){a=245+n*137;b=158+n*23;if(op==='subtract'&&b>a){c=a;a=b;b=c;}answer=fifthNumber_decimal(op==='add'?a+b:a-b,2);}
+    if(op==='multiply'){a=12+n;b=3+n%8;placesA=1;placesB=1;answer=fifthNumber_decimal(a*b,2);}
+    if(op==='divide'){b=12+n%13;c=11+n%17;a=b*c;placesB=1;answer=fifthNumber_decimal(c,1);}
+    var symbol={add:'+',subtract:'−',multiply:'×',divide:'÷'}[op],left=fifthNumber_decimal(a,placesA),right=fifthNumber_decimal(b,placesB);
+    var hint=op==='add'||op==='subtract'?'Align equal places, then '+op+' hundredths. Regroup ten hundredths as one tenth when needed.':op==='multiply'?'Each factor is measured in tenths. A tenth of a tenth is a hundredth.':'Multiply both quantities by 10 to make the divisor a whole number. Equal scaling preserves the quotient.';
+    var reasoning=op==='add'||op==='subtract'?a+' hundredths '+symbol+' '+b+' hundredths = '+(op==='add'?a+b:a-b)+' hundredths, or '+answer+'.':op==='multiply'?a+' tenths × '+b+' tenths = '+a*b+' hundredths, or '+answer+'.':left+' ÷ '+right+' = '+fifthNumber_decimal(a,1)+' ÷ '+b+' = '+answer+'. Check: '+right+' × '+answer+' = '+left+'.';
+    q('Calculate '+left+' '+symbol+' '+right+'.',answer,hint,reasoning,{kind:'g5n_decimal_operation',a:a,b:b,placesA:placesA,placesB:placesB,operation:op});decimal();
+  }
+  if(k==='g5n_shopping'){
+    a=125+n*13;b=2+n%5;c=175+n*7;answer=fifthNumber_decimal(a*b+c,2);
+    q('Buy '+b+' bags of sprinkles at $'+fifthNumber_decimal(a,2)+' each and one ribbon roll for $'+fifthNumber_decimal(c,2)+'. What is the total cost in dollars?',answer,'Find the cost of all the bags first. Then add the ribbon cost. Work in cents to keep the units exact.',a+' cents × '+b+' = '+a*b+' cents for sprinkles. Add '+c+' cents to get '+(a*b+c)+' cents = $'+answer+'.',operands('g5n_story',a,b,'shopping',{c:c,labels:[b+' bags at $'+fifthNumber_decimal(a,2),'Ribbon: $'+fifthNumber_decimal(c,2),'Total cost: ? dollars']}));decimal();
+  }
+  if(k==='g5n_packages'){
+    b=12+n%17;c=84+n*4;d=1+n%(b-1);a=b*c+d;
+    q('There are '+a+' cupcakes. Each delivery box holds at most '+b+'. How many boxes are needed to carry every cupcake?',c+1,'Find the full boxes and the leftovers. Any leftover cupcakes need one more box.',a+' = '+b+' × '+c+' + '+d+'. The '+d+' leftover cupcakes need another box, so use '+(c+1)+' boxes.',{kind:'g5n_quotient',total:a,size:b,remainder:d});
+  }
+  if(k==='g5n_fraction_add'||k==='g5n_fraction_subtract'||k==='g5n_mixed'||k==='g5n_recipe'){
+    b=pair[0];d=pair[1];a=1+Math.floor(n/6)%(b-1);c=1+Math.floor(Math.floor(n/6)/(b-1))%(d-1);var subtract=k==='g5n_fraction_subtract'||((k==='g5n_mixed'||k==='g5n_recipe')&&mode);
+    if(k==='g5n_mixed'||k==='g5n_recipe'){a+=b*(2+n%2);c+=d;}
+    if(subtract&&a*d<c*b){var swap=a;a=c;c=swap;swap=b;b=d;d=swap;}
+    var common=b*d/fifthNumber_gcd(b,d),leftN=a*(common/b),rightN=c*(common/d),result= subtract?leftN-rightN:leftN+rightN;answer=fifthNumber_fraction(result,common);
+    var operation=subtract?'subtract':'add',symbol=subtract?'−':'+',firstText=fifthNumber_mixed(a,b),secondText=fifthNumber_mixed(c,d);
+    var story=k==='g5n_recipe'?(subtract?'A recipe starts with '+firstText+' cups of flour and uses '+secondText+' cups. How many cups remain?':'A dough recipe uses '+firstText+' cups of flour; topping uses '+secondText+' cups. How many cups are used altogether?'):'Find '+firstText+' '+symbol+' '+secondText+'.';
+    q(story,answer,'Rename both amounts using denominator '+common+' so the pieces have the same size. Then '+operation+' the numerators.',fifthNumber_fraction(a,b)+' = '+leftN+'/'+common+' and '+fifthNumber_fraction(c,d)+' = '+rightN+'/'+common+'. So '+leftN+'/'+common+' '+symbol+' '+rightN+'/'+common+' = '+result+'/'+common+' = '+answer+'.',{kind:'g5n_fraction_operation',a:a,b:b,c:c,d:d,operation:operation,common:common});fraction();
+  }
+  if(k==='g5n_fraction_division'){
+    a=2+n%7;b=3+n%6;
+    q('Share '+a+' whole pies equally among '+b+' tables. How much pie does each table receive?',fifthNumber_fraction(a,b),'Cut each pie into '+b+' equal pieces. Each table gets one piece from every pie.',a+' ÷ '+b+' = '+a+'/'+b+' = '+fifthNumber_fraction(a,b)+' pies per table. Each of the '+b+' tables gets '+a+' pieces of size 1/'+b+'.',{kind:'g5n_share',numerator:a,denominator:1,groups:b,operation:'share_wholes'});fraction();
+  }
+  if(k==='g5n_fraction_product'||k==='g5n_batches'){
+    b=2+n%4;d=2+Math.floor(n/4);a=1+n%(b-1);c=1+Math.floor(n/3)%(d-1);answer=fifthNumber_fraction(a*c,b*d);
+    q(k==='g5n_batches'?'A full batch needs '+a+'/'+b+' cup of cocoa. You make '+c+'/'+d+' of a batch. How many cups of cocoa are needed?':'Build '+a+'/'+b+' × '+c+'/'+d+'. Choose '+a+' of '+b+' columns and '+c+' of '+d+' rows. The overlap is the product.',k==='g5n_batches'?answer:JSON.stringify([a,c]),'Split a whole into '+b+' equal columns and '+d+' equal rows. Take '+a+'/'+b+' of '+c+'/'+d+'; count only the overlap.',a+' × '+c+' = '+a*c+' overlapping pieces. There are '+b+' × '+d+' = '+b*d+' equal pieces in one whole. The product is '+answer+', smaller than either positive factor here.',{kind:'g5n_area',a:a,b:b,c:c,d:d,showOverlap:k==='g5n_batches'});fraction();
+    if(k==='g5n_fraction_product'){p.widget={kind:'g5n_fraction_area',a:a,b:b,c:c,d:d,solution:p.answer};p.hideVisual=true;}
+  }
+  if(k==='g5n_scaling'){
+    a=2+n%5;b=2+n%7;c=n%3===0?b-1:n%3===1?b:b+2;answer=c<b?'smaller':c===b?'the same':'greater';
+    q('Without finding the product, compare '+a+' × '+c+'/'+b+' with '+a+'. Is the product smaller, the same, or greater?',answer,'Compare the multiplier with 1. Taking part of an amount shrinks it; taking more than one copy enlarges it.',c+'/'+b+' is '+(c<b?'less than':c===b?'equal to':'greater than')+' 1, so multiplying the positive amount '+a+' gives '+(answer==='the same'?'the same amount':'a '+answer+' amount')+'.',{kind:'g5n_scaling',whole:a,numerator:c,denominator:b},['smaller','the same','greater']);
+  }
+  if(k==='g5n_unit_divide'||k==='g5n_whole_divide'||k==='g5n_sharing'){
+    b=2+n%7;c=2+Math.floor(n/7);var count=k==='g5n_whole_divide'||(k==='g5n_sharing'&&mode);answer=count?String(c*b):fifthNumber_fraction(1,b*c);
+    q(count?'You have '+c+' liters of juice. Each serving is 1/'+b+' liter. How many servings can you pour?':'Share 1/'+b+' liter of syrup equally among '+c+' bakers. How many liters does each baker get?',answer,count?'Each whole liter contains '+b+' servings of 1/'+b+' liter. Count that many servings in every whole.':'Split the 1/'+b+' part into '+c+' equal pieces. Each new piece is one of '+b*c+' equal pieces of a whole.',count?c+' ÷ (1/'+b+') = '+c+' × '+b+' = '+answer+' servings.': '(1/'+b+') ÷ '+c+' = 1/('+b+' × '+c+') = '+answer+' liter per baker.',{kind:'g5n_share',numerator:count?c:1,denominator:count?1:b,groups:count?b:c,operation:count?'count_portions':'share_unit'});fraction();
+  }
+  if(k==='g5n_benchmark'){
+    var sets=[[1,4,1,8],[1,3,1,4],[2,3,3,4],[1,2,1,2],[3,8,1,8],[4,5,3,4]];var set=sets[n%sets.length];var factor=1+Math.floor(n/sets.length);a=set[0]*factor;b=set[1]*factor;c=set[2]*factor;d=set[3]*factor;var numerator=a*d+c*b,denominator=b*d;
+    answer=numerator*2<denominator?'less than 1/2':numerator*2===denominator?'exactly 1/2':numerator<denominator?'between 1/2 and 1':numerator===denominator?'exactly 1':'greater than 1';
+    q('Check the estimate for '+a+'/'+b+' + '+c+'/'+d+' cups. Which benchmark description fits the total?',answer,'Compare each amount with 1/2, or rename both as equal-sized pieces. Compare the total with 1/2 and 1.',a+'/'+b+' + '+c+'/'+d+' = '+fifthNumber_fraction(numerator,denominator)+', which is '+answer+'. The benchmark check helps catch an unreasonable answer.',{kind:'g5n_fraction_operation',a:a,b:b,c:c,d:d,operation:'benchmark',common:b*d/fifthNumber_gcd(b,d)},['less than 1/2','exactly 1/2','between 1/2 and 1','exactly 1','greater than 1']);
+  }
+  return p;
+}
+function matchFifthNumberAnswer(p,raw){
+  if(!p||typeof p.skill!=='string'||!Object.keys(FIFTH_NUMBER_SKILLS).some(function(path){return FIFTH_NUMBER_SKILLS[path].some(function(skill){return skill[0]===p.skill;});}))return null;
+  if(p.widget){var arr;try{arr=JSON.parse(String(raw));}catch(e){return false;}if(!Array.isArray(arr))return false;
+    if(p.widget.kind==='g5n_decimal_build')return arr.length===4&&arr.every(function(x){return Number.isInteger(x)&&x>=0&&x<=20;})&&arr[0]*1000+arr[1]*100+arr[2]*10+arr[3]===p.widget.target;
+    if(p.widget.kind==='g5n_fraction_area')return arr.length===2&&arr[0]===p.widget.a&&arr[1]===p.widget.c;
+    return false;
+  }
+  if(p.choices)return p.choices.indexOf(String(raw))!==-1&&String(raw)===p.answer;
+  return answersMatch(raw,p.answer);
+}
+function fifthNumber_node(tag,attrs,text){var node=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.keys(attrs||{}).forEach(function(key){node.setAttribute(key,attrs[key]);});if(text!==undefined)node.textContent=text;return node;}
+function renderFifthNumberVisual(container,v,hint){
+  var kinds=['g5n_place','g5n_target','g5n_compare','g5n_round','g5n_power','g5n_move','g5n_product','g5n_quotient','g5n_expression','g5n_patterns','g5n_decimal_operation','g5n_story','g5n_fraction_operation','g5n_share','g5n_area','g5n_scaling'];
+  if(!v||kinds.indexOf(v.kind)===-1)return false;
+  container.replaceChildren();var svg=fifthNumber_node('svg',{viewBox:'0 0 400 260',role:'img',class:'path-diagram'+(hint?' diagram-hint':'')});container.appendChild(svg);
+  var ink='#69452e',green='#287963',pale='#fff6e8',peach='#f3b97c',desc='';
+  function text(x,y,t,size,extra){var attrs={x:x,y:y,'text-anchor':'middle','font-size':size||16,fill:ink,'font-family':'sans-serif'};Object.keys(extra||{}).forEach(function(key){attrs[key]=extra[key];});svg.appendChild(fifthNumber_node('text',attrs,t));}
+  function fit(x,y,t,max){text(x,y,t,Math.min(max||20,360/(Math.max(1,String(t).length)*.57)));}
+  function rect(x,y,w,h,color,extra){var attrs={x:x,y:y,width:w,height:h,fill:color||pale,stroke:ink,'stroke-width':1};Object.keys(extra||{}).forEach(function(key){attrs[key]=extra[key];});svg.appendChild(fifthNumber_node('rect',attrs));}
+  function line(x1,y1,x2,y2){svg.appendChild(fifthNumber_node('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:ink,'stroke-width':2}));}
+  function bar(num,den,y,label,slots){var wholes=Math.max(1,Math.ceil(num/den)),gap=8,count=slots||wholes,width=(344-gap*(count-1))/count;fit(200,y-8,label,16);for(var whole=0;whole<wholes;whole++)for(var j=0;j<den;j++)rect(28+whole*(width+gap)+j*width/den,y,width/den,29,whole*den+j<num?green:pale,{'data-piece':whole*den+j,'data-denominator':den});}
+  function chart(units,y,focus){var digits=fifthNumber_decimal(units,3).split('.').join('').padStart(4,'0');['ones','tenths','hundredths','thousandths'].forEach(function(name,i){rect(18+i*92,y,90,64,i===focus?'#fae2b9':pale);text(63+i*92,y+20,name,12);text(63+i*92,y+50,digits[i],24);});}
+  if(v.kind==='g5n_place'){desc='Place-value chart for '+fifthNumber_decimal(v.units,3)+'. Columns are ones, tenths, hundredths, and thousandths. The requested place is highlighted.';chart(v.units,73,v.focus);fit(200,185,'Each step right makes the unit one tenth as large.',16);}
+  if(v.kind==='g5n_target'){desc='Target decimal '+v.value+'. Build this amount with place-value units.';fit(200,87,v.value,34);fit(200,142,v.caption,17);fit(200,195,'1 = 10 tenths = 100 hundredths = 1,000 thousandths',14);}
+  if(v.kind==='g5n_compare'){desc='Two aligned place-value charts: '+fifthNumber_decimal(v.a,3)+' and '+fifthNumber_decimal(v.b,3)+'. Compare the first differing place from left to right.';chart(v.a,38,-1);chart(v.b,130,-1);}
+  if(v.kind==='g5n_round'){desc='Number line from '+fifthNumber_decimal(v.low,3)+' to '+fifthNumber_decimal(v.high,3)+'. The point is '+fifthNumber_decimal(v.units,3)+'. Midpoint is marked.';line(42,142,358,142);[0,.5,1].forEach(function(t){var x=42+t*316;line(x,132,x,151);text(x,176,fifthNumber_decimal(v.low+t*(v.high-v.low),3),14);});var x=42+(v.units-v.low)/(v.high-v.low)*316;svg.appendChild(fifthNumber_node('circle',{cx:x,cy:142,r:7,fill:green}));text(x,112,fifthNumber_decimal(v.units,3),16);fit(200,225,'Which benchmark is closer? Midpoints round up.',16);}
+  if(v.kind==='g5n_power'){desc=v.value+' '+(v.divide?'divided':'multiplied')+' by 10 to power '+v.power+'. Track each digit across '+v.power+' places.';fit(200,58,v.value+' '+(v.divide?'÷':'×')+' 10^'+v.power+' = ?',29);['thousands','hundreds','tens','ones','tenths','hundredths','thousandths'].forEach(function(name,i){rect(12+i*54,100,53,57);text(38+i*54,124,name,8);var digit=String(v.value)[String(v.value).length-4+i];text(38+i*54,145,i<=3&&digit!==undefined?digit:'',15);});fit(200,205,'Each digit shifts '+v.power+' places '+(v.divide?'right':'left')+'.',18);}
+  if(v.kind==='g5n_move'){desc='Compare the value of the same digit in '+v.from+' and '+v.to+'. Adjacent places differ by a factor of ten.';fit(200,100,v.from+' → '+v.to,32);fit(200,180,'one place left: × 10 · one place right: ÷ 10',17);}
+  if(v.kind==='g5n_product'){desc='Area model: one side '+v.a+', the other split into '+v.tens+' and '+v.ones+'. The two partial products must be combined. Diagram is not to scale.';var split=300*v.tens/v.b;rect(54,70,split,110,peach);if(v.ones)rect(54+split,70,300-split,110,'#b8e6d0');text(54+split/2,54,v.tens,17);if(v.ones)text(54+split+(300-split)/2,54,v.ones,17);text(25,130,v.a,16);fit(200,222,v.a+' × '+v.tens+' + '+v.a+' × '+v.ones+' = ?',21);}
+  if(v.kind==='g5n_quotient'){desc='Grouping model: total '+v.total+', each group holds '+v.size+'. Find how many groups; the diagram does not reveal the quotient.';rect(40,65,320,64,peach);fit(200,105,v.total+' items altogether',23);[0,1,2].forEach(function(i){rect(54+i*96,155,88,48);text(98+i*96,185,i===2?'…':v.size+' each',17);});fit(200,238,'How many groups? Check for leftovers.',17);}
+  if(v.kind==='g5n_expression'){desc='Expression '+v.expression+'. Grouping symbols show which calculations happen first.';fit(200,95,v.expression,29);fit(200,160,'1. Parentheses  2. Brackets',20);fit(200,199,'3. Multiply or divide  4. Add or subtract',17);}
+  if(v.kind==='g5n_patterns'){desc='Corresponding pattern entries. A adds '+v.stepA+'; B adds '+v.stepB+'. Rows show steps zero, one, two, and '+v.step+'. The final B entry is unknown.';var steps=[0,1,2,v.step];['Step','A: +'+v.stepA,'B: +'+v.stepB].forEach(function(label,i){text(74+i*126,36,label,17);});steps.forEach(function(step,row){[step,step*v.stepA,row===3?'?':step*v.stepB].forEach(function(value,col){rect(20+col*126,48+row*43,120,39);text(80+col*126,75+row*43,value,21);});});}
+  if(v.kind==='g5n_decimal_operation'){var first=fifthNumber_decimal(v.a,v.placesA),second=fifthNumber_decimal(v.b,v.placesB),symbol={add:'+',subtract:'−',multiply:'×',divide:'÷'}[v.operation];desc='Decimal calculation '+first+' '+symbol+' '+second+'. Units are shown so each quantity keeps its place value.';fit(200,65,first+' '+symbol+' '+second+' = ?',30);if(v.operation==='add'||v.operation==='subtract'){text(170,115,'ones',14);text(245,115,'tenths',14);text(320,115,'hundredths',14);[first,second].forEach(function(val,row){var parts=val.split('.');text(170,150+row*35,parts[0],23);text(208,150+row*35,'.',23);text(245,150+row*35,parts[1][0],23);text(320,150+row*35,parts[1][1],23);});line(105,196,350,196);fit(200,232,'Combine or exchange equal-size units.',17);}else{fit(200,135,v.operation==='multiply'?'tenths × tenths → hundredths':'Scale both amounts equally.',22);fit(200,197,v.operation==='multiply'?'Multiply the counts; track the unit size.':'The number of groups stays the same.',17);}}
+  if(v.kind==='g5n_story'){desc='Story plan: '+v.labels.join('. ')+'. Quantities are not drawn to scale.';v.labels.forEach(function(label,i){rect(25,28+i*70,350,53,i===2?'#fae2b9':pale);fit(200,62+i*70,label,21);});}
+  if(v.kind==='g5n_fraction_operation'){desc='Same-size whole models show '+v.a+'/'+v.b+' and '+v.c+'/'+v.d+'. '+(v.operation==='subtract'?'Subtract': 'Combine')+' after making equal-size pieces. Each complete bar is one whole.';var slots=Math.max(Math.ceil(v.a/v.b),Math.ceil(v.c/v.d));bar(v.a,v.b,55,v.a+'/'+v.b+' of a whole',slots);bar(v.c,v.d,142,v.c+'/'+v.d+' of a whole',slots);fit(200,222,'Same whole · rename with equal-size pieces',16);}
+  if(v.kind==='g5n_share'){desc=v.operation==='count_portions'?v.numerator+' whole amounts, each split into '+v.groups+' equal portions. Count the portions.':v.operation==='share_wholes'?v.numerator+' whole pies shared among '+v.groups+' tables. Each pie is cut into '+v.groups+' equal pieces.':'One of '+v.denominator+' equal parts is shared among '+v.groups+' people. Split only that part again.';
+    if(v.operation==='share_unit'){bar(1,v.denominator,70,'Start with 1/'+v.denominator+' of a whole');var width=344/v.denominator;for(var j=1;j<v.groups;j++){line(28+j*width/v.groups,70,28+j*width/v.groups,99);}fit(200,159,'The shaded part is split into '+v.groups+' equal shares.',16);fit(200,213,'What fraction of the whole is one small share?',16);}
+    else {var count=v.numerator,perRow=Math.min(4,count),w=328/perRow;for(var i=0;i<count;i++){var row=Math.floor(i/perRow),col=i%perRow;for(var j=0;j<v.groups;j++)rect(35+col*w+j*(w-10)/v.groups,48+row*68,(w-10)/v.groups,45,v.operation==='share_wholes'&&j===0?green:pale,{'data-whole':i,'data-portion':j});}fit(200,235,v.operation==='share_wholes'?'One colored piece from each pie goes to one table.':'Each box is one whole; each piece is one serving.',15);}}
+  if(v.kind==='g5n_area'){desc='A whole rectangle split into '+v.b+' columns and '+v.d+' rows. '+(v.showOverlap?v.a+' columns and '+v.c+' rows are selected; their overlap models the product.':'Use the controls to select the two factors; the overlap will show their product.');var cell=Math.min(260/v.b,156/v.d),width=cell*v.b,height=cell*v.d,left=(400-width)/2;fit(200,28,v.a+'/'+v.b+' × '+v.c+'/'+v.d,22);for(var row=0;row<v.d;row++)for(var col=0;col<v.b;col++){var vertical=v.showOverlap&&col<v.a,horizontal=v.showOverlap&&row<v.c;rect(left+col*cell,49+row*cell,cell,cell,vertical&&horizontal?green:vertical?peach:horizontal?'#b8e6d0':pale,{'data-column':col,'data-row':row,'data-overlap':vertical&&horizontal?'true':'false'});}fit(200,49+height+28,'Orange: columns · mint: rows · dark: overlap',14);}
+  if(v.kind==='g5n_scaling'){desc='Multiplier '+v.numerator+'/'+v.denominator+' shown using same-size whole bars. Compare the shaded amount with one complete whole.';bar(v.numerator,v.denominator,75,'Multiplier: '+v.numerator+'/'+v.denominator);fit(200,162,'Starting amount: '+v.whole,23);fit(200,209,'Less than 1, exactly 1, or more than 1 copy?',16);}
+  svg.setAttribute('aria-label',desc);return true;
+}
+function renderFifthNumberAnswer(container,p,submit,reveal){
+  var w=p&&p.widget;if(!w||['g5n_decimal_build','g5n_fraction_area'].indexOf(w.kind)===-1)return false;
+  container.replaceChildren();var values=reveal?JSON.parse(w.solution):w.kind==='g5n_decimal_build'?[0,0,0,0]:[0,0],outputs=[],graph=document.createElement('div');container.appendChild(graph);
+  var status=document.createElement('p');status.setAttribute('aria-live','polite');container.appendChild(status);
+  var labels=w.kind==='g5n_decimal_build'?['ones','tenths','hundredths','thousandths']:['columns','rows'];
+  function draw(){outputs.forEach(function(out,i){out.textContent=String(values[i]);});if(w.kind==='g5n_decimal_build'){var amount=values[0]*1000+values[1]*100+values[2]*10+values[3];status.textContent=values[0]+' × 1 + '+values[1]+' × 0.1 + '+values[2]+' × 0.01 + '+values[3]+' × 0.001';renderFifthNumberVisual(graph,{kind:'g5n_target',value:fifthNumber_decimal(amount,3),caption:'Your place-value model'},false);}else{status.textContent=values[0]+' of '+w.b+' columns; '+values[1]+' of '+w.d+' rows.';renderFifthNumberVisual(graph,{kind:'g5n_area',a:values[0],b:w.b,c:values[1],d:w.d,showOverlap:true},false);}}
+  labels.forEach(function(label,i){var row=document.createElement('div');row.className='graph-builder';var name=document.createElement('span');name.textContent=label;row.appendChild(name);[-1,1].forEach(function(change){var button=document.createElement('button');button.className='btn btn-small btn-back';button.textContent=change===1?'+':'−';button.setAttribute('aria-label',(change===1?'Add one ':'Remove one ')+label);button.disabled=!!reveal;button.addEventListener('click',function(){if(reveal)return;values[i]=Math.max(0,Math.min(w.kind==='g5n_decimal_build'?20:i===0?w.b:w.d,values[i]+change));draw();});row.appendChild(button);});var output=document.createElement('output');outputs.push(output);row.appendChild(output);container.appendChild(row);});
+  var check=document.createElement('button');check.className='btn btn-small btn-teal';check.textContent='Check my model';check.disabled=!!reveal;check.addEventListener('click',function(){if(!reveal)submit(JSON.stringify(values));});container.appendChild(check);draw();return true;
+}
+
+// Grade 5 geometry, measurement, data, and practical applications.
+var FIFTH_VISUAL_SKILLS={
+shapes:[['g5v_coordinate_read','Read bakery coordinates','Read ordered pairs in the first quadrant'],['g5v_coordinate_plot','Plot a bakery stop','Locate ordered pairs on a coordinate plane'],['g5v_coordinate_route','Map a delivery route','Use coordinate directions in a bakery map'],['g5v_shape_hierarchy','Sort shape families','Classify quadrilaterals in every valid family']],
+measurement:[['g5v_volume_cubes','Count storage cubes','Connect unit cubes, layers, and volume'],['g5v_volume_prism','Measure a box','Use length × width × height for volume'],['g5v_volume_missing','Find a missing dimension','Find a side from volume and two known sides'],['g5v_volume_add','Join storage spaces','Add volumes of nonoverlapping rectangular prisms'],['g5v_volume_build','Build a storage box','Design rectangular prisms with a target volume'],['g5v_unit_convert','Convert bakery measures','Convert metric and customary units within one system']],
+data:[['g5v_pattern_pairs','Pair two growing patterns','Generate ordered pairs from two numerical rules'],['g5v_pattern_graph','Read related patterns','Explain the relationship between graphed patterns'],['g5v_fraction_plot','Build a ribbon line plot','Plot measurements in halves, quarters, and eighths'],['g5v_plot_total','Total the ribbons','Add fractional lengths shown on a line plot'],['g5v_plot_difference','Compare ribbon collections','Subtract fractional totals from two line plots'],['g5v_plot_share','Share ribbon equally','Use a fractional line plot to distribute a total equally']],
+time:[['g5v_money_budget','Plan a bakery budget','Apply decimal arithmetic to a multistep budget'],['g5v_money_change','Make change for an order','Multiply prices and subtract to find change'],['g5v_time_application','Plan oven time','Apply unit conversion to a multistep baking schedule']]
+};
+function fifthVisual_fraction(a,b){function gcd(x,y){while(y){var t=x%y;x=y;y=t;}return x;}var g=gcd(Math.abs(a),b);return b/g===1?String(a/g):(a/g)+'/'+(b/g);}
+function fifthVisual_measure(a,b){var whole=Math.floor(a/b),rem=a%b;return whole&&rem?whole+' '+fifthVisual_fraction(rem,b):fifthVisual_fraction(a,b);}
+function fifthVisual_money(cents){return (cents/100).toFixed(2);}
+function fifthVisual_json(raw){try{var a=JSON.parse(String(raw));return Array.isArray(a)&&a.every(function(x){return Number.isInteger(x);})?a:null;}catch(e){return null;}}
+function makeFifthVisualProblem(level,n){
+var k=level.skill,p=null;n=((n%24)+24)%24;
+function q(story,answer,hint,visual,widget,choices,explanation){p={story:story,answer:String(answer),hintText:hint,explanation:explanation||hint+' The answer is '+answer+'.',visual:visual};if(widget){p.widget=widget;p.answer=widget.solution;p.explanation=explanation||hint+' The completed model shows one valid solution.';}if(choices)p.choices=choices;}
+function notice(title,lines){return {kind:'g5v_notice',title:title,lines:lines};}
+function coordinate(x,y,max,name){return {kind:'g5v_coordinates',max:max,points:[{x:x,y:y,label:name||'P'}]};}
+function choices(x,y,max){var a=['('+x+', '+y+')'];[[y,x],[(x+1)%(max+1),y],[x,(y+1)%(max+1)],[(x+2)%(max+1),(y+2)%(max+1)]].forEach(function(v){var s='('+v[0]+', '+v[1]+')';if(a.indexOf(s)===-1&&a.length<4)a.push(s);});return a.slice(n%4).concat(a.slice(0,n%4));}
+if(k==='g5v_coordinate_read'){var x=n%6,y=Math.floor(n/6)+(n%2?2:0);q('Read the ordered pair for delivery stop P. Write the horizontal coordinate first.','('+x+', '+y+')','Start at the origin (0, 0). Move right to read x, then up to read y.',coordinate(x,y,6),null,choices(x,y,6),'P is '+x+' units right and '+y+' units up: ('+x+', '+y+').');}
+if(k==='g5v_coordinate_plot'){var x=n%5,y=Math.floor(n/5);q('Put the bakery stop at ('+x+', '+y+'). Tap the point on the map.',null,'The first number tells how far right to move; the second tells how far up. Zero means stay on that axis.',notice('Plot one delivery stop',['Coordinates are (right, up).','Both axes start at zero.']),{kind:'g5v_coordinate',max:4,solution:JSON.stringify([x,y])},null,'The point is '+x+' units right and '+y+' units up: ('+x+', '+y+').');p.hideVisual=true;}
+if(k==='g5v_coordinate_route'){var sx=n%3,sy=Math.floor(n/3)%3,dx=1+n%2,dy=1+Math.floor(n/6)%2,x=sx+dx,y=sy+dy;q('Start at the Oven ('+sx+', '+sy+'). Travel '+dx+' units east (right), then '+dy+' units north (up). Plot your delivery stop.',null,'Add the eastward distance to x. Add the northward distance to y. Moving up does not change x.',coordinate(sx,sy,4,'Oven'),{kind:'g5v_coordinate',max:4,start:[sx,sy],solution:JSON.stringify([x,y])},null,'('+sx+' + '+dx+', '+sy+' + '+dy+') = ('+x+', '+y+').');p.hideVisual=true;}
+if(k==='g5v_shape_hierarchy'){
+var families=['Quadrilateral','Parallelogram','Rectangle','Rhombus','Square'],shapes=[{points:[[0,0],[2,0],[2,2],[0,2]],families:[0,1,2,3,4],right:true,equal:true,name:'square'},{points:[[0,0],[3,0],[3,2],[0,2]],families:[0,1,2],right:true,equal:false,name:'rectangle'},{points:[[0,1],[2,0],[4,1],[2,2]],families:[0,1,3],right:false,equal:true,name:'rhombus'},{points:[[0,0],[3,0],[4,2],[1,2]],families:[0,1],right:false,equal:false,name:'parallelogram'},{points:[[0,0],[3,0],[2,2],[0.5,2]],families:[0],right:false,equal:false,name:'quadrilateral'},{points:[[0,0],[3,0],[2.5,2],[0,1]],families:[0],right:false,equal:false,name:'quadrilateral'}],s=shapes[n%6];
+q('Choose EVERY family that fits this cookie cutter. Families can contain smaller families.',null,'A rectangle has four right angles. A rhombus has four equal sides. A square has both. All three are parallelograms, and all parallelograms are quadrilaterals.',{kind:'g5v_shape',points:s.points,right:s.right,equal:s.equal,turn:Math.floor(n/6)*90},{kind:'g5v_families',labels:families,values:s.families,solution:JSON.stringify(s.families)},null,'This '+s.name+' belongs to: '+s.families.map(function(i){return families[i];}).join(', ')+'.');}
+if(['g5v_volume_cubes','g5v_volume_prism','g5v_volume_missing','g5v_volume_add','g5v_volume_build'].indexOf(k)!==-1){
+var l=2+n%4,w=2+Math.floor(n/4)%3,h=1+Math.floor(n/12)+n%3,volume=l*w*h,v={kind:'g5v_volume',boxes:[[l,w,h]],unit:'cm',grid:k==='g5v_volume_cubes'};
+if(k==='g5v_volume_cubes')q('This box is packed with 1 cm cubes. Each layer has '+l+' rows of '+w+' cubes, and there are '+h+' layers. What is its volume in cubic centimeters?',volume,'Count cubes in one layer, then multiply by the number of layers. Each cube takes up 1 cubic centimeter.',v,null,null,l+' × '+w+' = '+l*w+' cubes per layer. '+l*w+' × '+h+' = '+volume+' cm³.');
+if(k==='g5v_volume_prism')q('A rectangular bakery box is '+l+' cm long, '+w+' cm wide, and '+h+' cm high. What is its volume in cubic centimeters?',volume,'Volume = length × width × height. Each factor counts cubes in a different direction.',v,null,null,l+' × '+w+' × '+h+' = '+volume+' cm³.');
+if(k==='g5v_volume_missing'){v.hideHeight=true;v.knownVolume=volume;q('A rectangular box has volume '+volume+' cm³. Its length is '+l+' cm and its width is '+w+' cm. What is its height in centimeters?',h,'Find the area of one layer: length × width. Divide the volume by that area to find the height.',v,null,null,volume+' ÷ ('+l+' × '+w+') = '+h+' cm.');}
+if(k==='g5v_volume_add'){var l2=1+n%3,h2=2+n%2;v.boxes.push([l2,w,h2]);q('Two rectangular storage blocks do not overlap. Block A is '+l+' × '+w+' × '+h+' cm. Block B is '+l2+' × '+w+' × '+h2+' cm. What is their combined volume in cubic centimeters?',volume+l2*w*h2,'Find each block’s volume separately, then add. No space is counted twice because the blocks do not overlap.',v,null,null,volume+' + '+l2*w*h2+' = '+(volume+l2*w*h2)+' cm³.');}
+if(k==='g5v_volume_build'){q('Build a rectangular storage box with volume '+volume+' cubic units. Set three whole-number dimensions from 1 to 8.',null,'Choose three dimensions whose product is '+volume+'. Several boxes may work.',notice('Target volume: '+volume+' cubic units',['Every small cube is 1 cubic unit.','Adjust the three dimensions below.']),{kind:'g5v_box',target:volume,max:8,solution:JSON.stringify([l,w,h])},null,'One solution: '+l+' × '+w+' × '+h+' = '+volume+' cubic units. Other dimensions with the same product work too.');p.hideVisual=true;}}
+if(k==='g5v_unit_convert'){
+var units=[['meters','centimeters',100],['kilometers','meters',1000],['kilograms','grams',1000],['liters','milliliters',1000],['feet','inches',12],['yards','feet',3],['pounds','ounces',16],['gallons','cups',16]],u=units[n%8],mode=Math.floor(n/8),quarters=5+n%7,large=quarters/4,small=large*u[2],reverse=mode===1,amount=reverse?small:large,answer=reverse?large:small;
+q('The bakery measures '+amount+' '+(reverse?u[1]:u[0])+'. How many '+(reverse?u[0]:u[1])+' is that?',answer,'Use 1 '+u[0]+' = '+u[2]+' '+u[1]+'. '+(reverse?'Divide by '+u[2]+' to change to the larger unit.':'Multiply by '+u[2]+' to change to the smaller unit.'),{kind:'g5v_conversion',largeUnit:u[0],smallUnit:u[1],factor:u[2],amount:amount,reverse:reverse},null,null,amount+(reverse?' ÷ ':' × ')+u[2]+' = '+answer+' '+(reverse?u[0]:u[1])+'.');p.decimalInput=true;}
+if(k==='g5v_pattern_pairs'){var a=1+n%3,b=2+Math.floor(n/3)%4,count=2+Math.floor(n/12),x=a*count,y=b*count,pairs=Array.from({length:count},function(_,i){return [a*i,b*i];});q('Both patterns start at 0. Tray counts add '+a+' each step; cookie counts add '+b+'. What is the NEXT ordered pair (trays, cookies)?','('+x+', '+y+')','Apply each rule once to the last pair. Keep tray counts first and cookie counts second.',{kind:'g5v_patterns',pairs:pairs,steps:[a,b]},null,choices(x,y,15),'The next pair is ('+a*(count-1)+' + '+a+', '+b*(count-1)+' + '+b+') = ('+x+', '+y+').');}
+if(k==='g5v_pattern_graph'){var factor=2+n%4,xs=[[1,2,3],[1,2,4],[1,3,4],[2,3,4],[1,2,5],[2,4,5]][Math.floor(n/4)],max=Math.ceil(xs[2]*factor/2)*2,points=xs.map(function(x,i){return {x:x,y:x*factor,label:String.fromCharCode(65+i)};});q('The graph pairs tray counts (x) with cookie counts (y). At every point, y is how many times x?',factor,'Read an x and y from one point. Divide y by x, then check the same rule for the other points.',{kind:'g5v_coordinates',max:max,points:points,axisLabels:['Trays (x)','Cookies (y)'],labelStep:max>16?4:2},null,['2','3','4','5'],'Every pair follows y = '+factor+' × x. For example, '+points[1].y+' = '+factor+' × '+points[1].x+'.');}
+if(['g5v_fraction_plot','g5v_plot_total','g5v_plot_difference','g5v_plot_share'].indexOf(k)!==-1){
+var d=[2,4,8][Math.floor(n/8)],base=d+n%8,values=[1+n%2,1+Math.floor(n/2)%2,2,1+Math.floor(n/2)%2,1+n%2],v={kind:'g5v_plot',base:base,denominator:d,values:values,unit:'inches'},total=values.reduce(function(sum,c,i){return sum+c*(base+i);},0),count=values.reduce(function(a,b){return a+b;},0);
+if(k==='g5v_fraction_plot'){var observations=[base,base+1,base+1,base+2+n%3,base+3,base+n%5],counts=Array(5).fill(0);observations.forEach(function(x){counts[x-base]++;});q('Make a line plot of these ribbon lengths in inches: '+observations.map(function(x){return fifthVisual_measure(x,d);}).join(', ')+'.',null,'Put one × above each ribbon’s length. Repeated lengths stack. There must be exactly '+observations.length+' marks.',{kind:'g5v_observations',observations:observations,denominator:d},{kind:'g5v_plot_counts',base:base,denominator:d,values:counts,observations:observations,max:6,solution:JSON.stringify(counts)},null,'The completed plot has one mark for every ribbon, including repeated lengths.');p.hideVisual=true;}
+if(k==='g5v_plot_total')q('What is the total length, in inches, of ALL ribbons on the line plot?',fifthVisual_fraction(total,d),'Each × is one ribbon. Multiply each length by its number of marks, then add the lengths using equal-sized fractional parts.',v,null,null,'The ribbons total '+total+' pieces of size 1/'+d+' inch: '+fifthVisual_measure(total,d)+' inches.');
+if(k==='g5v_plot_difference'){var other=values.map(function(c,i){return i%2?c-1:c;}),otherTotal=other.reduce(function(sum,c,i){return sum+c*(base+i);},0);v.other=other;q('How many more inches of ribbon are in Set A than in Set B?',fifthVisual_fraction(total-otherTotal,d),'Find each plot’s total length, counting every ×. Subtract Set B’s total from Set A’s total.',v,null,null,fifthVisual_measure(total,d)+' − '+fifthVisual_measure(otherTotal,d)+' = '+fifthVisual_measure(total-otherTotal,d)+' inches.');}
+if(k==='g5v_plot_share')q('Join ALL the plotted ribbon, then cut it equally among '+count+' gift boxes. How many inches of ribbon does each box get?',fifthVisual_fraction(total,d*count),'Add the lengths of all ribbons. Divide that total by '+count+' equal shares. The number of × marks is the number of ribbons, not their total length.',v,null,null,fifthVisual_measure(total,d)+' ÷ '+count+' = '+fifthVisual_measure(total,d*count)+' inches per box.');p.fractionInput=true;}
+if(k==='g5v_money_budget'){var budget=3000+25*n,price=225+15*(n%7),quantity=3+n%3,supplies=375+20*(n%5),left=budget-quantity*price-supplies;q('You have $'+fifthVisual_money(budget)+'. Buy '+quantity+' ingredient bags at $'+fifthVisual_money(price)+' each and $'+fifthVisual_money(supplies)+' of ribbon. How many dollars remain?',fifthVisual_money(left),'Multiply the bag price by the number of bags. Add the ribbon cost, then subtract from the budget.',{kind:'g5v_receipt',budget:budget,price:price,quantity:quantity,extra:supplies,mode:'budget'},null,null,'$'+fifthVisual_money(budget)+' − ($'+fifthVisual_money(price)+' × '+quantity+' + $'+fifthVisual_money(supplies)+') = $'+fifthVisual_money(left)+'.');p.decimalInput=true;}
+if(k==='g5v_money_change'){var price=135+10*(n%8),quantity=2+Math.floor(n/8),paid=2000+100*(n%3),change=paid-price*quantity;q('A customer buys '+quantity+' treats at $'+fifthVisual_money(price)+' each and pays $'+fifthVisual_money(paid)+'. How many dollars in change should they receive?',fifthVisual_money(change),'Multiply to find the cost. Subtract that cost from the amount paid; line up dollars and cents.',{kind:'g5v_receipt',budget:paid,price:price,quantity:quantity,extra:0,mode:'change'},null,null,'$'+fifthVisual_money(paid)+' − '+quantity+' × $'+fifthVisual_money(price)+' = $'+fifthVisual_money(change)+'.');p.decimalInput=true;}
+if(k==='g5v_time_application'){var quarters=1+n%3,batches=2+Math.floor(n/3)%4,cleanup=10+5*Math.floor(n/12),minutes=quarters*15*batches+cleanup;q('One batch bakes for '+quarters/4+' hour. Bake '+batches+' batches one after another, then clean for '+cleanup+' minutes. How many minutes does the whole job take?',minutes,'Convert hours to minutes using 60 minutes per hour. Multiply by the number of batches, then add cleanup.',{kind:'g5v_schedule',hours:quarters/4,batches:batches,cleanup:cleanup},null,null,quarters/4+' × 60 = '+quarters*15+' minutes per batch. '+quarters*15+' × '+batches+' + '+cleanup+' = '+minutes+' minutes.');}
+return p;
+}
+function matchFifthVisualAnswer(p,raw){if(!p||!p.visual||!/^g5v_/.test(p.visual.kind))return null;var w=p.widget;if(!w)return p.choices?String(raw)===p.answer:answersMatch(String(raw),p.answer);var a=fifthVisual_json(raw);if(!a)return false;
+if(w.kind==='g5v_coordinate')return a.length===2&&a.every(function(x){return x>=0&&x<=w.max;})&&a.every(function(x,i){return x===JSON.parse(w.solution)[i];});
+if(w.kind==='g5v_families')return a.length===w.values.length&&new Set(a).size===a.length&&a.every(function(x){return w.values.indexOf(x)!==-1;});
+if(w.kind==='g5v_plot_counts')return a.length===w.values.length&&a.every(function(x,i){return x===w.values[i];});
+if(w.kind==='g5v_box')return a.length===3&&a.every(function(x){return x>=1&&x<=w.max;})&&a[0]*a[1]*a[2]===w.target;return null;}
+function fifthVisual_svg(tag,attrs,text){var el=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.keys(attrs||{}).forEach(function(k){el.setAttribute(k,attrs[k]);});if(text!==undefined)el.textContent=String(text);return el;}
+function fifthVisual_parallelPairs(points){var count=0;for(var i=0;i<2;i++){var a=points[i],b=points[i+1],c=points[i+2],d=points[(i+3)%4];if(Math.abs((b[0]-a[0])*(d[1]-c[1])-(b[1]-a[1])*(d[0]-c[0]))<1e-8)count++;}return count;}
+function fifthVisual_description(v){
+if(v.kind==='g5v_coordinates')return 'Coordinate plane in the first quadrant. Both axes run from 0 to '+v.max+'. Horizontal is x; vertical is y. '+v.points.map(function(p){return p.label+' is '+p.x+' units right and '+p.y+' units up from the origin.';}).join(' ');
+if(v.kind==='g5v_shape')return 'Four-sided polygon. '+(v.right?'Four right angles. ':'Does not have four right angles. ')+(v.equal?'All four sides have equal length. ':'Not all four sides have equal length. ')+fifthVisual_parallelPairs(v.points)+' pairs of parallel sides.';
+if(v.kind==='g5v_volume')return v.boxes.map(function(b,i){return 'Block '+String.fromCharCode(65+i)+': length '+b[0]+', width '+b[1]+', height '+(v.hideHeight?'unknown':b[2])+' '+v.unit+'.';}).join(' ')+(v.knownVolume?' Given volume '+v.knownVolume+' cubic centimeters.':'')+(v.grid?' Every little cube is one cubic unit.':'');
+if(v.kind==='g5v_plot'){function desc(values){return values.map(function(c,i){return c+' ribbons of '+fifthVisual_measure(v.base+i,v.denominator)+' inches';}).join('; ');}return (v.other?'Set A: ':'')+desc(v.values)+(v.other?'. Set B: '+desc(v.other):'')+'. Each × is one ribbon.';}
+if(v.kind==='g5v_patterns')return 'Two patterns: add '+v.steps[0]+' trays and '+v.steps[1]+' cookies at each step. Known pairs: '+v.pairs.map(function(a){return '('+a.join(', ')+')';}).join('; ')+'.';
+if(v.kind==='g5v_conversion')return 'Conversion key: 1 '+v.largeUnit+' = '+v.factor+' '+v.smallUnit+'. Given amount: '+v.amount+' '+(v.reverse?v.smallUnit:v.largeUnit)+'.';
+if(v.kind==='g5v_observations')return 'Ribbon lengths in inches: '+v.observations.map(function(x){return fifthVisual_measure(x,v.denominator);}).join(', ')+'.';
+if(v.kind==='g5v_receipt')return (v.mode==='budget'?'Budget':'Paid')+': $'+fifthVisual_money(v.budget)+'. '+v.quantity+' items at $'+fifthVisual_money(v.price)+' each.'+(v.extra?' Ribbon: $'+fifthVisual_money(v.extra)+'.':'');
+if(v.kind==='g5v_schedule')return v.batches+' successive batches, '+v.hours+' hour each, then '+v.cleanup+' minutes of cleanup. 1 hour = 60 minutes.';
+return [v.title].concat(v.lines||[]).join('. ');}
+function renderFifthVisualVisual(container,v,hint){
+if(!v||!/^g5v_/.test(v.kind))return false;container.replaceChildren();
+var height=v.kind==='g5v_coordinates'?360:v.kind==='g5v_plot'&&v.other?360:260,svg=fifthVisual_svg('svg',{viewBox:'0 0 400 '+height,role:'img','aria-label':fifthVisual_description(v),'class':'path-diagram'+(hint?' diagram-hint':'')}),ink='#69452e',green='#287963';svg.style.maxHeight='none';svg.style.height='auto';
+function label(x,y,text,size,color){svg.appendChild(fifthVisual_svg('text',{x:x,y:y,'text-anchor':'middle','font-size':size||17,fill:color||ink,'font-family':'sans-serif'},text));}
+function line(x1,y1,x2,y2,color,width){svg.appendChild(fifthVisual_svg('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:color||ink,'stroke-width':width||2}));}
+function poly(points,fill){svg.appendChild(fifthVisual_svg('polygon',{points:points.map(function(p){return p.join(',');}).join(' '),fill:fill,stroke:ink,'stroke-width':1.5}));}
+if(v.kind==='g5v_notice'){label(200,50,v.title,19);v.lines.forEach(function(t,i){label(200,100+i*35,t,16);});}
+if(v.kind==='g5v_coordinates'){
+var ox=65,oy=300,span=252,unit=span/v.max,step=v.labelStep||1;
+for(var i=0;i<=v.max;i++){line(ox+i*unit,oy,ox+i*unit,oy-span,'#dacabc',1);line(ox,oy-i*unit,ox+span,oy-i*unit,'#dacabc',1);if(i%step===0){label(ox+i*unit,oy+21,i,13);label(ox-20,oy-i*unit+5,i,13);}}
+line(ox,oy,ox+span+10,oy,ink,2);line(ox,oy,ox,oy-span-10,ink,2);label(200,345,v.axisLabels?v.axisLabels[0]:'x · right',16);label(200,22,v.axisLabels?v.axisLabels[1]:'y · up',16);
+v.points.forEach(function(p){var x=ox+p.x*unit,y=oy-p.y*unit;svg.appendChild(fifthVisual_svg('circle',{cx:x,cy:y,r:6,fill:green,'data-g5v-x':p.x,'data-g5v-y':p.y}));label(x+(x>300?-17:18),y+(y<65?20:-10),p.label,14,green);});}
+if(v.kind==='g5v_shape'){
+var xs=v.points.map(function(p){return p[0];}),ys=v.points.map(function(p){return p[1];}),xmin=Math.min.apply(null,xs),ymin=Math.min.apply(null,ys),width=Math.max.apply(null,xs)-xmin,h=Math.max.apply(null,ys)-ymin,scale=155/Math.max(width,h),angle=v.turn*Math.PI/180;
+var points=v.points.map(function(p){var x=(p[0]-xmin-width/2)*scale,y=(p[1]-ymin-h/2)*scale;return [200+x*Math.cos(angle)-y*Math.sin(angle),123+x*Math.sin(angle)+y*Math.cos(angle)];});poly(points,'#f3b97c');
+points.forEach(function(p,i){var next=points[(i+1)%4],prev=points[(i+3)%4],dx=next[0]-p[0],dy=next[1]-p[1],len=Math.hypot(dx,dy);if(v.equal){var mx=(p[0]+next[0])/2,my=(p[1]+next[1])/2;line(mx-dy/len*6,my+dx/len*6,mx+dy/len*6,my-dx/len*6,green,2);}if(v.right){var pl=Math.hypot(prev[0]-p[0],prev[1]-p[1]),a=[dx/len*11,dy/len*11],b=[(prev[0]-p[0])/pl*11,(prev[1]-p[1])/pl*11];line(p[0]+a[0],p[1]+a[1],p[0]+a[0]+b[0],p[1]+a[1]+b[1],green);line(p[0]+b[0],p[1]+b[1],p[0]+a[0]+b[0],p[1]+a[1]+b[1],green);}});label(200,235,'Ticks: equal sides. Small boxes: right angles.',14);}
+if(v.kind==='g5v_volume'){
+var totalWidth=v.boxes.reduce(function(sum,b){return sum+b[0]+b[1]*0.55;},0),maxHeight=Math.max.apply(null,v.boxes.map(function(b){return b[2]+b[1]*0.35;})),scale=Math.min(32,(320-(v.boxes.length-1)*25)/totalWidth,150/maxHeight),left=(400-(totalWidth*scale+(v.boxes.length-1)*25))/2;
+v.boxes.forEach(function(b,bi){var x0=left,y0=196,l=b[0],w=b[1],h=b[2];function pt(x,y,z){return [x0+scale*(x+0.55*y),y0-scale*(z+0.35*y)];}var A=pt(0,0,0),B=pt(l,0,0),C=pt(l,w,0),E=pt(0,0,h),F=pt(l,0,h),G=pt(l,w,h),H=pt(0,w,h);poly([E,F,G,H],'#f8dcb2');poly([B,C,G,F],'#6cae96');poly([A,B,F,E],'#b8e6d0');
+if(v.grid){for(var i=1;i<l;i++){var a=pt(i,0,0),b1=pt(i,0,h),c=pt(i,w,h);line(a[0],a[1],b1[0],b1[1],ink,1);line(b1[0],b1[1],c[0],c[1],ink,1);}for(var j=1;j<w;j++){var a=pt(0,j,h),b1=pt(l,j,h),c=pt(l,j,0);line(a[0],a[1],b1[0],b1[1],ink,1);line(b1[0],b1[1],c[0],c[1],ink,1);}for(var z=1;z<h;z++){var a=pt(0,0,z),b1=pt(l,0,z),c=pt(l,w,z);line(a[0],a[1],b1[0],b1[1],ink,1);line(b1[0],b1[1],c[0],c[1],ink,1);}}
+var center=x0+scale*(l+w*0.55)/2;label(center,28,v.boxes.length>1?'Block '+String.fromCharCode(65+bi):'Rectangular prism',17);label(center,219,l+' × '+w+' × '+(v.hideHeight?'?':h)+' '+v.unit,14);left+=scale*(l+w*0.55)+25;});
+label(200,248,v.knownVolume?'Given volume: '+v.knownVolume+' cm³':v.grid?'Each small cube = 1 cubic '+(v.unit==='cm'?'centimeter':'unit'):v.boxes.length>1?'Two parts · no overlapping space':'Length × width × height',14);}
+if(v.kind==='g5v_conversion'){label(200,47,'Conversion key',20);label(200,98,'1 '+v.largeUnit,22);label(200,137,'= '+v.factor+' '+v.smallUnit,22);label(200,205,'Given: '+v.amount+' '+(v.reverse?v.smallUnit:v.largeUnit),17);}
+if(v.kind==='g5v_patterns'){label(200,32,'Trays (x)       Cookies (y)',19);v.pairs.forEach(function(pair,i){label(130,77+i*43,pair[0],21);label(270,77+i*43,pair[1],21);});label(200,235,'Next step: add '+v.steps[0]+' to x; add '+v.steps[1]+' to y.',15);}
+if(v.kind==='g5v_observations'){label(200,32,'Ribbon lengths · inches',19);v.observations.forEach(function(x,i){label(90+i%3*110,100+Math.floor(i/3)*65,fifthVisual_measure(x,v.denominator),23);});label(200,237,'One ribbon = one mark on the plot',15);}
+if(v.kind==='g5v_plot'){
+function plot(values,y,title){label(200,v.other?y-105:30,title,17);line(45,y,355,y);values.forEach(function(count,i){var x=45+i*77.5;line(x,y-5,x,y+6);label(x,y+24,fifthVisual_measure(v.base+i,v.denominator),14);for(var j=0;j<count;j++)label(x,y-14-j*20,'×',24,green);});}
+plot(v.values,v.other?142:186,v.other?'Set A':'Ribbon lengths (inches)');if(v.other)plot(v.other,299,'Set B');label(200,height-7,'Lengths in inches · each × is one ribbon',14);}
+if(v.kind==='g5v_receipt'){label(200,35,v.mode==='budget'?'Budget plan':'Customer order',20);label(200,86,(v.mode==='budget'?'Budget':'Paid')+': $'+fifthVisual_money(v.budget),20);label(200,135,v.quantity+' items at $'+fifthVisual_money(v.price)+' each',19);if(v.extra)label(200,184,'Ribbon: $'+fifthVisual_money(v.extra),19);label(200,238,'$1 = 100 cents',15);}
+if(v.kind==='g5v_schedule'){label(200,39,'Oven schedule',20);label(200,91,v.batches+' batches, one after another',18);label(200,138,v.hours+' hour per batch',21);label(200,182,'Then '+v.cleanup+' minutes of cleanup',18);label(200,236,'Conversion key: 1 hour = 60 minutes',15);}
+container.appendChild(svg);return true;
+}
+function renderFifthVisualAnswer(container,p,submit,reveal){
+var w=p.widget;if(!w||!/^g5v_/.test(w.kind))return false;container.replaceChildren();var root=document.createElement('div');root.style.maxWidth='400px';root.style.width='100%';root.style.margin='0 auto';container.appendChild(root);
+function el(tag,text,parent){var e=document.createElement(tag);if(text!==undefined)e.textContent=text;(parent||root).appendChild(e);return e;}
+function button(text,action,parent,label){var b=el('button',text,parent);b.type='button';b.className='btn btn-small btn-back';b.disabled=!!reveal;b.style.minHeight='44px';b.style.minWidth='44px';if(label)b.setAttribute('aria-label',label);b.addEventListener('click',function(){if(!reveal)action();});return b;}
+function note(text){var e=el('p',text);e.style.fontSize='0.85rem';return e;}
+function check(fn,label){button(label||'Check my model',function(){submit(fn());}).className='btn btn-small btn-teal';}
+if(w.kind==='g5v_coordinate'){
+var selected=reveal?JSON.parse(w.solution):null,board=el('div');board.style.position='relative';board.style.width='100%';board.style.maxWidth='340px';board.style.aspectRatio='1';board.style.margin='8px auto';var svg=fifthVisual_svg('svg',{viewBox:'0 0 340 340','aria-hidden':'true'});svg.style.width='100%';svg.style.height='100%';board.appendChild(svg);var buttons=[],status=el('output');status.setAttribute('aria-live','polite');
+function xy(x,y){return [39+x*64,295-y*64];}
+function draw(){svg.replaceChildren();for(var j=0;j<=4;j++){var low=xy(j,0),high=xy(j,4),a=xy(0,j),b=xy(4,j);svg.appendChild(fifthVisual_svg('line',{x1:low[0],y1:low[1],x2:high[0],y2:high[1],stroke:'#dacabc'}));svg.appendChild(fifthVisual_svg('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'#dacabc'}));svg.appendChild(fifthVisual_svg('text',{x:low[0],y:329,'text-anchor':'middle','font-size':14,fill:'#69452e'},j));svg.appendChild(fifthVisual_svg('text',{x:9,y:a[1]+5,'text-anchor':'middle','font-size':14,fill:'#69452e'},j));}svg.appendChild(fifthVisual_svg('text',{x:325,y:300,'font-size':14,fill:'#69452e'},'x'));svg.appendChild(fifthVisual_svg('text',{x:35,y:15,'font-size':14,fill:'#69452e'},'y'));
+buttons.forEach(function(b){var x=b.fifthX,y=b.fifthY,active=selected&&x===selected[0]&&y===selected[1],start=w.start&&x===w.start[0]&&y===w.start[1];b.textContent=active?'●':start?'O':'·';b.setAttribute('aria-pressed',String(!!active));b.style.background='transparent';b.style.color=active?'#287963':'#69452e';});status.textContent=selected?'Your point: ('+selected.join(', ')+')':'Choose a point.';}
+for(var y=0;y<=4;y++)for(var x=0;x<=4;x++)(function(x,y){var point=xy(x,y),b=button('·',function(){selected=[x,y];draw();},board,'Plot at ('+x+', '+y+')'+(w.start&&x===w.start[0]&&y===w.start[1]?' — Oven':''));b.fifthX=x;b.fifthY=y;b.setAttribute('data-g5v-coordinate',x+','+y);b.style.position='absolute';b.style.left=point[0]/3.4+'%';b.style.top=point[1]/3.4+'%';b.style.transform='translate(-50%, -50%)';b.style.width='44px';b.style.height='44px';b.style.padding='0';b.style.borderRadius='50%';b.style.border='0';b.style.boxShadow='none';b.style.fontSize='24px';buttons.push(b);})(x,y);
+note('x goes right. y goes up. '+(w.start?'O marks the Oven.':''));check(function(){return selected?JSON.stringify(selected):'';},'Check my point');draw();}
+if(w.kind==='g5v_families'){var selected=reveal?w.values.slice():[],buttons=[];w.labels.forEach(function(label,i){var b=button(label,function(){var at=selected.indexOf(i);if(at===-1)selected.push(i);else selected.splice(at,1);draw();});b.style.margin='4px';buttons.push(b);});function draw(){buttons.forEach(function(b,i){var active=selected.indexOf(i)!==-1;b.setAttribute('aria-pressed',String(active));b.style.background=active?'#b8e6d0':'#fff6e8';});}note('Select every family that applies.');check(function(){return JSON.stringify(selected);},'Check my families');draw();}
+if(w.kind==='g5v_box'){
+var dimensions=reveal?JSON.parse(w.solution):[1,1,1],drawing=el('div'),counts=[];
+['Length','Width','Height'].forEach(function(name,i){var row=el('div');row.style.display='flex';row.style.alignItems='center';row.style.justifyContent='space-between';row.style.gap='6px';row.style.margin='5px 0';el('span',name,row);button('−',function(){dimensions[i]=Math.max(1,dimensions[i]-1);draw();},row,'Decrease '+name.toLowerCase());counts.push(el('output','',row));button('+',function(){dimensions[i]=Math.min(w.max,dimensions[i]+1);draw();},row,'Increase '+name.toLowerCase());});
+var volume=el('output');volume.setAttribute('aria-live','polite');function draw(){counts.forEach(function(e,i){e.textContent=dimensions[i]+' units';});renderFifthVisualVisual(drawing,{kind:'g5v_volume',boxes:[dimensions],unit:'units',grid:true},false);volume.textContent='Your volume: '+dimensions[0]*dimensions[1]*dimensions[2]+' cubic units.';}check(function(){return JSON.stringify(dimensions);},'Check my box');draw();}
+if(w.kind==='g5v_plot_counts'){
+var values=reveal?w.values.slice():w.values.map(function(){return 0;}),drawing=el('div'),counts=[];
+values.forEach(function(_,i){var name=fifthVisual_measure(w.base+i,w.denominator)+' in',row=el('div');row.style.display='flex';row.style.alignItems='center';row.style.justifyContent='space-between';row.style.gap='5px';row.style.margin='4px 0';el('span',name,row);button('−',function(){values[i]=Math.max(0,values[i]-1);draw();},row,'Remove ribbon at '+name);counts.push(el('output','',row));button('+',function(){values[i]=Math.min(w.max,values[i]+1);draw();},row,'Add ribbon at '+name);});
+function draw(){counts.forEach(function(e,i){e.textContent=values[i]+' ×';});renderFifthVisualVisual(drawing,{kind:'g5v_plot',base:w.base,denominator:w.denominator,values:values},false);}check(function(){return JSON.stringify(values);},'Check my plot');draw();}
+return true;
+}
+
 Object.assign(PATHWAYS, FOUNDATION_PATHWAYS, REASONING_PATHWAYS);
 Object.keys(VISUAL_PATHWAY_ADDITIONS).forEach(function(topic){VISUAL_PATHWAY_ADDITIONS[topic].forEach(function(skills,i){PATHWAYS[topic].grades[i]=PATHWAYS[topic].grades[i].concat(skills);});});
+// Keep existing grade 1–4 arrays and IDs stable; endpoints have explicit grades.
+var LEARNING_GRADES = [0,1,2,3,4,5];
+var PATHWAY_EXTENSIONS = {};
+Object.keys(EARLY_PATHWAY_SKILLS).forEach(function(topic){PATHWAY_EXTENSIONS[topic]={0:EARLY_PATHWAY_SKILLS[topic]};});
+[FIFTH_NUMBER_SKILLS,FIFTH_VISUAL_SKILLS].forEach(function(catalog){Object.keys(catalog).forEach(function(topic){if(!PATHWAY_EXTENSIONS[topic])PATHWAY_EXTENSIONS[topic]={};PATHWAY_EXTENSIONS[topic][5]=catalog[topic];});});
+function gradeLabel(grade){return grade===0?'Kindergarten':'Grade '+grade;}
+function gradeButtonLabel(grade){return grade===0?'K':String(grade);}
+function pathwaySkills(topic,grade){return grade>=1&&grade<=4?PATHWAYS[topic].grades[grade-1]:(PATHWAY_EXTENSIONS[topic]||{})[grade]||[];}
+function availablePathGrades(topic){return LEARNING_GRADES.filter(function(grade){return PATHWAYS[topic]&&pathwaySkills(topic,grade).length;});}
 Object.keys(PATHWAYS).forEach(function(topic) {
   TOPICS.push([topic, PATHWAYS[topic].name]);
-  PATHWAYS[topic].grades.forEach(function(skills, i) {
-    var track = topic + '_g' + (i + 1);
+  availablePathGrades(topic).forEach(function(grade) {
+    var skills=pathwaySkills(topic,grade),track = topic + '_g' + grade;
     TRACK_LEVELS[track] = skills.map(function(s, j) {
-      return {id: track + '_' + s[0], track: track, pathway: topic, grade: i + 1, skill: s[0], name: s[1], desc: s[2], icon: PATHWAYS[topic].icon || {shapes:'🍪',measurement:'📏',data:'📊'}[topic], open: true, step: j};
+      return {id: track + '_' + s[0], track: track, pathway: topic, grade: grade, skill: s[0], name: s[1], desc: s[2], icon: PATHWAYS[topic].icon || {shapes:'🍪',measurement:'📏',data:'📊'}[topic], open: true, step: j};
     });
   });
 });
@@ -1996,7 +2544,7 @@ Object.keys(PATHWAYS).forEach(function(topic){selectedPathGrade[topic]=1;});
 
 function measureText(n,d){var whole=Math.floor(n/d),remainder=n%d;return whole && remainder ? whole+' '+fractionText(remainder,d) : fractionText(n,d);}
 function makePathProblem(level, n) {
-  var extra=makeFoundationProblem(level,n)||makeReasoningProblem(level,n)||makeVisualExtensionProblem(level,n);
+  var extra=makeFoundationProblem(level,n)||makeReasoningProblem(level,n)||makeVisualExtensionProblem(level,n)||makeEarlyProblem(level,n)||makeFifthNumberProblem(level,n)||makeFifthVisualProblem(level,n);
   if(extra){extra.type='pathway';extra.skill=level.skill;extra.display=extra.display||'';extra.answer=String(extra.answer);extra.explanation=extra.explanation||extra.hintText+' The answer is '+extra.answer+'.';extra.srKey='path:'+level.id+':'+n;return extra;}
   var k = level.skill, a = 3 + n % 5, b = 2 + n % 3;
   var p = {type: 'pathway', skill: k, display: '', story: '', answer: '', hintText: '', explanation: '', visual: null};
@@ -2068,14 +2616,15 @@ function buildPathPool(level) {
   return Array.from({length:24},function(_,n){var p=makePathProblem(level,n);return {key:p.srKey,weight:SR_WEIGHTS[getSRData(progress,p.srKey).box],problem:p};});
 }
 function pathAnswerMatches(problem, raw) {
-  var matchers=[matchFoundationAnswer,matchReasoningAnswer,matchVisualExtensionAnswer];
+  var matchers=[matchFoundationAnswer,matchReasoningAnswer,matchVisualExtensionAnswer,matchEarlyAnswer,matchFifthNumberAnswer,matchFifthVisualAnswer];
   for(var i=0;i<matchers.length;i++){var match=matchers[i](problem,raw);if(match!==null)return match;}
   if (problem.choices || problem.builder) return String(raw)===String(problem.answer);
   return answersMatch(raw,problem.answer);
 }
 function nextPathSkill(level) {
   var levels=TRACK_LEVELS[level.track],i=levels.findIndex(function(l){return l.id===level.id;});
-  return levels[i+1] || (TRACK_LEVELS[level.pathway+'_g'+(level.grade+1)]||[])[0] || null;
+  var nextGrade=availablePathGrades(level.pathway).find(function(grade){return grade>level.grade;});
+  return levels[i+1] || (nextGrade!==undefined ? TRACK_LEVELS[level.pathway+'_g'+nextGrade][0] : null);
 }
 function recordPathResult(level, correct, independent) {
   var progress=getProgress(),old=progress.pathProgress[level.id]||{rounds:0,bestIndependent:0};
@@ -2091,7 +2640,7 @@ var BAKERY_CHALLENGES=[
   {id:'design',name:'Design the bakery',icon:'🏡',description:'Use shapes, measurements and data to plan your bakery.',topics:['shapes','measurement','data']}
 ];
 function learningNode(tag,text,cls){var el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;}
-function setLearningGrade(grade){if(!Number.isInteger(grade)||grade<1||grade>4)return;var p=getProgress();p.learningGrade=grade;saveProgressData(p);}
+function setLearningGrade(grade){if(!Number.isInteger(grade)||LEARNING_GRADES.indexOf(grade)===-1)return;var p=getProgress();p.learningGrade=grade;saveProgressData(p);}
 function recordLearningActivity(level,kind){
   if(!level||!level.pathway||!reportLevel(level.id)||['example','guided'].indexOf(kind)===-1)return;
   var p=getProgress(),item=p.learningProgress[level.id]||{exampleViewed:false,guidedCompleted:false};
@@ -2107,15 +2656,15 @@ function getLearningRecommendations(progress,grade){
 }
 function renderLearningGrades(id,screen){
   var row=document.getElementById(id),grade=getProgress().learningGrade;row.replaceChildren();
-  for(var g=1;g<=4;g++)(function(value){var b=learningNode('button','Grade '+value,'mode-btn'+(grade===value?' active':''));b.setAttribute('aria-pressed',String(grade===value));b.addEventListener('click',function(){setLearningGrade(value);showScreen(screen);});row.appendChild(b);})(g);
+  LEARNING_GRADES.forEach(function(value){var b=learningNode('button',gradeButtonLabel(value),'mode-btn'+(grade===value?' active':''));b.setAttribute('aria-label',gradeLabel(value));b.setAttribute('aria-pressed',String(grade===value));b.addEventListener('click',function(){setLearningGrade(value);showScreen(screen);});row.appendChild(b);});
 }
 function openPathway(topic,grade){if(!PATHWAYS[topic]||!TRACK_LEVELS[topic+'_g'+grade])return;selectedPathGrade[topic]=grade;setTrack(topic+'_g'+grade);showScreen('level-screen');}
 function renderPathways(){
   var p=getProgress(),grade=p.learningGrade;renderLearningGrades('learning-grades','pathways-screen');
   var next=document.getElementById('learning-next');next.replaceChildren();
-  getLearningRecommendations(p,grade).forEach(function(r){var card=learningNode('button',undefined,'learning-card recommendation-card');card.appendChild(learningNode('strong',r.level.name));card.appendChild(learningNode('span',PATHWAYS[r.level.pathway].name+' · Grade '+grade));card.appendChild(learningNode('small',r.reason));card.addEventListener('click',function(){openPathLesson(r.level);});next.appendChild(card);});
+  getLearningRecommendations(p,grade).forEach(function(r){var card=learningNode('button',undefined,'learning-card recommendation-card');card.appendChild(learningNode('strong',r.level.name));card.appendChild(learningNode('span',PATHWAYS[r.level.pathway].name+' · '+gradeLabel(grade)));card.appendChild(learningNode('small',r.reason));card.addEventListener('click',function(){openPathLesson(r.level);});next.appendChild(card);});
   var grid=document.getElementById('pathway-cards');grid.replaceChildren();
-  PATHWAY_ORDER.filter(function(topic){return PATHWAYS[topic];}).forEach(function(topic){
+  PATHWAY_ORDER.filter(function(topic){return PATHWAYS[topic]&&TRACK_LEVELS[topic+'_g'+grade];}).forEach(function(topic){
     var path=PATHWAYS[topic],levels=TRACK_LEVELS[topic+'_g'+grade],ready=levels.filter(function(l){return p.pathProgress[l.id]&&p.pathProgress[l.id].ready;}).length;
     var card=learningNode('button',undefined,'learning-card');card.dataset.pathway=topic;
     card.appendChild(learningNode('span',path.icon||({shapes:'🍪',measurement:'📏',data:'📊'}[topic]),'learning-icon'));card.appendChild(learningNode('strong',path.name));
@@ -2125,7 +2674,7 @@ function renderPathways(){
   });
 }
 function buildChallengePool(id,grade,seed){
-  var mission=BAKERY_CHALLENGES.find(function(c){return c.id===id;});if(!mission||!Number.isInteger(grade)||grade<1||grade>4)return [];
+  var mission=BAKERY_CHALLENGES.find(function(c){return c.id===id;});if(!mission||!Number.isInteger(grade)||LEARNING_GRADES.indexOf(grade)===-1)return [];
   var groups=mission.topics.map(function(topic){return TRACK_LEVELS[topic+'_g'+grade]||[];}).filter(function(levels){return levels.length;});
   if(!groups.length)return [];
   var progress=getProgress();
@@ -2135,16 +2684,17 @@ function buildChallengePool(id,grade,seed){
   });
 }
 function recordChallengeResult(id,grade,correct,independent){
-  if(!BAKERY_CHALLENGES.some(function(c){return c.id===id;})||!Number.isInteger(grade)||grade<1||grade>4)return;
+  if(!BAKERY_CHALLENGES.some(function(c){return c.id===id;})||!Number.isInteger(grade)||LEARNING_GRADES.indexOf(grade)===-1)return;
   var p=getProgress(),key=id+'_g'+grade,old=p.challengeProgress[key]||{rounds:0,bestIndependent:0};
   p.challengeProgress[key]={rounds:old.rounds+1,lastCorrect:correct,lastIndependent:independent,bestIndependent:Math.max(old.bestIndependent,independent),lastSeen:Date.now()};saveProgressData(p);
 }
 function renderChallenges(){
   renderLearningGrades('challenge-grades','challenges-screen');var p=getProgress(),grade=p.learningGrade,grid=document.getElementById('challenge-cards');grid.replaceChildren();
-  BAKERY_CHALLENGES.forEach(function(m){var card=learningNode('button',undefined,'learning-card');card.dataset.challenge=m.id;card.appendChild(learningNode('span',m.icon,'learning-icon'));card.appendChild(learningNode('strong',m.name));card.appendChild(learningNode('small',m.description));var old=p.challengeProgress[m.id+'_g'+grade];card.appendChild(learningNode('span',old?'Last challenge: '+old.lastIndependent+'/10 on my own':'10 mixed tasks · starts without a timer','learning-progress'));card.addEventListener('click',function(){startChallenge(m.id,grade);});grid.appendChild(card);});
+  BAKERY_CHALLENGES.forEach(function(m){var card=learningNode('button',undefined,'learning-card');card.dataset.challenge=m.id;card.appendChild(learningNode('span',m.icon,'learning-icon'));card.appendChild(learningNode('strong',m.name));card.appendChild(learningNode('small',grade===0?{opening:'Count treats and sort the bakery’s orders.',orders:'Put treats together, take some away, and compare amounts.',design:'Explore shapes, compare sizes, and sort treats.'}[m.id]:m.description));var old=p.challengeProgress[m.id+'_g'+grade];card.appendChild(learningNode('span',old?'Last challenge: '+old.lastIndependent+'/10 on my own':'10 mixed tasks · starts without a timer','learning-progress'));card.addEventListener('click',function(){startChallenge(m.id,grade);});grid.appendChild(card);});
 }
 function startChallenge(id,grade){
   var mission=BAKERY_CHALLENGES.find(function(m){return m.id===id;}),pool=buildChallengePool(id,grade,Math.floor(Math.random()*24));if(!mission||!pool.length)return;
+  setLearningGrade(grade);
   stopRoundTimers();state.challenge={id:id,grade:grade,name:mission.name};state.roundActive=true;state.roundPace=0;
   var first=reportLevel(pool[0].problem.sourceLevelId).level;state.pathLevel=first;state.track=first.track;state.levelId=first.id;state.levelIndex=0;
   state.currentOrder=0;state.tips=0;state.correct=0;state.independentCorrect=0;state.streak=0;state.bestStreak=0;state.wrongFacts=[];state.factsPool=pool;
@@ -2253,9 +2803,9 @@ function reportNextStep(skill) {
   if(skill.status==='Try more time')return 'Choose No timer so there is time to read, think, and use a hint.';
   if(skill.status==='Getting started')return 'Try a few more questions. There is not enough practice yet to spot a pattern.';
   if(skill.status==='Building independence')return 'Try a short round again. Think through the first step before asking for a hint.';
-  if(skill.status==='Practice together')return skill.grade?'Look at the worked example together, then try with help and No timer.':'Practice this level together with No timer. Talk through the hint before trying again.';
+  if(skill.status==='Practice together')return skill.grade!=null?'Look at the worked example together, then try with help and No timer.':'Practice this level together with No timer. Talk through the hint before trying again.';
   var found=reportLevel(skill.id),next=found && found.level.pathway && nextPathSkill(found.level);
-  return next?'A possible next step: '+next.name+' (Grade '+next.grade+').':'Keep practicing with varied questions, or try the next level when it feels comfortable.';
+  return next?'A possible next step: '+next.name+' ('+gradeLabel(next.grade)+').':'Keep practicing with varied questions, or try the next level when it feels comfortable.';
 }
 function buildReportData(progress) {
   var report=progress.report||normalizeReport(progress),groups={},questions=0,answered=0,independent=0,supported=0,incorrect=0,timeouts=0;
@@ -2286,14 +2836,14 @@ function buildReportData(progress) {
 }
 function reportDate(timestamp){return new Date(timestamp).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}
 function earlierReportText(item){
-  var label=item.label+(item.grade?' · Grade '+item.grade:'');
+  var label=item.label+(item.grade!=null?' · '+gradeLabel(item.grade):'');
   if(item.kind==='round')return label+': '+item.rounds+' completed '+(item.rounds===1?'round':'rounds')+'. Last round: '+item.independent+'/10 on my own, '+item.correct+'/10 correct including help.';
   return label+': '+(item.correct?item.correct+' recorded correct answers.':'Earlier practice recorded.')+' Help and timing details were not recorded.';
 }
 function reportText(report){
   var lines=['BAKERY QUEST — MY REPORT CARD','Prepared '+reportDate(report.generatedAt),'Subject: Math','Only practice on this device is included. Untried topics are not scored.','Detailed recording began '+reportDate(report.startedAt)+'.',report.questions+' questions recorded: '+report.independent+' on my own, '+report.supported+' with help, '+report.incorrect+' to review, '+report.timeouts+' ran out of time.',''];
-  report.topics.forEach(function(topic){lines.push(topic.name.toUpperCase());topic.skills.forEach(function(skill){lines.push(skill.label+(skill.grade?' · Grade '+skill.grade:''),skill.status,skill.independent+'/'+skill.answered+' answered on my own; '+skill.supported+' with help; '+skill.incorrect+' to review; '+skill.timeouts+' ran out of time.','Next time: '+skill.nextStep,'Last practiced: '+reportDate(skill.lastSeen),'');});if(topic.earlier.length){lines.push('Earlier practice (separate from the detailed counts above):');topic.earlier.forEach(function(item){lines.push(earlierReportText(item));});lines.push('');}});
-  report.topics.forEach(function(topic){if(topic.learning.length){lines.push(topic.name+' — Learning activities (not scored)');topic.learning.forEach(function(a){lines.push(a.label+' · Grade '+a.grade+': '+(a.guidedCompleted?'Guided practice completed':'Worked example explored'));});lines.push('');}});
+  report.topics.forEach(function(topic){lines.push(topic.name.toUpperCase());topic.skills.forEach(function(skill){lines.push(skill.label+(skill.grade!=null?' · '+gradeLabel(skill.grade):''),skill.status,skill.independent+'/'+skill.answered+' answered on my own; '+skill.supported+' with help; '+skill.incorrect+' to review; '+skill.timeouts+' ran out of time.','Next time: '+skill.nextStep,'Last practiced: '+reportDate(skill.lastSeen),'');});if(topic.earlier.length){lines.push('Earlier practice (separate from the detailed counts above):');topic.earlier.forEach(function(item){lines.push(earlierReportText(item));});lines.push('');}});
+  report.topics.forEach(function(topic){if(topic.learning.length){lines.push(topic.name+' — Learning activities (not scored)');topic.learning.forEach(function(a){lines.push(a.label+' · '+gradeLabel(a.grade)+': '+(a.guidedCompleted?'Guided practice completed':'Worked example explored'));});lines.push('');}});
   if(!report.topics.length)lines.push('No practice recorded yet. Try any topic to begin your report card.');
   lines.push('Learning activities are not scored. Bakery challenge entries show mixed practice separately; they do not mark a focused skill ready.');
   lines.push('On my own = correct first try without an in-app hint or chart. With help = correct after a hint, chart, or retry. Outside help cannot be detected.','Feedback uses up to the last 10 answered questions; fewer than 5 means Getting started. Timeouts do not count as incorrect answers.','This is a practice report, not a school grade or an assessment of everything a child knows. Grade labels describe the activities practiced, not the child’s overall grade level.');return lines.join('\n');
@@ -2315,7 +2865,7 @@ function renderReport(){
     var section=el('section',undefined,'report-topic');section.dataset.topic=topic.id;section.appendChild(el('h3',topic.name));
     topic.skills.forEach(function(skill){
       var card=el('article',undefined,'report-skill'),heading=el('div',undefined,'report-skill-heading');
-      heading.appendChild(el('h4',skill.label+(skill.grade?' · Grade '+skill.grade:'')));heading.appendChild(el('span',skill.status,'report-status'));card.appendChild(heading);
+      heading.appendChild(el('h4',skill.label+(skill.grade!=null?' · '+gradeLabel(skill.grade):'')));heading.appendChild(el('span',skill.status,'report-status'));card.appendChild(heading);
       card.appendChild(el('p',skill.independent+' of '+skill.answered+' answered on my own · '+skill.supported+' with help · '+skill.incorrect+' to review','report-counts'));
       if(skill.timeouts)card.appendChild(el('p',skill.timeouts+' '+(skill.timeouts===1?'question ran':'questions ran')+' out of time. These are separate from the answered questions.','report-note'));
       var answered=skill.recent.filter(function(v){return v!=='timeout';});
@@ -2324,7 +2874,7 @@ function renderReport(){
       card.appendChild(el('p','Last practiced '+reportDate(skill.lastSeen),'report-note'));
       var practice=el('button','Practice this skill','btn btn-small btn-back report-no-print');practice.addEventListener('click',function(){var found=reportLevel(skill.id);if(found && found.level.pathway)openPathLesson(found.level);else{setTrack(skill.track);showScreen('level-screen');}});card.appendChild(practice);section.appendChild(card);
     });
-    if(topic.learning.length){var activities=el('div',undefined,'report-history');activities.appendChild(el('h4','Learning activities · not scored'));topic.learning.forEach(function(a){activities.appendChild(el('p',a.label+' · Grade '+a.grade+': '+(a.guidedCompleted?'Guided practice completed':'Worked example explored')));});section.appendChild(activities);}
+    if(topic.learning.length){var activities=el('div',undefined,'report-history');activities.appendChild(el('h4','Learning activities · not scored'));topic.learning.forEach(function(a){activities.appendChild(el('p',a.label+' · '+gradeLabel(a.grade)+': '+(a.guidedCompleted?'Guided practice completed':'Worked example explored')));});section.appendChild(activities);}
     if(topic.earlier.length){var history=el('div',undefined,'report-history');history.appendChild(el('h4','Earlier practice'));topic.earlier.forEach(function(item){history.appendChild(el('p',earlierReportText(item)));});section.appendChild(history);}
     content.appendChild(section);
   });
@@ -2352,7 +2902,7 @@ function loadProgress() {
   if (!Number.isFinite(progress.totalTips)) progress.totalTips = 0;
   if ([0, 20, 40, 60].indexOf(progress.timerSeconds) === -1) progress.timerSeconds = PATIENCE_SECONDS;
   if (!progress.pathProgress || typeof progress.pathProgress !== 'object') progress.pathProgress = {};
-  if(!Number.isInteger(progress.learningGrade)||progress.learningGrade<1||progress.learningGrade>4)progress.learningGrade=2;
+  if(!Number.isInteger(progress.learningGrade)||LEARNING_GRADES.indexOf(progress.learningGrade)===-1)progress.learningGrade=2;
   if(!progress.learningProgress||typeof progress.learningProgress!=='object'||Array.isArray(progress.learningProgress))progress.learningProgress={};
   if(!progress.challengeProgress||typeof progress.challengeProgress!=='object'||Array.isArray(progress.challengeProgress))progress.challengeProgress={};
   progress.bakery = normalizeBakery(progress);
@@ -2764,7 +3314,7 @@ function showScreen(id) {
 
 function setTrack(track) {
   state.track = track;
-  if (PATHWAYS[track.split('_')[0]]) selectedPathGrade[track.split('_')[0]]=Number(track.split('_g')[1]);
+  if (PATHWAYS[track.split('_')[0]]) {var grade=Number(track.split('_g')[1]);selectedPathGrade[track.split('_')[0]]=grade;setLearningGrade(grade);}
   renderLevelSelect();
 }
 function visualNode(tag,attrs,text) {
@@ -2774,7 +3324,7 @@ function visualNode(tag,attrs,text) {
   return node;
 }
 function renderPathVisual(container, v, hint) {
-  if(renderFoundationVisual(container,v,hint)||renderReasoningVisual(container,v,hint)||renderVisualExtensionVisual(container,v,hint))return;
+  if(renderFoundationVisual(container,v,hint)||renderReasoningVisual(container,v,hint)||renderVisualExtensionVisual(container,v,hint)||renderEarlyVisual(container,v,hint)||renderFifthNumberVisual(container,v,hint)||renderFifthVisualVisual(container,v,hint))return;
   container.replaceChildren();
   var svg=visualNode('svg',{viewBox:'0 0 400 250',role:'img','aria-label':v.description||'Bakery math diagram: '+v.kind,'class':'path-diagram'+(hint?' diagram-hint':'')});
   var stroke='#69452e',fill='#f3b97c',accent='#287963';
@@ -2876,7 +3426,7 @@ function renderPathVisual(container, v, hint) {
   container.appendChild(svg);
 }
 function renderPathAnswer(container, problem, submit, reveal) {
-  if(renderFoundationAnswer(container,problem,submit,reveal)||renderReasoningAnswer(container,problem,submit,reveal)||renderVisualExtensionAnswer(container,problem,submit,reveal))return;
+  if(renderFoundationAnswer(container,problem,submit,reveal)||renderReasoningAnswer(container,problem,submit,reveal)||renderVisualExtensionAnswer(container,problem,submit,reveal)||renderEarlyAnswer(container,problem,submit,reveal)||renderFifthNumberAnswer(container,problem,submit,reveal)||renderFifthVisualAnswer(container,problem,submit,reveal))return;
   container.replaceChildren();
   if(problem.choices) {
     // Rotate choices to avoid a predictable correct-answer position.
@@ -2904,13 +3454,15 @@ function openPathLesson(level) {
   document.getElementById('lesson-note').textContent='Watch an example, try with help, or jump into practice. No timer here.';
   document.getElementById('lesson-explanation').hidden=false;
   document.getElementById('start-path-practice').hidden=false;
+  setLearningGrade(level.grade);
   recordLearningActivity(level,'example');
   selectedLesson=level;state.track=level.track;selectedPathGrade[level.pathway]=level.grade;lessonGuided=false;lessonRevealed=false;
   lessonProblem=makePathProblem(level,0);showScreen('lesson-screen');renderLesson();
 }
 function renderLesson() {
   var p=lessonProblem;
-  document.getElementById('lesson-title').textContent=selectedLesson.name+' · Grade '+selectedLesson.grade;
+  document.getElementById('lesson-visual').hidden=Boolean(p.hideVisual);
+  document.getElementById('lesson-title').textContent=selectedLesson.name+' · '+gradeLabel(selectedLesson.grade);
   document.getElementById('lesson-question').textContent=p.story;
   renderPathVisual(document.getElementById('lesson-visual'),p.builder && !lessonGuided ? {kind:'bars',values:p.builder.values,labels:p.builder.labels,scale:1} : p.visual,!lessonGuided);
   document.getElementById('lesson-explanation').textContent=lessonGuided?p.hintText:p.explanation;
@@ -2934,35 +3486,37 @@ function showPathHint(){
 }
 
 var pathCheck=null;
-function suggestPathGrade(scores){var gap=scores.findIndex(function(score){return score<2;});return gap===-1?4:gap+1;}
+function suggestPathGrade(scores,grades){grades=grades||scores.map(function(_,i){return i+1;});var gap=scores.findIndex(function(score){return score<2;});return grades[gap===-1?grades.length-1:gap];}
 function startPathCheck(topic){
-  pathCheck={topic:topic,index:0,scores:[0,0,0,0],answered:false};
+  var grades=availablePathGrades(topic);if(!grades.length)return;
+  pathCheck={topic:topic,index:0,grades:grades,scores:grades.map(function(){return 0;}),answered:false};
   showScreen('lesson-screen');renderPathCheck();
 }
 function renderPathCheck(){
-  var check=pathCheck,grade=Math.floor(check.index/2)+1,levels=TRACK_LEVELS[check.topic+'_g'+grade];
-  document.getElementById('lesson-title').textContent='Find a starting point · '+(check.index+1)+' of 8';
+  var check=pathCheck,gradeIndex=Math.floor(check.index/2),grade=check.grades[gradeIndex],total=check.grades.length*2,levels=TRACK_LEVELS[check.topic+'_g'+grade];
+  document.getElementById('lesson-title').textContent='Find a starting point · '+(check.index+1)+' of '+total;
   document.getElementById('lesson-note').textContent='A short sample, not an assessment. No timer, no effect on tips or progress. You can choose any grade.';
   document.getElementById('guided-try').hidden=true;
   document.getElementById('start-path-practice').hidden=true;
   var level=levels[check.index%2===0?0:levels.length-1];
   lessonProblem=makePathProblem(level,2+check.index);check.answered=false;
+  document.getElementById('lesson-visual').hidden=Boolean(lessonProblem.hideVisual);
   document.getElementById('lesson-question').textContent=lessonProblem.story;
   document.getElementById('lesson-explanation').hidden=true;
   document.getElementById('lesson-feedback').textContent='';
   renderPathVisual(document.getElementById('lesson-visual'),lessonProblem.visual,false);
   renderPathAnswer(document.getElementById('lesson-answers'),lessonProblem,function(raw){
     if(check.answered)return;check.answered=true;
-    if(pathAnswerMatches(lessonProblem,raw))check.scores[grade-1]++;
+    if(pathAnswerMatches(lessonProblem,raw))check.scores[gradeIndex]++;
     document.getElementById('lesson-feedback').textContent=lessonProblem.explanation;
-    var next=document.createElement('button');next.className='btn btn-small btn-teal';next.textContent=check.index===7?'See suggestion':'Next question';
+    var next=document.createElement('button');next.className='btn btn-small btn-teal';next.textContent=check.index===total-1?'See suggestion':'Next question';
     next.addEventListener('click',function(){
       check.index++;
-      if(check.index<8)renderPathCheck();
+      if(check.index<total)renderPathCheck();
       else{
-        var suggested=suggestPathGrade(check.scores),topic=check.topic;pathCheck=null;
+        var suggested=suggestPathGrade(check.scores,check.grades),topic=check.topic;pathCheck=null;
         selectedPathGrade[topic]=suggested;setTrack(topic+'_g'+suggested);showScreen('level-screen');
-        document.getElementById('level-guide').textContent='Suggested starting point: Grade '+suggested+'. This was only a small sample. Choose any skill or grade that feels right.';
+        document.getElementById('level-guide').textContent='Suggested starting point: '+gradeLabel(suggested)+'. This was only a small sample. Choose any skill or grade that feels right.';
       }
     });var answers=document.getElementById('lesson-answers');answers.replaceChildren();if(lessonProblem.widget)renderPathAnswer(answers,lessonProblem,function(){},true);answers.appendChild(next);
   });
@@ -2990,7 +3544,7 @@ function renderPracticePicker() {
   if (PATHWAYS[topic]) {
     var label=document.createElement('p');label.className='choice-label';label.textContent='Choose a starting grade — every skill is open. Work upward or jump ahead.';skills.appendChild(label);
     var row=document.createElement('div');row.className='skill-buttons grade-picker';
-    for(var grade=1;grade<=4;grade++){var track=topic+'_g'+grade;row.appendChild(button('Grade '+grade,track,state.track===track));}
+    availablePathGrades(topic).forEach(function(grade){var track=topic+'_g'+grade,b=button(gradeButtonLabel(grade),track,state.track===track);b.setAttribute('aria-label',gradeLabel(grade));row.appendChild(b);});
     skills.appendChild(row);
     var check=document.createElement('button');check.className='btn btn-small btn-back';check.textContent='Help me choose a starting point';check.addEventListener('click',function(){startPathCheck(topic);});skills.appendChild(check);return;
   }
@@ -3027,7 +3581,7 @@ function renderLevelSelect() {
 
   var levels = TRACK_LEVELS[state.track] || [];
   var pathway=levels[0] && levels[0].pathway;
-  document.getElementById('practice-title').textContent=pathway?PATHWAYS[pathway].name+' · Grade '+levels[0].grade:'Fact & Number Practice';
+  document.getElementById('practice-title').textContent=pathway?PATHWAYS[pathway].name+' · '+gradeLabel(levels[0].grade):'Fact & Number Practice';
   document.getElementById('level-guide').textContent=pathway?'Choose a skill. Start untimed, learn with hints, and earn tips.':'Choose a level • Get 7 of 10 right to unlock the next!';
   document.getElementById('level-pace').parentElement.hidden=Boolean(pathway);
   document.getElementById('pace-advice').hidden=Boolean(pathway);
@@ -3158,7 +3712,7 @@ function nextOrder() {
   }
 
   state.currentProblem = generateProblem();
-  document.getElementById('round-context').textContent=state.challenge?state.challenge.name+' · Grade '+state.challenge.grade:state.pathLevel?state.pathLevel.name+' · Grade '+state.pathLevel.grade:'Fact & number practice';
+  document.getElementById('round-context').textContent=state.challenge?state.challenge.name+' · '+gradeLabel(state.challenge.grade):state.pathLevel?state.pathLevel.name+' · '+gradeLabel(state.pathLevel.grade):'Fact & number practice';
   document.getElementById('round-unit-label').textContent=state.challenge?'Task':'Question';
   state.reportRecorded = false;
   state.reportHelpUsed = document.getElementById('game-chart').style.display !== 'none';
@@ -3212,7 +3766,7 @@ function nextOrder() {
 
   var path=state.currentProblem.type==='pathway', custom=path && (state.currentProblem.choices || state.currentProblem.builder || state.currentProblem.widget);
   document.getElementById('game-screen').classList.toggle('visual-round',path);
-  document.getElementById('path-visual').hidden=!path || Boolean(state.currentProblem.builder) || Boolean(state.currentProblem.widget && (['fm_shade','fm_line','fm_hundredgrid'].indexOf(state.currentProblem.widget.kind)!==-1 || ['fd_prompt','vx_notice'].indexOf(state.currentProblem.visual.kind)!==-1));
+  document.getElementById('path-visual').hidden=!path || Boolean(state.currentProblem.hideVisual) || Boolean(state.currentProblem.builder) || Boolean(state.currentProblem.widget && (['fm_shade','fm_line','fm_hundredgrid'].indexOf(state.currentProblem.widget.kind)!==-1 || ['fd_prompt','vx_notice'].indexOf(state.currentProblem.visual.kind)!==-1));
   document.getElementById('path-hint').hidden=!path;
   document.getElementById('path-answers').hidden=!custom;
   if(path){
@@ -3472,13 +4026,13 @@ function endRound() {
   if(state.pathLevel && !state.challenge){
     recordPathResult(state.pathLevel,state.correct,state.independentCorrect);
     var next=nextPathSkill(state.pathLevel),ready=state.independentCorrect>=8;
-    var summary=document.createElement('p');summary.className='bakery-help';summary.textContent=state.independentCorrect+'/10 solved independently. '+(ready?(next?'Ready for a next step: '+next.name+' (Grade '+next.grade+').':'You completed the last step in this path. Try another path or practice again!'):'Try this skill again with the worked example. You can also choose an earlier grade.');rec.appendChild(summary);
+    var summary=document.createElement('p');summary.className='bakery-help';summary.textContent=state.independentCorrect+'/10 solved independently. '+(ready?(next?'Ready for a next step: '+next.name+' ('+gradeLabel(next.grade)+').':'You completed the last step in this path. Try another path or practice again!'):'Try this skill again with the worked example. You can also choose an earlier grade.');rec.appendChild(summary);
     var action=document.createElement('button');action.className='btn btn-small btn-teal';action.textContent=ready&&next?'Try the next skill':'Practice this skill';action.addEventListener('click',function(){openPathLesson(ready&&next?next:state.pathLevel);});rec.appendChild(action);
   }
   if(state.challenge){
     recordChallengeResult(state.challenge.id,state.challenge.grade,state.correct,state.independentCorrect);
     document.getElementById('results-title').textContent='Challenge complete!';
-    document.getElementById('results-subtitle').textContent=state.challenge.name+' · Grade '+state.challenge.grade;
+    document.getElementById('results-subtitle').textContent=state.challenge.name+' · '+gradeLabel(state.challenge.grade);
     rec.appendChild(learningNode('p',state.independentCorrect+'/10 tasks solved independently. Your report lists these as bakery challenges.','bakery-help'));
   }else if(state.pathLevel)document.getElementById('results-subtitle').textContent='You practiced '+state.pathLevel.name+'.';
   // Show tricky facts + pattern insights
