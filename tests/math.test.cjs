@@ -59,3 +59,5 @@ test('all new levels generate correct, nonnegative arithmetic and comparison pro
     }
   }
 });
+
+test('million-sized whole-number answers are accepted without widening decimal precision',()=>{const c=app();assert.equal(c.answersMatch('1000000','1000000'),true);assert.equal(c.parseAnswer('10000000'),null);assert.equal(c.parseAnswer('1000000.0001'),null);assert.equal(c.answersMatch('999999.9999','999999.9999'),true);});

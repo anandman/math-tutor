@@ -1,101 +1,95 @@
 # Bakery Quest
 
-A math practice app for kids, themed as a bakery game. Practice whole-number
-arithmetic, decimals, and fractions through timed customer orders.
+A math practice app with a bakery to make your own. Learn through examples,
+interactive tools, and practice; earn tips to decorate and care for Sprinkle.
 
-Serves customers, earns tips, unlocks upgrades.
+[Play Bakery Quest](https://anandman.github.io/math-tutor/)
 
-## Features
+## Three places to explore
 
-- Addition & subtraction: levels within 10, 20, and 100, with no negative answers
-- Choose a missing result, second number, or first number, with matching stories and hints
-- Each equation form has its own 10 → 20 → 100 unlocks, adaptive practice, and report entries
-- Multiplication & division: four levels of fact practice
-- Decimals & fractions: compare first, then add/subtract, then multiply/divide
-- Topic and skill pickers, with three increasingly challenging levels per new skill
-- Every skill starts unlocked; score 7/10 to unlock its next level
-- Decimal and fraction keypad entry, with equivalent fraction answers accepted
-- Shapes & Space, Measurement, and Data & Graphs: 38 visual skills across grades 1–4
-- Jump into any grade/skill, or take an optional eight-question starting-point check
-- Worked examples, guided tries, on-demand hints, and hands-on bar-graph building
-- Per-skill progress and next-step suggestions based on independent answers
-- Visual pathways begin untimed; existing arithmetic timing preferences are preserved
-- Bakery story problems with fun characters
-- Choose 20, 40, or 60 seconds per order, or practice with no timer
-- Prominent Home button during rounds; leaving keeps tips already earned
-- Hint system: wrong answer gives a hint + second chance
-- Timeouts do not count as incorrect answers in adaptive fact practice
-- 23 collectible prizes: shelf decorations, room colors, a cat, and pet accessories
-- Arrange six display spots, swap decorations, or put them away for later
-- Adopt Sprinkle the cat, dress it up, play with its toys, and tuck it in for a nap
-- All prizes are cosmetic; arranging and playing are free, with purchases saved
-- My Report Card shows only practiced math topics and skills, with activity grade labels
-- Independent answers, helped answers, review needs, and timeouts shown separately
-- Parent-friendly next steps, recent practice comparisons, and print/PDF or text export
-- Earlier practice retained separately when detailed help/timing records are unavailable
-- Progress saved in browser (localStorage)
-- Works on iPad landscape and mobile
+- **Math Pathways:** choose grades 1–4 freely, then a pathway and skill. Explore
+  a worked example, try with guidance, and practice independently. Suggestions
+  use recorded practice; they never lock a child into a grade.
+- **Bakery Challenges:** ten mixed tasks for opening the bakery, preparing orders,
+  or designing the bakery. Each grade has its own mix. Challenge results are
+  tracked separately from focused skill practice.
+- **My Bakery:** spend earned tips on 23 cosmetic prizes, arrange six display
+  spots, change the room, and adopt, dress, play with, or tuck in Sprinkle the cat.
 
-## Development
+## Math pathways
 
-```bash
-# Serve locally
-npx serve .
-```
+145 skills across eight pathways, with grade labels as entry points:
 
-No build step or app dependencies. Just a single `index.html`.
+| Pathway | Progression from grade 1 through grade 4 |
+|---|---|
+| Place Value | Count through 120; tens/ones → hundreds and exchanges → rounding and arithmetic within 1,000 → place values through 1,000,000 |
+| Number Strategies | Equal equations and making ten → regrouping, arrays and parity → unknown factors/divisors and partial products → larger arithmetic, remainders, factors and patterns |
+| Word Problems | Joining, separating, parts and comparisons → two-step stories and matching equations → both division meanings and two-step plans → multiplicative comparisons, multistep plans and remainder interpretation |
+| Time & Money | Hours/half hours → five-minute clocks, a.m./p.m. and U.S. money → minutes and elapsed time → time/unit conversions and multistep money problems |
+| Fraction & Decimal Models | Halves/quarters → thirds and equal-area shares → fraction number lines and equivalence → further equivalence, mixed numbers, whole-number multiplication and hundredths |
+| Shapes & Space | Names, composition and construction → sides, solids and equal shares → overlapping shape families and quadrilaterals → lines, angles, symmetry and right triangles |
+| Measurement | Compare, estimate and repeat units → rulers and number-line lengths → area/perimeter construction → conversions, angle construction and floor designs |
+| Data & Graphs | Read/build picture charts → bars and whole-unit plots → scaled graphs and two-step questions → fractional plots and comparing total measurements |
 
-Run the arithmetic, visual-pathway, input-validation, saved-progress, report-card, round, and prize-shop tests with Node.js:
+Tools include place-value counters and exchanges, clock hands, coin/bill choices,
+fraction shading and number lines, polygon construction, symmetry grids,
+protractors, rectangle designs, and graph/plot builders. Alternative correct
+constructions and equivalent numerical answers are accepted where appropriate.
 
-```bash
-node --test tests/*.test.cjs
-```
+Every skill has a worked example, guided activity, hints, and a ten-question round.
+Eight independent correct answers suggest a next step. Pathway rounds and
+challenges begin untimed. An unsuccessful pathway task shows an explanation and
+solved model, and waits until the learner chooses to continue.
 
-Deployed to GitHub Pages — pushes to `main` auto-deploy via `.github/workflows/pages.yml`.
+An optional eight-question starting check samples a pathway and suggests where
+to begin. It is not a formal assessment and never restricts access.
 
-## Visual learning pathways
+## Fact & number practice
 
-Choose a topic, a grade, then a skill. Every grade is accessible immediately.
-Each skill offers a worked example, an optional guided try, and a ten-order round.
-Eight independent correct answers suggest moving forward; hints and time do not
-block access to other grades. Progress and rewards stay on the current device.
+Available from Math Pathways:
 
-| Path | Foundations / Grade 1 | Grade 2 | Grade 3 | Grade 4 |
-|---|---|---|---|---|
-| Shapes & Space | Shape names, composing shapes, fair shares | Sides/corners, solids, equal shares, tiled trays | Shape families and fractions of shapes | Lines, angle types, symmetry |
-| Measurement | Compare/order lengths; repeated units | Read rulers, start beyond zero, choose units | Area, perimeter, grams/liters | Protractors, unit conversions, missing sides, combined areas |
-| Data & Graphs | Picture charts and comparisons | Bar graphs, build a graph, whole-unit line plots | Scaled graphs and fractional line plots | Eighth-unit plots, ranges, total fractional lengths |
-
-The optional starting check samples two skills per grade and suggests a place to
-begin; it does not assign a formal assessment level or restrict skill access.
-Grade labels organize selected practice skills, not an entire grade curriculum.
-Content is guided by the Common Core [grade 2 geometry](https://www.thecorestandards.org/Math/Content/2/G/),
-[grade 2 measurement/data](https://www.thecorestandards.org/Math/Content/2/MD/),
-[grade 3 measurement/data](https://www.thecorestandards.org/Math/Content/3/MD/),
-[grade 4 measurement/data](https://www.thecorestandards.org/Math/Content/4/MD/),
-and [grade 4 geometry](https://www.thecorestandards.org/Math/Content/4/G/) standards.
+- Addition/subtraction with a missing result, second number, or first number.
+  Each form has independent 10 → 20 → 100 progression and reporting.
+- Multiplication/division facts in four levels, plus mixed practice.
+- Fractions/decimals: compare → add/subtract → multiply/divide, with three levels
+  per operation. Later operations remain optional extensions beyond grade 4.
+- Each track starts available; 7/10 unlocks the next level in that track.
+- Choose 20, 40, or 60 seconds, or no timer. Pathways preserve that preference.
+- First wrong answer gives a hint and retry. Timeouts are distinct from errors.
+- Home is always available during a round; quitting keeps tips already earned.
 
 ## My Report Card
 
-Open **My Report Card** from the home screen or after a round. Only math topics
-and skills actually practiced on that device appear. Untried topics are not
-scored, and grade labels describe the activities, not an overall grade placement.
+Only activities actually attempted on the current device appear. Untried subjects
+and skills are not scored. Grade labels describe activities, not a child's overall
+placement. The report separates:
 
-New practice records correct first tries, correct answers after a hint/chart/retry,
-questions to review, and timeouts separately. Timeouts do not count as incorrect
-answers. Feedback uses recent practice and suggests a next step; small samples
-show “Getting started.” This is a practice report, not a school or STAR grade.
-The app cannot detect help given outside the app.
+- Independent answers, answers with in-app help/retries, review needs and timeouts.
+- Focused practice and **Bakery challenge** application entries.
+- Worked examples/guided learning, shown as **not scored** activities.
+- Earlier history where detailed timing/help information was not recorded.
 
-Show the report to a parent, use **Print / save PDF**, or **Save text copy**.
-Reports stay on the device unless you choose to share a saved copy. Existing
-practice is preserved as earlier history; missing help/timing details are not
-guessed. Guided examples and the optional starting check are not scored.
+Guided learning and challenge results do not earn independent pathway readiness.
+Parent suggestions use recent answers, with small samples labeled “Getting
+started.” The app cannot detect assistance given outside it. Reports describe
+practice, not school or STAR grades.
 
-Addition and subtraction reports distinguish **Missing result**, **Missing second
-number**, and **Missing first number**, then list practiced ranges in numeric
-order. Existing addition/subtraction records remain under Missing result; no
-credit is transferred to the new forms. Earn 7/10 in a form to unlock its next range.
+Open the report from Home, Math Pathways, or round results. Use **Print / save PDF**
+or **Save text copy** to share it. Reports and all other progress stay on the
+current device unless you choose to share a saved copy. No profiles or accounts.
 
-See [Math coverage and next checks, grades 1–4](docs/GRADE-COVERAGE.md) for the
-current practice coverage and recommended additions, with links to the standards.
+See [Grade 1–4 coverage](docs/GRADE-COVERAGE.md) for detail and standards sources.
+
+## Development
+
+Single `index.html` with embedded CSS/JS, safe DOM/SVG rendering, and localStorage.
+No build step or app dependencies. Google Fonts is the only external resource.
+
+```bash
+python3 -m http.server 8000
+node --test tests/*.test.cjs
+```
+
+Tests cover mathematical correctness, model rendering, construction validators,
+saved progress, input validation, scoring, reports, challenges, and prizes.
+Pushes to `main` deploy to GitHub Pages via `.github/workflows/pages.yml`.

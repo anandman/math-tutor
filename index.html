@@ -551,6 +551,46 @@ body::before {
   #shop-items { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .shop-item { margin-bottom: 0; }
 }
+/* Three clear destinations, with room for learning tools. */
+.home-destinations { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; width:100%; }
+.learning-card { display:flex; flex-direction:column; align-items:flex-start; gap:9px; padding:20px; border:2px solid var(--peach); border-radius:18px; background:var(--warm-white); color:var(--chocolate); font:inherit; text-align:left; cursor:pointer; min-width:0; }
+.learning-card:hover, .learning-card:focus-visible { border-color:var(--teal); outline:2px solid var(--teal); outline-offset:2px; }
+.learning-card strong { font-family:'Fredoka',sans-serif; font-size:1.15rem; }
+.learning-card small { font-size:.82rem; line-height:1.5; color:var(--brown); }
+.learning-icon { font-size:1.8rem; }
+.learning-progress { font-size:.75rem; font-weight:700; color:var(--teal-dark); margin-top:auto; }
+.learning-screen { max-width:1000px; max-height:100dvh; overflow-y:auto; gap:18px; }
+.learning-screen.active { align-items:stretch; }
+.learning-screen > *, #skill-picker { flex-shrink:0; }
+.learning-heading { display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+.learning-heading h2 { font-size:1.8rem; }
+.learning-intro { line-height:1.55; color:var(--brown); font-size:.95rem; }
+.learning-grade-picker { display:flex; gap:6px; background:var(--peach); padding:5px; border-radius:14px; }
+.learning-grade-picker .mode-btn { border-radius:10px; }
+.learning-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+#learning-next { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.recommendation-card { background:#edf7f0; padding:15px; }
+.learning-tools-link { display:flex; align-items:center; gap:14px; flex-wrap:wrap; border-top:1px solid var(--peach); padding-top:20px; }
+#round-context { width:100%; margin:0 0 10px; font-family:'Fredoka',sans-serif; color:var(--teal-dark); text-align:center; }
+#path-answers { width:100%; min-width:0; }
+#path-answers input[type=range], #lesson-answers input[type=range] { max-width:100%; accent-color:var(--teal-dark); }
+#path-answers button, #lesson-answers button { touch-action:manipulation; }
+#menu-screen { max-width:900px; }
+@media(max-width:600px) { .home-destinations,.learning-grid,#learning-next { grid-template-columns:1fr; } .learning-card { padding:15px; } #menu-screen .bakery-scene { max-width:170px !important; } .learning-grade-picker .mode-btn { padding:10px 4px; } }
+@media print { .learning-screen { display:none !important; } }
+
+@media(max-width:600px) {
+  #menu-screen .bakery-sign { padding:18px 12px; margin-bottom:14px; width:100%; }
+  #menu-screen .bakery-sign h1 { font-size:2rem; }
+  .home-destinations .learning-card { display:grid; grid-template-columns:30px 1fr; gap:6px 10px; }
+  .home-destinations .learning-icon { grid-row:span 2; font-size:1.5rem; }
+  #pathway-cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  #pathway-cards .learning-card { padding:12px; gap:6px; }
+  #pathway-cards strong { font-size:1rem; }
+  #pathway-cards small { display:none; }
+  #pathway-cards .learning-icon { font-size:1.4rem; }
+  #pathway-cards .learning-progress { font-size:.72rem; }
+}
 </style>
 </head>
 <body>
@@ -587,20 +627,30 @@ body::before {
     </circle>
   </svg>
 
-  <button class="btn btn-primary" onclick="showScreen('level-screen')" style="margin-bottom: 14px;">
-    Start Baking!
-  </button>
-  <div style="display: flex; gap: 10px;">
-    <button class="btn btn-golden btn-small" onclick="showScreen('shop-screen')">
-      My Bakery
-    </button>
-    <button class="btn btn-teal btn-small" onclick="showScreen('chart-screen')">
-      Math Chart
-    </button>
+  <div class="home-destinations">
+    <button id="menu-pathways" class="learning-card" onclick="showScreen('pathways-screen')"><span class="learning-icon">🧠</span><strong>Math Pathways</strong><small>Learn with examples, explore tools, and practice at your level.</small></button>
+    <button id="menu-challenges" class="learning-card" onclick="showScreen('challenges-screen')"><span class="learning-icon">🧁</span><strong>Bakery Challenges</strong><small>Put different math skills to work on bakery tasks.</small></button>
+    <button id="menu-bakery" class="learning-card" onclick="showScreen('shop-screen')"><span class="learning-icon">🏡</span><strong>My Bakery</strong><small>Spend your tips, decorate, and play with Sprinkle.</small></button>
   </div>
-  <button id="menu-report" class="btn btn-small btn-back" onclick="showScreen('report-screen')" style="margin-top: 14px;">My Report Card</button>
+  <div class="bakery-footer"><button id="menu-report" class="btn btn-small btn-back" onclick="showScreen('report-screen')">My Report Card</button><button class="btn btn-small btn-teal" onclick="showScreen('chart-screen')">Math Chart</button></div>
 </div>
 
+<div class="screen learning-screen" id="pathways-screen">
+  <div class="learning-heading"><h2>Math Pathways</h2><button class="btn btn-small btn-back" onclick="showScreen('menu-screen')">← Home</button></div>
+  <p class="learning-intro">Explore an example, try with guidance, then practice on your own. Every grade is open. Choose what fits today.</p>
+  <div id="learning-grades" class="learning-grade-picker" aria-label="Choose a grade"></div>
+  <h3>Choose a pathway</h3><div id="pathway-cards" class="learning-grid"></div>
+  <h3>Try next</h3><div id="learning-next" class="learning-grid"></div>
+  <div class="learning-tools-link"><button id="arithmetic-practice" class="btn btn-small btn-teal" onclick="setTrack('addition');showScreen('level-screen')">Fact & number practice</button><p class="learning-intro">Addition, subtraction, multiplication, division, fractions, and decimals.</p></div>
+  <button class="btn btn-small btn-back" onclick="showScreen('report-screen')">See my report card</button>
+</div>
+<div class="screen learning-screen" id="challenges-screen">
+  <div class="learning-heading"><h2>Bakery Challenges</h2><button class="btn btn-small btn-back" onclick="showScreen('menu-screen')">← Home</button></div>
+  <p class="learning-intro">Try a mix of skills for bakery jobs. Each challenge starts without a timer. Hints are here whenever you need them, and every task can earn tips.</p>
+  <div id="challenge-grades" class="learning-grade-picker" aria-label="Choose a challenge grade"></div>
+  <div id="challenge-cards" class="learning-grid"></div>
+  <button class="btn btn-small btn-teal" onclick="showScreen('pathways-screen')">Learn a skill first</button>
+</div>
 <!-- REPORT CARD -->
 <div class="screen" id="report-screen">
   <div class="report-actions report-no-print">
@@ -618,9 +668,9 @@ body::before {
 </div>
 <!-- LEVEL SELECT -->
 <div class="screen" id="level-screen">
-  <h2 style="font-size: 1.5rem; color: var(--brown); margin-bottom: 6px;">Choose Your Order</h2>
+  <h2 id="practice-title" style="font-size: 1.5rem; color: var(--brown); margin-bottom: 6px;">Math Practice</h2>
 
-  <p class="choice-label">Choose a topic</p>
+  <p class="choice-label" id="practice-topic-label">Choose a topic</p>
   <div class="mode-toggle" id="topic-picker" aria-label="Math topics"></div>
   <div id="skill-picker" aria-label="Practice skills"></div>
   <p class="choice-label" id="level-guide">Choose a level • Get 7 of 10 right to unlock the next!</p>
@@ -631,7 +681,7 @@ body::before {
 
   <div id="both-mode-area" style="width: 100%; text-align: center; margin-top: 4px;"></div>
 
-  <button class="btn btn-small btn-back" onclick="showScreen('menu-screen')" style="margin-top: 12px;">Back</button>
+  <button class="btn btn-small btn-back" onclick="showScreen('pathways-screen')" style="margin-top: 12px;">← Math Pathways</button>
 </div>
 
 <!-- WORKED EXAMPLE / GUIDED PRACTICE -->
@@ -648,6 +698,7 @@ body::before {
 <!-- GAME SCREEN -->
 <div class="screen" id="game-screen">
   <div class="round-controls"><button id="round-home" class="btn btn-small btn-back" onclick="quitGame()">← Home</button><label class="pace-control" for="round-pace">Time <select id="round-pace" onchange="setPace(Number(this.value))"><option value="20">20 seconds</option><option value="40">40 seconds</option><option value="60">60 seconds</option><option value="0">No timer</option></select></label><small>Leave anytime — keep your earned tips.</small></div>
+  <p id="round-context"></p>
   <div class="game-layout">
     <div class="game-left">
       <div class="game-header">
@@ -655,7 +706,7 @@ body::before {
         <button class="peek-chart-btn" onclick="toggleGameChart()" title="Peek at chart">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="display: block;"><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="1" y1="5.5" x2="15" y2="5.5" stroke="currentColor" stroke-width="1"/><line x1="1" y1="10" x2="15" y2="10" stroke="currentColor" stroke-width="1"/><line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" stroke-width="1"/><line x1="10.5" y1="1" x2="10.5" y2="15" stroke="currentColor" stroke-width="1"/></svg>
         </button>
-        <div class="progress-display">Order <span id="current-order">1</span> / <span id="total-orders">10</span></div>
+        <div class="progress-display"><span id="round-unit-label">Question</span> <span id="current-order">1</span> / <span id="total-orders">10</span></div>
       </div>
       <div class="patience-bar-container">
         <div class="patience-label" id="patience-label">Customer patience</div>
@@ -743,7 +794,7 @@ body::before {
     <div id="path-recommendation"></div>
     <button class="btn btn-small btn-back" onclick="showScreen('report-screen')" style="margin: 12px 0;">Show my report card</button>
     <div class="results-buttons">
-      <button class="btn btn-primary btn-small" onclick="showScreen('level-screen')">More Orders</button>
+      <button class="btn btn-primary btn-small" onclick="continueLearning()">Choose more practice</button>
       <button class="btn btn-golden btn-small" onclick="showScreen('menu-screen')">Home</button>
     </div>
   </div>
@@ -900,12 +951,1039 @@ var PATHWAYS = {
     [['line_eighth','Precise measurements','Read a plot marked in eighths'],['plot_range','Longest and shortest','Subtract fractional measurements'],['plot_total','Ribbon inventory','Add measurements from a fractional line plot']]
   ]}
 };
+
+// Grade 1–4 activity modules. Kept inline for a self-contained static app.
+// Place Value and Time & Money: visual models plus accessible construction tools.
+var FOUNDATION_PATHWAYS = {
+  place:{name:'Place Value',icon:'🧮',grades:[
+    [['pv_count120','Count along','Count forward from any number through 120'],['pv_build_tens','Tens & ones workshop','Build two-digit numbers with tens and ones'],['pv_compare','Compare the trays','Compare two-digit numbers using place value'],['pv_ten_change','Ten more, ten less','Change a number by one ten']],
+    [['pv_hundreds','Hundreds workshop','Build three-digit numbers with hundreds, tens, and ones'],['pv_expanded','Unpack a number','Connect standard and expanded form'],['pv_skip_count','Skip-count deliveries','Count by 5s, 10s, and 100s within 1,000'],['pv_exchange','Trade the blocks','Exchange a hundred or ten without changing the value']],
+    [['pv_round1000','Rounding shelves','Round whole numbers to the nearest ten or hundred'],['pv_add1000','Combine the inventory','Add within 1,000 using place-value models'],['pv_sub1000','Use the inventory','Subtract within 1,000 and regroup as needed'],['pv_tens_product','Boxes of tens','Multiply a one-digit number by a multiple of ten']],
+    [['pv_million','Big-number workshop','Build numbers through 1,000,000'],['pv_ten_times','Ten times the value','See how a digit’s value changes one place to the left'],['pv_round_large','Round big inventories','Round whole numbers to any named place through hundred thousands'],['pv_compare_large','Compare big numbers','Use the first different place to compare numbers']]
+  ]},
+  time:{name:'Time & Money',icon:'🕰️',grades:[
+    [['tm_hour','Clock hours','Read analog clocks to the hour'],['tm_half','Half past','Read analog clocks to the half hour'],['tm_set_half','Clock workshop','Set both hands for hours and half hours']],
+    [['tm_five','Five-minute clocks','Read time in five-minute intervals'],['tm_ampm','Morning or afternoon?','Use a.m. and p.m. in daily routines'],['tm_coins','Coin counter','Make an amount with U.S. coins in different ways'],['tm_bills','Bakery cash drawer','Combine dollar bills and coins to make an amount']],
+    [['tm_minute','Every minute counts','Read analog clocks to the nearest minute'],['tm_set_minute','Precise clock workshop','Set the hour and minute hands accurately'],['tm_elapsed','How long did it take?','Find elapsed time in minutes'],['tm_finish','When will it finish?','Add an interval and set the finishing time']],
+    [['tm_intervals','Time-unit exchange','Convert hours, minutes, and seconds'],['tm_time_steps','Plan a baking session','Solve multistep problems with time intervals'],['tm_money_steps','Make the change','Find a total cost and build the change'],['tm_measure_steps','Supply-room problems','Convert units and solve a second measurement step']]
+  ]}
+};
+
+function foundationTime(minutes) {
+  minutes=((minutes%720)+720)%720;
+  return (Math.floor(minutes/60)||12)+':'+String(minutes%60).padStart(2,'0');
+}
+function foundationClock(hour,minute) {
+  return {kind:'fd_clock',hour:hour,minute:minute,hourAngle:(hour%12)*30+minute/2,minuteAngle:minute*6};
+}
+function foundationCounts(value,places) {
+  return places.map(function(place){return Math.floor(value/place)%10;});
+}
+function foundationCash(value) {return '$'+(value/100).toFixed(2);}
+function makeFoundationProblem(level,n) {
+  var skill=level.skill,p=null;
+  n=((n%24)+24)%24;
+  function set(story,answer,hint,visual,choices,explanation) {
+    p={story:story,answer:String(answer),hintText:hint,visual:visual,explanation:explanation||hint+' The answer is '+answer+'.'};
+    if(choices)p.choices=choices;
+  }
+  function build(target,places) {
+    p.widget={kind:'fd_place',target:target,places:places,solution:JSON.stringify(foundationCounts(target,places))};
+  }
+  function clockWidget(total,step) {
+    total=((total%720)+720)%720;
+    p.widget={kind:'fd_clock',targetMinutes:total,step:step,solution:JSON.stringify({hour:Math.floor(total/60)||12,minute:total%60})};
+  }
+  function coins(target,denominations) {
+    var left=target,solution=denominations.map(function(d){var count=Math.floor(left/d);left-=count*d;return count;});
+    p.widget={kind:'fd_coins',target:target,denominations:denominations,solution:JSON.stringify(solution)};
+  }
+  var h=1+n%12,m=0;
+  if(skill==='pv_count120') {
+    var starts=[0,8,18,28,38,48,58,68,78,88,98,108,1,9,19,29,39,49,59,69,79,89,99,115],start=starts[n],steps=n===23?5:3+n%3;
+    set('The baker has counted '+start+' cookie boxes. Count '+steps+' more boxes. What number comes last?',start+steps,'Start at '+start+'. Move one space for each new box. After a number ending in 9, start a new ten.',{kind:'fd_countline',start:start,steps:steps});
+  }
+  if(skill==='pv_build_tens') {
+    var target=10+(24+n*17)%90;
+    set('Build '+target+' cookies using full trays of 10 and single cookies.',target,'One full tray stands for 10. Use the tens digit for trays and the ones digit for single cookies.',{kind:'fd_prompt',title:String(target),lines:['Build with tens and ones.','One ten has the same value as ten ones.']});build(target,[10,1]);
+  }
+  if(skill==='pv_compare' || skill==='pv_compare_large') {
+    var large=skill==='pv_compare_large',a=large?102000+n*3617:24+(n*13)%70,b=n%3===0?a:n%3===1?a+(large?100+n:1+n%8):a-(large?1000+n:1+n%8);
+    set('Which symbol makes '+a+' □ '+b+' true?',a>b?'>':a<b?'<':'=','Compare the greatest place first. If those digits match, move one place to the right. The first different digits decide.',{kind:'fd_compare',a:a,b:b,blocks:!large},['<','=','>']);
+  }
+  if(skill==='pv_ten_change') {
+    var value=20+n*3,change=n%2? -10:10;
+    set('There are '+value+' cookies. '+(change>0?'Add one full tray of 10.':'Take away one full tray of 10.')+' How many cookies are there now?',value+change,'Change the tens by one. The ones stay the same.',{kind:'fd_ten_change',value:value,change:change});
+  }
+  if(skill==='pv_hundreds') {
+    var target=100+(34+n*37)%900;
+    set('Build an inventory of '+target+' cookies using hundreds, tens, and ones.',target,'A hundred is 10 tens or 100 ones. Match each digit to its place.',{kind:'fd_prompt',title:String(target),lines:['Build with hundreds, tens, and ones.','Use zero pieces for a place with a zero digit.']});build(target,[100,10,1]);
+  }
+  if(skill==='pv_expanded') {
+    var value=105+n*31,hundreds=Math.floor(value/100)*100,tens=Math.floor(value/10)%10*10,ones=value%10;
+    var correct=hundreds+' + '+tens+' + '+ones;
+    set('Which expanded form has the same value as '+value+'?',correct,'Each digit contributes its place value: hundreds, then tens, then ones. A zero digit contributes zero.',{kind:'fd_blocks',value:value,places:[100,10,1]},[correct,(hundreds/100)+' + '+tens+' + '+ones,hundreds+' + '+(tens+10)+' + '+ones,hundreds+' + '+tens+' + '+(ones+10)]);
+  }
+  if(skill==='pv_skip_count') {
+    var step=[5,10,100][n%3],jumps=3+n%4,start=(n%3===2?n%5:n%9)*step;
+    set('The delivery list starts at '+start+' and grows by '+step+' each time. What number is reached after '+jumps+' jumps?',start+jumps*step,'Add the same amount for every jump. Count jumps, not the starting number.',{kind:'fd_skipline',start:start,step:step,jumps:jumps});
+  }
+  if(skill==='pv_exchange') {
+    var value=134+n*23,initial=foundationCounts(value,[100,10,1]),trade=n%2===0?0:1;
+    if(initial[trade]===0){value+=trade===0?100:10;initial=foundationCounts(value,[100,10,1]);}
+    var result=initial.slice();result[trade]--;result[trade+1]+=10;
+    var unit=trade===0?'hundred':'ten',lower=trade===0?'tens':'ones';
+    set('Start with '+value+'. Trade exactly one '+unit+' for 10 '+lower+'. Keep the other pieces unchanged.',result[0]+' hundreds, '+result[1]+' tens, '+result[2]+' ones','Trading changes the pieces but not their total value. One hundred equals 10 tens; one ten equals 10 ones.',{kind:'fd_prompt',title:'Same value, new pieces',lines:['Start: '+initial[0]+' hundreds, '+initial[1]+' tens, '+initial[2]+' ones','Trade one '+unit+' for 10 '+lower+'.']});
+    p.widget={kind:'fd_exchange',target:value,places:[100,10,1],initial:initial,required:result,solution:JSON.stringify(result)};
+  }
+  if(skill==='pv_round1000' || skill==='pv_round_large') {
+    var large=skill==='pv_round_large',unit=large?[10,100,1000,10000,100000][n%5]:n%2?100:10;
+    var value=large?12345+n*31417:n===0?25:115+n*31;
+    var lower=Math.floor(value/unit)*unit,upper=lower+unit,answer=value-lower<unit/2?lower:upper;
+    set('Round '+value+' to the nearest '+({10:'ten',100:'hundred',1000:'thousand',10000:'ten thousand',100000:'hundred thousand'}[unit])+'.',answer,'Find the two neighboring multiples. Choose the closer one. At the midpoint, choose the greater multiple.',{kind:'fd_round',value:value,unit:unit,lower:lower,upper:upper},null,value+' is '+(value-lower)+' above '+lower+' and '+(upper-value)+' below '+upper+'. '+(value-lower===unit/2?'It is at the midpoint, so round up.':'Choose the nearer endpoint.')+' It rounds to '+answer+'.');
+  }
+  if(skill==='pv_add1000' || skill==='pv_sub1000') {
+    var subtract=skill==='pv_sub1000',a=subtract?402+n*19:128+n*13,b=subtract?167+n*7:146+n*9,target=subtract?a-b:a+b;
+    set('The bakery has '+a+' cookies and '+(subtract?'uses '+b:'bakes '+b+' more')+'. Build the number of cookies '+(subtract?'left':'altogether')+'.',target,subtract?'Work in ones, tens, and hundreds. When needed, trade 1 ten for 10 ones or 1 hundred for 10 tens before subtracting.':'Combine each place. When you have 10 ones, exchange them for 1 ten; exchange 10 tens for 1 hundred.',{kind:'fd_operation',a:a,b:b,operation:subtract?'−':'+',places:[100,10,1]});build(target,[100,10,1]);
+  }
+  if(skill==='pv_tens_product') {
+    var a=2+n%8,b=(1+n%9)*10;
+    set('There are '+a+' boxes with '+b+' cookies per box. How many cookies altogether?',a*b,'First multiply by the number of tens in each box. Then turn those tens into ones: 1 ten = 10 ones.',{kind:'fd_operation',a:a,b:b,operation:'×',places:[100,10,1]});
+  }
+  if(skill==='pv_million') {
+    var value=n===23?1000000:1007+n*41731;
+    set('Build the bakery festival’s inventory number: '+value.toLocaleString('en-US')+'.',value,'Read each digit with its place, from millions to ones. Each place is worth 10 times the place to its right. Zero holds an empty place.',{kind:'fd_prompt',title:value.toLocaleString('en-US'),lines:['Use the place-value counters below.','Every counter has the value shown above it.']});build(value,[1000000,100000,10000,1000,100,10,1]);
+  }
+  if(skill==='pv_ten_times') {
+    var digit=1+n%9,place=[1,10,100,1000,10000][n%5],before=digit*place,after=before*10;
+    set('The digit '+digit+' has value '+before+'. Move it one place to the left. What is its new value?',after,'Moving one place to the left multiplies the digit’s value by 10. The digit stays the same; its place changes.',{kind:'fd_shift',digit:digit,place:place,before:before});
+  }
+  if(['tm_hour','tm_half','tm_five','tm_minute'].indexOf(skill)!==-1) {
+    m=skill==='tm_hour'?0:skill==='tm_half'?30:skill==='tm_five'?5*((n*5+1)%12):(n*17+1)%60;
+    var total=(h%12)*60+m,answer=foundationTime(total),alternatives=[answer,foundationTime(total+60),foundationTime(total+(m===30? -30:5)),foundationTime(total+125)];
+    set('What time does the '+(n<12?'bakery':'delivery')+' clock show?',answer,'The long hand shows minutes. Each large number marks 5 minutes. The short hand shows the hour and moves toward the next hour as minutes pass.',foundationClock(h,m),alternatives,'The long hand points to '+m+' minutes. The short hand is '+(m?'between '+h+' and '+(h%12+1):'at '+h)+'. The time is '+answer+'.');
+  }
+  if(skill==='tm_set_half' || skill==='tm_set_minute') {
+    m=skill==='tm_set_half'?(n%2?30:0):(n*17+7)%60;
+    var time=foundationTime(h*60+m);
+    set('Set the clock to '+time+' for the next bakery delivery.',time,'Set the hour, then the minutes. Watch the short hand move a little as the long hand travels around the clock.',{kind:'fd_prompt',title:'Delivery at '+time,lines:['Move both hands with the controls below.','The short hand moves between hours.']});clockWidget(h*60+m,skill==='tm_set_half'?30:1);
+  }
+  if(skill==='tm_ampm') {
+    var contexts=[[''+(6+n%5)+':00 in the morning, before noon','a.m.'],[''+(1+n%5)+':30 in the afternoon, after noon','p.m.'],[''+(7+n%4)+':15 at night, before midnight','p.m.'],['12:00 noon','p.m.'],['12:00 midnight','a.m.'],[''+(2+n%4)+':45 before sunrise, after midnight','a.m.']][n%6];
+    set('The bakery schedule says '+contexts[0]+'. Should the time use a.m. or p.m.?',contexts[1],'A.m. starts at midnight and ends just before noon. P.m. starts at noon and ends just before midnight.',{kind:'fd_prompt',title:'Bakery schedule',lines:[contexts[0]]},['a.m.','p.m.']);
+  }
+  if(skill==='tm_coins' || skill==='tm_bills') {
+    var bills=skill==='tm_bills',target=bills?125+n*31:30+n*3,denoms=bills?[500,100,25,10,5,1]:[25,10,5,1];
+    set('Choose '+(bills?'U.S. bills and coins':'U.S. coins')+' to pay exactly '+(bills?foundationCash(target):target+'¢')+'. You may use any combination.',bills?foundationCash(target):target+'¢','A quarter is 25¢, a dime 10¢, a nickel 5¢, and a penny 1¢.'+(bills?' One dollar is 100¢.':'')+' Add their values; different combinations can make the same amount.',{kind:'fd_prompt',title:'Pay '+(bills?foundationCash(target):target+'¢'),lines:['Choose any combination with exactly this value.','U.S. money · 100 cents = 1 dollar']});coins(target,denoms);
+  }
+  if(skill==='tm_elapsed' || skill==='tm_finish') {
+    var start=480+n*7,duration=17+n*3,end=start+duration;
+    if(skill==='tm_elapsed')set('Baking starts at '+foundationTime(start)+' a.m. and ends at '+foundationTime(end)+' '+(end>=720?'p.m.':'a.m.')+' the same day. How many minutes pass?',duration,'Count forward from the start to the next hour, then to the end. Add the intervals. Crossing noon does not add extra time.',{kind:'fd_timeline',start:start,end:end});
+    else {set('Baking starts at '+foundationTime(start)+' a.m. It takes '+duration+' minutes. Set the clock to the finishing time that same day.',foundationTime(end),'Add minutes to the start time. Each group of 60 minutes advances the hour by one.',{kind:'fd_timeline',start:start,duration:duration});clockWidget(end,1);}
+  }
+  if(skill==='tm_intervals') {
+    var conversions=[['hours','minutes',60],['minutes','seconds',60],['days','hours',24]][n%3],amount=2+n;
+    set('A bakery event lasts '+amount+' '+conversions[0]+'. How many '+conversions[1]+' is that?',amount*conversions[2],'Each '+conversions[0].slice(0,-1)+' has '+conversions[2]+' '+conversions[1]+'. Multiply by the number of larger units.',{kind:'fd_prompt',title:amount+' '+conversions[0],lines:['1 '+conversions[0].slice(0,-1)+' = '+conversions[2]+' '+conversions[1]]});
+  }
+  if(skill==='tm_time_steps') {
+    var total=60+(n%3)*30,first=12+n,second=18+n%13,remaining=total-first-second;
+    set('You have '+total+' minutes before the bakery opens. Mixing takes '+first+' minutes, then baking takes '+second+' minutes. How many minutes remain for decorating?',remaining,'Add the time spent on mixing and baking. Subtract that sum from the total time available.',{kind:'fd_time_budget',total:total,first:first,second:second});
+  }
+  if(skill==='tm_money_steps') {
+    var price=65+n*7,count=2+n%4,total=price*count,paid=(Math.floor(total/500)+1)*500,change=paid-total;
+    set('Buy '+count+' muffins at '+foundationCash(price)+' each and pay '+foundationCash(paid)+'. Choose U.S. money for the exact change.',foundationCash(change),'First multiply the price by the number of muffins. Subtract the total cost from the amount paid. Build that difference with bills and coins.',{kind:'fd_receipt',price:price,count:count,paid:paid});coins(change,[500,100,25,10,5,1]);
+  }
+  if(skill==='tm_measure_steps') {
+    var conversion=[['meters','centimeters',100,'ribbon'],['liters','milliliters',1000,'juice'],['kilograms','grams',1000,'flour'],['feet','inches',12,'ribbon']][n%4],amount=2+n%6,used=conversion[2]===12?7+n%11:35+n*7;
+    set('The bakery starts with '+amount+' '+conversion[0]+' of '+conversion[3]+' and uses '+used+' '+conversion[1]+'. How many '+conversion[1]+' remain?',amount*conversion[2]-used,'Convert the starting amount to '+conversion[1]+' first. Then subtract the amount used; both amounts must use the same unit.',{kind:'fd_measure_story',amount:amount,factor:conversion[2],used:used,bigUnit:conversion[0],smallUnit:conversion[1]});
+  }
+  return p;
+}
+
+function matchFoundationAnswer(problem,raw) {
+  var w=problem.widget;
+  if(!w || ['fd_place','fd_exchange','fd_clock','fd_coins'].indexOf(w.kind)===-1)return null;
+  if(String(raw).trim()===problem.answer)return true;
+  var value;
+  try{value=JSON.parse(raw);}catch(e){return false;}
+  if(w.kind==='fd_clock') {
+    return value!==null && typeof value==='object' && !Array.isArray(value) && Number.isInteger(value.hour) && value.hour>=1 && value.hour<=12 && Number.isInteger(value.minute) && value.minute>=0 && value.minute<60 && (value.hour%12)*60+value.minute===w.targetMinutes;
+  }
+  var units=w.kind==='fd_coins'?w.denominations:w.places;
+  if(!Array.isArray(value)||value.length!==units.length||value.some(function(x){return !Number.isInteger(x)||x<0||x>1000;}))return false;
+  if(w.kind==='fd_place' && value.some(function(x){return x>9;}))return false;
+  if(w.kind==='fd_exchange' && value.some(function(x,i){return x!==w.required[i];}))return false;
+  return value.reduce(function(sum,count,i){return sum+count*units[i];},0)===w.target;
+}
+
+function foundationPlaceName(value,plural) {
+  var names={1:'one',10:'ten',100:'hundred',1000:'thousand',10000:'ten thousand',100000:'hundred thousand',1000000:'million'};
+  return names[value]+(plural?'s':'');
+}
+function renderFoundationVisual(container,v,hint) {
+  if(!v || v.kind.indexOf('fd_')!==0)return false;
+  var kinds=['fd_prompt','fd_clock','fd_countline','fd_skipline','fd_compare','fd_ten_change','fd_blocks','fd_round','fd_operation','fd_shift','fd_timeline','fd_time_budget','fd_receipt','fd_measure_story'];
+  if(kinds.indexOf(v.kind)===-1)return false;
+  container.replaceChildren();
+  var svg=visualNode('svg',{viewBox:'0 0 400 250',role:'img','class':'path-diagram foundation-diagram'}),ink='#69452e',teal='#287963',labels=[];
+  function label(x,y,text,size,color){labels.push(String(text));svg.appendChild(visualNode('text',{x:x,y:y,'text-anchor':'middle','font-size':size||17,fill:color||ink,'font-family':'sans-serif'},text));}
+  function line(x1,y1,x2,y2,color,width,attrs){var a={x1:x1,y1:y1,x2:x2,y2:y2,stroke:color||ink,'stroke-width':width||2};Object.keys(attrs||{}).forEach(function(k){a[k]=attrs[k];});svg.appendChild(visualNode('line',a));}
+  function rect(x,y,w,h,color){svg.appendChild(visualNode('rect',{x:x,y:y,width:w,height:h,rx:2,fill:color||'#f3b97c',stroke:ink,'stroke-width':1}));}
+  function blocks(value,x,y,scale){
+    var hundred=Math.floor(value/100),ten=Math.floor(value/10)%10,one=value%10;
+    for(var i=0;i<hundred;i++){var bx=x+(i%5)*23*scale,by=y+Math.floor(i/5)*23*scale;rect(bx,by,20*scale,20*scale,'#b8e6d0');for(var d=1;d<10;d++){line(bx+d*2*scale,by,bx+d*2*scale,by+20*scale,teal,.4);line(bx,by+d*2*scale,bx+20*scale,by+d*2*scale,teal,.4);}}
+    for(var i=0;i<ten;i++){var bx=x+i*10*scale,by=y+(hundred?50:0)*scale;rect(bx,by,6*scale,40*scale);for(var d=1;d<10;d++)line(bx,by+d*4*scale,bx+6*scale,by+d*4*scale,ink,.5);}
+    for(var i=0;i<one;i++)rect(x+i*10*scale,y+(hundred?100:50)*scale,6*scale,6*scale,'#e9a08c');
+  }
+  if(v.kind==='fd_prompt') {svg.setAttribute('viewBox','0 0 400 170');label(200,48,v.title,27,teal);v.lines.forEach(function(text,i){label(200,94+i*31,text,13);});}
+  if(v.kind==='fd_clock') {
+    svg.setAttribute('aria-label','Analog clock. The short hour hand is '+(v.minute?'between '+v.hour+' and '+(v.hour%12+1):'at '+v.hour)+'. The long hand is '+v.minute+' minute marks clockwise from 12.');
+    svg.appendChild(visualNode('circle',{cx:200,cy:125,r:106,fill:'#fff8eb',stroke:ink,'stroke-width':3}));
+    for(var i=0;i<60;i++){var angle=i*Math.PI/30,r=i%5===0?94:100;line(200+r*Math.sin(angle),125-r*Math.cos(angle),200+104*Math.sin(angle),125-104*Math.cos(angle),ink,i%5===0?2:1);}
+    for(var h=1;h<=12;h++){var a=h*Math.PI/6;label(200+81*Math.sin(a),131-81*Math.cos(a),h,19);}
+    var ha=((v.hour%12)*30+v.minute/2)*Math.PI/180,ma=v.minute*Math.PI/30;
+    line(200,125,200+55*Math.sin(ha),125-55*Math.cos(ha),ink,7,{'stroke-linecap':'round','data-hand':'hour'});
+    line(200,125,200+83*Math.sin(ma),125-83*Math.cos(ma),teal,4,{'stroke-linecap':'round','data-hand':'minute'});
+    svg.appendChild(visualNode('circle',{cx:200,cy:125,r:5,fill:ink}));
+    if(hint)label(200,248,'Short = hour · long = minutes',13,teal);
+  }
+  if(v.kind==='fd_countline'||v.kind==='fd_skipline') {
+    var steps=v.kind==='fd_countline'?v.steps:v.jumps,step=v.kind==='fd_countline'?1:v.step;
+    label(200,45,v.kind==='fd_countline'?'Count forward one at a time':'Equal jumps of '+step,18);line(35,145,365,145);
+    for(var i=0;i<=steps;i++){var x=40+i*320/steps;line(x,137,x,153);label(x,178,i===steps?'?':v.start+i*step,16);if(i<steps){svg.appendChild(visualNode('path',{d:'M '+x+' 130 Q '+(x+160/steps)+' 65 '+(x+320/steps)+' 130',fill:'none',stroke:teal,'stroke-width':2}));if(hint)label(x+160/steps,90,'+'+step,14,teal);}}
+    label(200,223,steps+' jumps from '+v.start,16);
+  }
+  if(v.kind==='fd_compare') {label(100,46,v.a,28);label(300,46,v.b,28);label(200,140,'□',35,teal);if(v.blocks){blocks(v.a,45,80,1);blocks(v.b,250,80,1);}else{label(200,205,'Start with the greatest place.',16);}}
+  if(v.kind==='fd_ten_change'){label(200,30,'Start with '+v.value,22);blocks(v.value,70,65,1.5);label(200,220,(v.change>0?'Add':'Remove')+' one ten',20,teal);}
+  if(v.kind==='fd_blocks'){label(200,30,'Hundreds · tens · ones',20);blocks(v.value,130,55,1.5);label(200,240,'Large square = 100 · rod = 10 · small square = 1',12);}
+  if(v.kind==='fd_round') {
+    var mid=(v.lower+v.upper)/2,x=45+(v.value-v.lower)/v.unit*310;
+    label(200,38,'Which endpoint is nearer?',19);line(45,145,355,145);[45,200,355].forEach(function(x){line(x,135,x,155);});
+    label(45,179,v.lower,13);label(200,205,mid+' midpoint',13);label(355,179,v.upper,13);
+    svg.appendChild(visualNode('circle',{cx:x,cy:145,r:7,fill:teal}));label(x,113,v.value,16,teal);
+    label(200,238,'At the midpoint, round toward the greater endpoint.',12);
+  }
+  if(v.kind==='fd_operation') {label(200,35,v.a+' '+v.operation+' '+v.b+' = ?',26,teal);if(v.operation!=='×'){blocks(v.a,50,65,1);blocks(v.b,245,65,1);label(200,135,v.operation,30);}else{label(200,118,v.a+' boxes',24);label(200,165,v.b+' cookies in each box',21);}label(200,238,'Square = 100 · rod = 10 · small square = 1',12);}
+  if(v.kind==='fd_shift'){label(200,60,'Digit '+v.digit+' in the '+foundationPlaceName(v.place,true)+' place',20);label(260,125,v.before,26);label(155,125,'←',36,teal);label(75,125,'?',28);label(200,182,'One place to the left',20,teal);label(200,218,'Each place has 10 times the value.',15);}
+  if(v.kind==='fd_timeline'){
+    label(200,42,'Follow the baking time',21);line(45,140,355,140);line(45,130,45,150);line(355,130,355,150);
+    label(75,178,foundationTime(v.start)+' a.m.',15);label(325,178,v.end!==undefined?foundationTime(v.end)+(v.end>=720?' p.m.':' a.m.'):'?',15);
+    label(200,110,v.duration!==undefined?'+'+v.duration+' minutes':'How many minutes?',18,teal);
+    label(200,223,'Same day · 60 minutes = 1 hour',15);
+  }
+  if(v.kind==='fd_time_budget'){label(200,44,v.total+' minutes available',24);rect(35,85,330,55,'#fff8eb');var width1=330*v.first/v.total,width2=330*v.second/v.total;rect(35,85,width1,55,'#b8e6d0');rect(35+width1,85,width2,55,'#f3b97c');label(200,181,'Mix: '+v.first+' min · Bake: '+v.second+' min',18);label(200,220,'Time remaining for decorating: ?',18,teal);}
+  if(v.kind==='fd_receipt'){rect(65,20,270,215,'#fff8eb');label(200,58,'Bakery receipt',23,teal);label(200,102,v.count+' muffins × '+foundationCash(v.price),19);label(200,142,'Paid: '+foundationCash(v.paid),20);line(90,165,310,165);label(200,205,'Change: ?',21);}
+  if(v.kind==='fd_measure_story'){label(200,54,'Start: '+v.amount+' '+v.bigUnit,24);label(200,104,'1 '+(v.bigUnit==='feet'?'foot':v.bigUnit.replace(/s$/,''))+' = '+v.factor+' '+v.smallUnit,17,teal);label(200,155,'Used: '+v.used+' '+v.smallUnit,21);label(200,215,'How many '+v.smallUnit+' remain?',17);}
+  if(v.kind!=='fd_clock')svg.setAttribute('aria-label',v.description||'Math model. '+labels.join('. '));
+  container.appendChild(svg);return true;
+}
+
+function renderFoundationAnswer(container,problem,submit,reveal) {
+  var w=problem.widget;
+  if(!w || ['fd_place','fd_exchange','fd_clock','fd_coins'].indexOf(w.kind)===-1)return false;
+  container.replaceChildren();
+  var wrap=document.createElement('div');wrap.className='foundation-workbench';wrap.style.cssText='width:100%;display:flex;flex-direction:column;gap:10px;';container.appendChild(wrap);
+  function element(tag,text,parent){var el=document.createElement(tag);if(text!==undefined)el.textContent=text;(parent||wrap).appendChild(el);return el;}
+  function button(text,label,parent,action){var el=element('button',text,parent);el.type='button';el.className='btn btn-small btn-back';el.setAttribute('aria-label',label);el.disabled=!!reveal;el.style.cssText='min-width:44px;min-height:44px;padding:6px 10px;';if(!reveal)el.addEventListener('click',action);return el;}
+  function check(label,serialize){var el=button(label,label,wrap,function(){submit(serialize());});el.className='btn btn-small btn-teal';}
+  if(reveal){var note=element('p','Worked example — these controls show one correct model.');note.style.cssText='margin:0;font-size:14px;';}
+  if(w.kind==='fd_clock') {
+    var time=reveal?JSON.parse(w.solution):{hour:12,minute:0},face=element('div'),labels=[];
+    function draw(){renderFoundationVisual(face,foundationClock(time.hour,time.minute),false);labels.forEach(function(item){item.output.textContent=item.key==='hour'?time.hour:String(time.minute).padStart(2,'0');});}
+    [['hour',1,12,1,'Hour hand'],['minute',0,w.step===30?30:59,w.step,'Minute hand']].forEach(function(config){
+      var row=element('label');row.style.cssText='display:flex;align-items:center;flex-wrap:wrap;gap:8px;';element('span',config[4],row);
+      var input=element('input',undefined,row);input.type='range';input.min=config[1];input.max=config[2];input.step=config[3];input.value=time[config[0]];input.disabled=!!reveal;input.setAttribute('aria-label',config[4]);input.style.cssText='flex:1;min-width:120px;min-height:44px;';
+      var output=element('output',undefined,row);output.style.cssText='min-width:28px;font-weight:bold;';labels.push({key:config[0],output:output});
+      if(!reveal)input.addEventListener('input',function(){time[config[0]]=Number(input.value);draw();});
+    });
+    check('Check my clock',function(){return JSON.stringify(time);});draw();return true;
+  }
+  var units=w.kind==='fd_coins'?w.denominations:w.places,counts=reveal?JSON.parse(w.solution):w.initial?w.initial.slice():units.map(function(){return 0;}),outputs=[],minusButtons=[],plusButtons=[];
+  var controls=element('div');controls.style.cssText='display:flex;flex-wrap:wrap;justify-content:center;gap:8px;';
+  var board=element('div');board.style.cssText='display:flex;flex-wrap:wrap;justify-content:center;gap:8px;';
+  var total=element('output');total.setAttribute('aria-live','polite');total.style.cssText='display:block;text-align:center;font-weight:bold;';
+  function coinName(value){return {1:'penny (1¢)',5:'nickel (5¢)',10:'dime (10¢)',25:'quarter (25¢)',100:'$1 bill',500:'$5 bill'}[value];}
+  function draw(){
+    outputs.forEach(function(el,i){el.textContent=counts[i];minusButtons[i].disabled=!!reveal||counts[i]===0;plusButtons[i].disabled=!!reveal||counts[i]>=(w.kind==='fd_place'?9:1000);});
+    board.replaceChildren();
+    counts.forEach(function(count,i){
+      if(count===0)return;
+      var group=element('div',undefined,board);group.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;max-width:135px;';
+      element('span',units[i].toLocaleString('en-US')+(w.kind==='fd_coins'?'¢':''),group);
+      var svg=visualNode('svg',{viewBox:'0 0 100 65',width:100,height:65,role:'img','aria-label':count+' '+(w.kind==='fd_coins'?coinName(units[i]):foundationPlaceName(units[i],true))});
+      for(var j=0;j<Math.min(count,20);j++){
+        var x=3+j%10*9,y=4+Math.floor(j/10)*27;
+        if(w.kind==='fd_coins'){
+          if(units[i]>=100)svg.appendChild(visualNode('rect',{x:x,y:y+7,width:8,height:5,fill:'#b8e6d0',stroke:'#69452e','stroke-width':.6}));
+          else svg.appendChild(visualNode('circle',{cx:x+4,cy:y+10,r:4,fill:units[i]===1?'#c28b65':'#d5d1c8',stroke:'#69452e'}));
+        }
+        else if(units[i]===10) {
+          svg.appendChild(visualNode('rect',{x:x,y:y,width:6,height:23,fill:'#f3b97c',stroke:'#69452e','stroke-width':.6}));
+          for(var d=1;d<10;d++)svg.appendChild(visualNode('line',{x1:x,y1:y+d*2.3,x2:x+6,y2:y+d*2.3,stroke:'#69452e','stroke-width':.4}));
+        } else if(units[i]===100) {
+          x=3+j%5*19;y=4+Math.floor(j/5)*20;
+          svg.appendChild(visualNode('rect',{x:x,y:y,width:16,height:16,fill:'#b8e6d0',stroke:'#69452e','stroke-width':.6}));
+          for(var d=1;d<10;d++){
+            svg.appendChild(visualNode('line',{x1:x+d*1.6,y1:y,x2:x+d*1.6,y2:y+16,stroke:'#287963','stroke-width':.25}));
+            svg.appendChild(visualNode('line',{x1:x,y1:y+d*1.6,x2:x+16,y2:y+d*1.6,stroke:'#287963','stroke-width':.25}));
+          }
+        } else svg.appendChild(visualNode('rect',{x:x,y:y,width:7,height:units[i]===1?7:20,fill:units[i]===1?'#e9a08c':'#b8e6d0',stroke:'#69452e','stroke-width':.6}));
+      }
+      if(count>20)svg.appendChild(visualNode('text',{x:50,y:62,'text-anchor':'middle','font-size':11,fill:'#69452e'},'+'+(count-20)+' more'));
+      group.appendChild(svg);
+    });
+    var value=counts.reduce(function(sum,count,i){return sum+count*units[i];},0);
+    total.textContent=w.kind==='fd_coins'?'Your money: '+foundationCash(value)+' ('+value+'¢)':'Your model: '+value.toLocaleString('en-US');
+  }
+  units.forEach(function(unit,i){
+    var row=element('div',undefined,controls);row.style.cssText='display:flex;flex-direction:column;align-items:center;gap:5px;min-width:82px;';
+    var name=w.kind==='fd_coins'?coinName(unit):foundationPlaceName(unit,true);element('span',name,row);
+    var pair=element('div',undefined,row);pair.style.cssText='display:flex;gap:3px;align-items:center;';
+    minusButtons[i]=button('−','Remove one '+(w.kind==='fd_coins'?coinName(unit):foundationPlaceName(unit,false)),pair,function(){counts[i]=Math.max(0,counts[i]-1);draw();});
+    var output=element('output',counts[i],pair);output.style.cssText='min-width:22px;text-align:center;';outputs.push(output);
+    plusButtons[i]=button('+','Add one '+(w.kind==='fd_coins'?coinName(unit):foundationPlaceName(unit,false)),pair,function(){counts[i]=Math.min(w.kind==='fd_place'?9:1000,counts[i]+1);draw();});
+    if(w.kind==='fd_exchange'){minusButtons[i].hidden=true;plusButtons[i].hidden=true;}
+  });
+  if(w.kind==='fd_exchange') {
+    for(var i=0;i<units.length-1;i++)(function(index){
+      var row=element('div');row.style.cssText='display:flex;flex-wrap:wrap;justify-content:center;gap:6px;';
+      button('Trade 1 '+foundationPlaceName(units[index],false)+' → 10 '+foundationPlaceName(units[index+1],true),'Trade one '+foundationPlaceName(units[index],false)+' for ten '+foundationPlaceName(units[index+1],true),row,function(){if(counts[index]>0){counts[index]--;counts[index+1]+=10;draw();}});
+      button('Bundle 10 '+foundationPlaceName(units[index+1],true)+' → 1 '+foundationPlaceName(units[index],false),'Bundle ten '+foundationPlaceName(units[index+1],true)+' into one '+foundationPlaceName(units[index],false),row,function(){if(counts[index+1]>=10){counts[index+1]-=10;counts[index]++;draw();}});
+    })(i);
+  }
+  check(w.kind==='fd_coins'?'Check my money':'Check my model',function(){return JSON.stringify(counts);});draw();return true;
+}
+
+// Number sense, problem structures, and fraction representations. Grade labels describe content.
+var REASONING_PATHWAYS = {
+  strategies: {name:'Number Strategies',icon:'🧠',grades:[
+    [['ns_balance','Balance the equation','Equal values on both sides, including reversed equations'],['ns_threeadd','Three-part orders','Add three small numbers and look for a helpful pair'],['ns_maketen','Make a ten','Regroup an addition into ten and some more'],['ns_tensones','A ten and some ones','Compose and decompose teen numbers']],
+    [['ns_even','Pairs or a leftover?','Explain odd and even with pairs'],['ns_arrays','Rows of treats','Connect equal rows to repeated addition'],['ns_regroup','Trade tens and hundreds','Add and subtract within 1,000 with regrouping'],['ns_placecompare','Compare by place','Compare three-digit numbers using place value']],
+    [['ns_unknown','Missing factors & divisors','Find unknowns in multiplication and division equations'],['ns_round','Round for a plan','Round to the nearest ten or hundred on a number line'],['ns_distribute','Break apart a product','Use two smaller arrays to find a missing partial product'],['ns_operations','Larger number strategies','Add, subtract, and multiply one-digit numbers by tens']],
+    [['ns_largeadd','Add larger whole numbers','Add through one million, carrying across place values'],['ns_largesub','Subtract larger whole numbers','Subtract through one million, including regrouping across zeros'],['ns_largeops','Larger products & quotients','Multiply up to four digits by one digit, two by two, and divide exactly'],['ns_divremainders','Quotient and remainder','Divide with a remainder smaller than the divisor'],['ns_factors','Factors, multiples & primes','Distinguish factors and multiples; identify primes and composites'],['ns_patterns','Follow the rule','Extend number patterns and account for each step']]
+  ]},
+  stories: {name:'Word Problems',icon:'📖',grades:[
+    [['wp_join','Orders joining','Find the start, change, or total in an adding story'],['wp_separate','Orders leaving','Find the start, change, or remainder in a taking-away story'],['wp_parts','Parts and a whole','Find a missing part or the whole collection'],['wp_compare','More and fewer','Find the difference, smaller amount, or larger amount']],
+    [['wp_twostep','Two changes','Solve two-step addition and subtraction stories within 100'],['wp_compare2','Compare, then change','Combine a comparison with another event'],['wp_equations','Match the story','Choose an equation that represents an unknown quantity'],['wp_equalgroups','Equal tray stories','Use repeated addition to reason about equal groups']],
+    [['wp_divshare','Share into equal groups','Find how many in each group when the group count is known'],['wp_divgroups','How many groups?','Find the group count when the amount in each is known'],['wp_twostep3','Two-step bakery plans','Use all four operations in two-step stories'],['wp_expression','Choose a plan','Choose an expression for a two-step story']],
+    [['wp_multcompare','Times as many or more?','Distinguish multiplicative comparisons from additive ones'],['wp_unknowncompare','Missing comparison amounts','Find the original amount or a times-as-many factor'],['wp_multistep4','Plan a busy bakery','Solve multi-step problems with larger whole numbers'],['wp_remainders','What does the leftover mean?','Use complete groups, an extra container, or the leftover amount']]
+  ]},
+  fractionmodels: {name:'Fraction & Decimal Models',icon:'🥧',grades:[
+    [['fm_halves','Make halves','Shade halves of a whole divided into two equal shares'],['fm_quarters','Make quarters','Build amounts from fourths of a whole'],['fm_comparepieces','Same whole, different shares','Compare halves and quarters of the same-size whole'],['fm_buildwhole','Complete the whole','Work out how many halves or quarters are still needed']],
+    [['fm_thirds','Share in thirds','Build amounts from three equal shares'],['fm_sharecounts','Name the equal shares','Connect the number of shares to halves, thirds, or fourths'],['fm_equalarea','Fair in different shapes','Judge equal-area shares in different arrangements'],['fm_sharecompare','More shares, smaller pieces','Compare one share from equal-size wholes']],
+    [['fm_numberline','Fractions on a line','Place fractions between zero and two using equal intervals'],['fm_equivalence','Build an equivalent fraction','Shade a different partition to show the same amount'],['fm_compare','Compare the same whole','Compare fractions with the same numerator or denominator'],['fm_unitsteps','Unit-fraction journeys','Count repeated unit fractions, including beyond one whole']],
+    [['fm_equivalence4','Equivalent fraction workshop','Build equal fractions by multiplying both parts by the same factor'],['fm_mixedops','Mixed-number recipes','Add and subtract mixed numbers with like denominators'],['fm_fractiontimes','Several fractional batches','Multiply a fraction by a whole number with equal groups'],['fm_decimalconnections','Tenths and hundredths','Connect fractions, decimals, and a hundred-square model'],['fm_decimalcompare','Compare decimal amounts','Compare tenths and hundredths using the same-size whole']]
+  ]}
+};
+function reasoningEquationText(tokens) {
+  return tokens.map(function(t){return Array.isArray(t)?'('+reasoningEquationText(t)+')':String(t);}).join(' ');
+}
+function makeReasoningProblem(level,n) {
+  var k=level.skill,p=null,a,b,c,total,answer,mode,visual,choices;
+  function q(story,answer,hint,visual,choices) {
+    p={story:story,answer:String(answer),hintText:hint,explanation:hint+' The answer is '+answer+'.',visual:visual};
+    if(choices)p.choices=choices;
+  }
+  function eq(left,right,subtitle) {return {kind:'r_equation',left:left,right:right,subtitle:subtitle||'Both sides must have the same value.'};}
+  function storyModel(parts,equation,unknown) {return {kind:'r_story',parts:parts,equation:equation,unknown:unknown,subtitle:'Story map · boxes are not drawn to scale.'};}
+  function plan(parts,expression) {return {kind:'r_plan',parts:parts,expression:expression};}
+  function widget(kind,denominator,target,extra) {
+    p.widget={kind:kind,denominator:denominator,target:target,solution:p.answer};
+    Object.keys(extra||{}).forEach(function(key){p.widget[key]=extra[key];});
+    p.fractionInput=true;
+  }
+  if(k==='ns_balance') {
+    a=2+n%7;b=1+Math.floor(n/3)%6;c=1+n%3;mode=n%4;
+    var left=mode===0?[a+b]:mode===1?[a,'+',b]:mode===2?[a,'+','?']:[a+b,'−',b];
+    var right=mode===0?['?','+',b]:mode===1?['?', '+',c]:mode===2?[a+b]:['?'];
+    answer=mode===1?a+b-c:mode===2?b:a;
+    q('What number belongs in the box? The equals sign means both sides have the same value.',answer,'Find the value of the complete side, then make the other side match.',eq(left,right));
+  }
+  if(k==='ns_threeadd') {
+    a=1+n%6;b=1+Math.floor(n/2)%6;c=1+Math.floor(n/5)%6;
+    q('Three small orders arrive together. How many treats are ordered altogether?',a+b+c,'Try adding a helpful pair first. You can group the addends without changing the total.',eq([a,'+',b,'+',c],['?'],'Three parts make one total.'));
+  }
+  if(k==='ns_maketen') {
+    a=6+n%4;b=10-a+1+Math.floor(n/4)%5;
+    q('Move some ones to make a ten. How many ones are left after making the ten?',a+b-10,'Move '+(10-a)+' from the second addend to complete the ten. Keep the total unchanged.',eq([a,'+',b],[10,'+','?'],'Make ten, then add the remaining ones.'));
+  }
+  if(k==='ns_tensones') {
+    total=11+n%9;mode=n%3;
+    q(mode===0?'One bundle of ten and these loose ones make what number?':mode===1?'The order is '+total+' treats. After making one bundle of ten, how many loose ones remain?':'A ten and '+(total-10)+' ones have been shown. How many treats are in the order?',mode===1?total-10:total,'A bundle has ten ones. Teen numbers are one ten and some more ones.',{kind:'r_place',tens:1,ones:total-10,find:mode===1?'ones':'total'});
+  }
+  if(k==='ns_even') {
+    total=3+n%18;
+    q('Pair the treats so every pair has two. Is the total odd or even?',total%2?'Odd':'Even','An even number makes pairs with none left over. An odd number has one left over.',{kind:'r_pairs',count:total},['Odd','Even']);
+  }
+  if(k==='ns_arrays') {
+    a=2+n%4;b=1+Math.floor(n/4)%5;
+    q('How many treats fill all the equal rows?',a*b,'Each row has '+a+' treats. Add '+a+' once for each row.',{kind:'r_array',rows:b,cols:a});
+  }
+  if(k==='ns_regroup') {
+    mode=n%2;a=mode?604+n*9:137+n*13;b=mode?176+n*3:86+n*7;
+    q('Find the total. Trade ones, tens, or hundreds when you need to.',mode?a-b:a+b,mode?'If a place has too few units, exchange one unit from the next place: 1 hundred = 10 tens; 1 ten = 10 ones.':'Add matching places. Exchange each group of 10 ones for 1 ten and each group of 10 tens for 1 hundred.',eq([a,mode?'−':'+',b],['?'],'Hundreds · tens · ones'));
+    p.story=mode?'Subtract the order amounts. Regroup when you need to.':p.story;
+    p.visual.placeValues=[a,b];
+  }
+  if(k==='ns_placecompare') {
+    a=100+((n*37+153)%800);b=n%4===0?a:n%4===1?a+10:n%4===2?a-1:a+100;
+    q('Choose the sign that compares these order totals.',a<b?'<':a>b?'>':'=','Compare hundreds first, then tens, then ones. Stop at the first place that differs.',{kind:'r_compare',a:a,b:b,places:true},['<','=','>']);
+  }
+  if(k==='ns_unknown') {
+    a=2+n%8;b=2+Math.floor(n/3)%8;total=a*b;mode=n%4;
+    var left=mode===0?['?','×',b]:mode===1?[a,'×','?']:mode===2?[total,'÷','?']:['?','÷',b];
+    q('Which number makes the multiplication or division equation true?',mode===0?a:mode===1?b:mode===2?b:total,'Multiplication and division undo each other. Think about the equal groups in the complete fact.',eq(left,[mode===0||mode===1?total:mode===2?a:a]));
+  }
+  if(k==='ns_round') {
+    var unit=n%2?100:10;total=unit===10?14+n*17:125+n*31;
+    q('Round '+total+' to the nearest '+(unit===10?'ten':'hundred')+'.',Math.floor((total+unit/2)/unit)*unit,'Find the two neighboring '+(unit===10?'tens':'hundreds')+'. Choose the closer one. At the halfway point, choose the larger one.',{kind:'r_round',number:total,unit:unit});
+  }
+  if(k==='ns_distribute') {
+    a=3+n%6;b=2+Math.floor(n/3)%4;c=1+n%3;
+    q('The large array is split into two smaller arrays. What is the missing partial product?',a*c,'The split changes the groups of columns, not the number of rows. Multiply the rows by the columns in the second part.',eq([a,'×',b,'+','?'],[a,'×',b+c],'First part + second part = whole array'));
+    p.visual.array={rows:a,first:b,second:c};
+  }
+  if(k==='ns_operations') {
+    mode=n%3;a=286+n*13;b=127+n*5;
+    if(mode===2){a=2+n%8;b=(2+Math.floor(n/3)%8)*10;}
+    q(mode===2?'Find the number of treats in these equal groups of tens.':'Use a place-value strategy to calculate the order total.',mode===0?a+b:mode===1?a-b:a*b,mode===2?'Multiply the one-digit factors first, then make the product ten times as large.':'Break the numbers into hundreds, tens, and ones, or regroup matching places.',eq([a,mode===0?'+':mode===1?'−':'×',b],['?'],mode===2?'Groups of tens':'Hundreds · tens · ones'));
+  }
+  if(k==='ns_largeadd'||k==='ns_largesub') {
+    mode=n%4;
+    if(k==='ns_largeadd') {
+      a=mode===0?4827+n*137:mode===1?245678+n*3451:mode===2?80975+n*2317:700004+n*397;
+      b=mode===0?3586+n*93:mode===1?168795+n*1137:mode===2?90868+n*1819:1000000-a;
+      q('Add the two order totals. Line up matching place values and regroup when needed.',a+b,'Start in the ones column. Exchange each group of 10 units for 1 in the next column, and include any carried unit when adding that column.',eq([a,'+',b],['?'],'Align the places, then add from right to left.'));
+    }else{
+      a=mode===0?10000+n*1000:mode===1?300000+n*10000:mode===2?1000000:704002+n*701;
+      b=mode===0?2678+n*53:mode===1?48765+n*1107:mode===2?235678+n*731:208765+n*587;
+      q('Subtract the filled orders from the starting total. Regroup through zero columns when needed.',a-b,'Start in the ones column. If you need to regroup through zeros, move left to the next nonzero digit. Exchange 1 of its units for 10 in the next place, continuing until the needed place has enough.',eq([a,'−',b],['?'],'Keep each digit in its place while regrouping.'));
+    }
+    p.visual.placeValues=[a,b];p.visual.placeColumns=7;
+  }
+  if(k==='ns_largeops') {
+    mode=n%3;a=mode===0?1234+n*47:mode===1?23+n: (124+n*7)*(3+n%6);b=mode===0?2+n%7:mode===1?12+n:3+n%6;
+    q(mode===2?'Divide the large order equally. How many treats go in each group?':'Find the product for this large bakery order.',mode===2?a/b:a*b,mode===2?'Break the dividend into parts that divide by the same divisor. Add the partial quotients.':'Use place value to split a factor into smaller parts. Multiply each part, then add the partial products.',eq([a,mode===2?'÷':'×',b],['?'],'Use partial products or partial quotients.'));
+  }
+  if(k==='ns_divremainders') {
+    b=3+n%7;a=14+n*11;c=1+n%(b-1);total=a*b+c;
+    answer=a+' remainder '+c;
+    q('Divide '+total+' by '+b+'. Choose the quotient and remainder. Write the leftover as a remainder, not a decimal.',answer,'Find the greatest multiple of '+b+' that is no larger than '+total+'. The remainder must be smaller than '+b+'.',{kind:'r_groups',total:total,groupSize:b},[answer,(a+1)+' remainder '+c,a+' remainder '+b,(a-1)+' remainder '+c]);
+  }
+  if(k==='ns_factors') {
+    mode=n%3;a=mode===2?[11,12,17,21,23,27,29,35][Math.floor(n/3)]:mode===0?12+n%17:2+n%8;b=mode===0?2+n%7:a*(2+n%4)+(n%2?0:1);
+    if(mode===2) {var prime=true;for(var f=2;f*f<=a;f++)if(a%f===0)prime=false;answer=prime?'Prime':'Composite';}
+    else answer=(mode===0?a%b===0:b%a===0)?'Yes':'No';
+    q(mode===0?'Is '+b+' a factor of '+a+'?':mode===1?'Is '+b+' a multiple of '+a+'?':'Is '+a+' prime or composite?',answer,mode===0?'A factor divides a number into whole equal groups with no remainder.':mode===1?'Multiples are the results of multiplying a number by whole numbers. Look for '+b+' in the '+a+' times table.':'A prime number has exactly two factors: 1 and itself. A composite number has more than two factors.',{kind:'r_factor',task:['factor','multiple','prime'][mode],number:a,candidate:b},mode===2?['Prime','Composite']:['Yes','No']);
+  }
+  if(k==='ns_patterns') {
+    a=2+n%11;b=3+Math.floor(n/3)%8;c=4+n%3;
+    var values=Array.from({length:c},function(_,i){return a+i*b;});
+    q('Start at '+a+' and add '+b+' each time. What number comes next?',a+c*b,'Keep the rule the same at every step. Add '+b+' to the last displayed number.',{kind:'r_pattern',values:values,step:b});
+  }
+  if(k==='wp_join'||k==='wp_separate'||k==='wp_parts'||k==='wp_compare') {
+    a=2+n%7;b=1+Math.floor(n/3)%7;total=a+b;mode=n%3;
+    if(k==='wp_join') {
+      answer=mode===0?total:mode===1?b:a;
+      var parts=[['Start',mode===2?'?':a],['Arrive',mode===1?'?':b],['Now',mode===0?'?':total]];
+      q(mode===0?'Naia has '+a+' cookies and bakes '+b+' more. How many cookies does she have now?':mode===1?'Naia has '+a+' cookies. She bakes some more and now has '+total+'. How many cookies did she bake?':'Naia has some cookies. She bakes '+b+' more and now has '+total+'. How many did she have at first?',answer,'The starting cookies and arriving cookies make the total. Find which of these three quantities is unknown.',storyModel(parts,eq([mode===2?'?':a,'+',mode===1?'?':b],[mode===0?'?':total]),['result','change','start'][mode]));
+    }
+    if(k==='wp_separate') {
+      answer=mode===0?a:mode===1?b:total;
+      q(mode===0?'There are '+total+' buns. Customers buy '+b+'. How many buns remain?':mode===1?'There are '+total+' buns. Customers buy some, leaving '+a+'. How many buns did customers buy?':'Some buns are on a tray. Customers buy '+b+', leaving '+a+'. How many buns were on the tray at first?',answer,'Start minus the amount leaving equals what remains. You can add the remaining buns and sold buns to find the start.',storyModel([['Start',mode===2?'?':total],['Leave',mode===1?'?':b],['Remain',mode===0?'?':a]],eq([mode===2?'?':total,'−',mode===1?'?':b],[mode===0?'?':a]),['result','change','start'][mode]));
+    }
+    if(k==='wp_parts') {
+      answer=mode===0?total:mode===1?a:b;
+      q(mode===0?'A box contains '+a+' oat cookies and '+b+' chocolate cookies. How many cookies are in the box?':mode===1?'A box has '+total+' cookies. '+b+' are chocolate and the rest are oat. How many are oat?':'A box has '+total+' cookies. '+a+' are oat and the rest are chocolate. How many are chocolate?',answer,'The two non-overlapping parts make one whole. Add the parts or subtract the known part from the whole.',storyModel([['Oat',mode===1?'?':a],['Chocolate',mode===2?'?':b],['All cookies',mode===0?'?':total]],eq([mode===1?'?':a,'+',mode===2?'?':b],[mode===0?'?':total]),['whole','first part','second part'][mode]));
+    }
+    if(k==='wp_compare') {
+      answer=mode===0?b:mode===1?total:a;
+      q(mode===0?'A tray has '+total+' muffins and '+a+' buns. How many more muffins than buns are there?':mode===1?'There are '+a+' buns. There are '+b+' more muffins than buns. How many muffins are there?':'There are '+total+' muffins, which is '+b+' more than the number of buns. How many buns are there?',answer,'The larger amount equals the smaller amount plus the difference. Decide which of the three is unknown.',storyModel([['Buns',mode===2?'?':a],['Extra muffins',mode===0?'?':b],['Muffins',mode===1?'?':total]],eq([mode===2?'?':a,'+',mode===0?'?':b],[mode===1?'?':total]),['difference','larger','smaller'][mode]));
+    }
+  }
+  if(k==='wp_twostep') {
+    a=20+n;b=7+n%8;c=3+n%7;mode=n%3;
+    var expr=mode===0?[a,'+',b,'−',c]:mode===1?[a,'−',b,'+',c]:[a,'−',b,'−',c];
+    q(mode===0?'We start with '+a+' rolls, bake '+b+' more, then sell '+c+'. How many rolls remain?':mode===1?'We start with '+a+' rolls, sell '+b+', then bake '+c+' more. How many rolls are there now?':'We start with '+a+' rolls, sell '+b+' in the morning, then sell '+c+' in the afternoon. How many rolls remain?',mode===0?a+b-c:mode===1?a-b+c:a-b-c,'Follow the story in order. Work out the amount after the first change, then apply the second change.',plan([['Start',a],[mode===0?'Bake':'Sell',b],[mode===1?'Bake':'Sell',c]],expr));
+  }
+  if(k==='wp_compare2') {
+    a=18+n;b=3+n%8;c=2+n%6;mode=n%2;
+    q(mode===0?'Naia has '+a+' cookies. Milo has '+b+' more cookies than Naia. Milo sells '+c+'. How many cookies does Milo have left?':'Naia has '+a+' cookies. Milo has '+b+' fewer cookies than Naia. Milo bakes '+c+' more. How many cookies does Milo have now?',mode===0?a+b-c:a-b+c,'First find Milo’s starting amount from the comparison. Then apply Milo’s change.',plan([['Naia',a],[mode===0?'Milo has more':'Milo has fewer',b],[mode===0?'Milo sells':'Milo bakes',c]],mode===0?[a,'+',b,'−',c]:[a,'−',b,'+',c]));
+  }
+  if(k==='wp_equations') {
+    a=13+n;b=4+n%9;total=a+b;mode=n%3;
+    answer=mode===0?a+' + ? = '+total:mode===1?'? − '+b+' = '+a:total+' − ? = '+a;
+    choices=mode===0?[answer,a+' − ? = '+total,total+' + '+a+' = ?']:mode===1?[answer,b+' − ? = '+a,a+' − '+b+' = ?']:[answer,total+' + ? = '+a,a+' − ? = '+total];
+    q(mode===0?'There are '+a+' biscuits. More are baked, making '+total+' biscuits. Which equation finds how many were baked?':mode===1?'Some biscuits are on a tray. '+b+' are sold, leaving '+a+'. Which equation finds how many were on the tray at first?':'A tray starts with '+total+' biscuits. Some are sold, leaving '+a+'. Which equation finds how many were sold?',answer,'Let ? stand for the quantity the question asks about. Match the action and the position of the unknown.',{kind:'r_plan',parts:mode===0?[['Start',a],['Arrive','?'],['Now',total]]:mode===1?[['Start','?'],['Sold',b],['Left',a]]:[['Start',total],['Sold','?'],['Left',a]],correctEquation:answer},choices);
+  }
+  if(k==='wp_equalgroups') {
+    a=2+n%4;b=2+Math.floor(n/4)%4;mode=n%2;
+    q(mode===0?'There are '+b+' trays with '+a+' muffins on each tray. How many muffins are on the trays altogether?':'There are '+b+' trays with '+a+' muffins on each tray. One whole tray is sold. How many muffins remain?',mode===0?a*b:a*(b-1),'Add the same number once for each tray that remains. Count trays and muffins per tray separately.',{kind:'r_array',rows:b,cols:a,crossLast:mode===1,expression:[a,'×',mode===0?b:b-1]});
+  }
+  if(k==='wp_divshare'||k==='wp_divgroups') {
+    a=2+n%8;b=2+Math.floor(n/3)%8;total=a*b;mode=k==='wp_divshare';
+    q(mode?'Share '+total+' cookies equally among '+b+' gift boxes. How many cookies go in each box?':'Put '+total+' cookies into gift boxes with '+b+' cookies in each box. How many gift boxes can be filled?',a,mode?'The number of boxes is known. Divide the total by that number to find the size of each equal share.':'The size of each group is known. Count how many groups of '+b+' fit into the total.',{kind:'r_division',meaning:mode?'share':'groups',total:total,known:b});
+  }
+  if(k==='wp_twostep3'||k==='wp_expression') {
+    a=3+n%7;b=2+Math.floor(n/4)%7;c=1+n%6;mode=n%4;
+    var totalBefore=a*b+c,story,expr,parts;
+    if(mode===0){story='We bake '+a+' trays with '+b+' muffins each, then add '+c+' loose muffins. How many muffins are there altogether?';expr=[a,'×',b,'+',c];answer=a*b+c;parts=[['Trays',a],['Each tray',b],['Extra muffins',c]];}
+    if(mode===1){story='We have '+totalBefore+' cookies, set aside '+c+', and share the rest equally among '+b+' boxes. How many cookies go in each box?';expr=[[totalBefore,'−',c],'÷',b];answer=a;parts=[['Cookies',totalBefore],['Set aside',c],['Equal boxes',b]];}
+    if(mode===2){totalBefore=a*b-c;if(totalBefore<1){c=1;totalBefore=a*b-1;}story='We have '+totalBefore+' cookies and bake '+c+' more. We share all the cookies equally among '+b+' boxes. How many cookies go in each box?';expr=[[totalBefore,'+',c],'÷',b];answer=a;parts=[['Start',totalBefore],['Bake',c],['Equal boxes',b]];}
+    if(mode===3){story='We bake '+a+' trays with '+b+' rolls each, then sell '+c+' rolls. How many rolls remain?';expr=[a,'×',b,'−',c];answer=a*b-c;parts=[['Trays',a],['Each tray',b],['Sell',c]];}
+    visual=plan(parts,expr);
+    if(k==='wp_expression') {
+      answer=reasoningEquationText(expr);visual.correctEquation=answer;
+      choices=mode===0?[answer,a+' + '+b+' + '+c,a+' × ('+b+' − '+c+')']:mode===1?[answer,'('+totalBefore+' + '+c+') ÷ '+b,totalBefore+' − ('+c+' × '+b+')']:mode===2?[answer,'('+totalBefore+' − '+c+') ÷ '+b,totalBefore+' + ('+c+' × '+b+')']:[answer,a+' + '+b+' − '+c,a+' × ('+b+' + '+c+')'];
+      q(story+' Choose the calculation that follows the story.',answer,'Keep each quantity’s role. Parentheses show what happens before dividing into equal boxes.',visual,choices);
+    } else q(story,answer,'Decide what must be found first. Use that result in the second step; keep track of whether you are counting treats or boxes.',visual);
+  }
+  if(k==='wp_multcompare') {
+    a=3+n%9;b=2+Math.floor(n/3)%6;mode=n%2;
+    q(mode===0?'Naia decorates '+a+' cupcakes. Milo decorates '+b+' times as many cupcakes as Naia. How many cupcakes does Milo decorate?':'Naia decorates '+a+' cupcakes. Milo decorates '+b+' more cupcakes than Naia. How many cupcakes does Milo decorate?',mode===0?a*b:a+b,mode===0?'“Times as many” makes equal copies of the original amount. Multiply the original amount by the number of copies.':'“More than” adds an extra amount. Add the difference to the original amount.',{kind:'r_comparisonstory',base:a,factor:b,multiplicative:mode===0,expression:mode===0?[a,'×',b]:[a,'+',b]});
+  }
+  if(k==='wp_unknowncompare') {
+    a=4+n%10;b=2+Math.floor(n/3)%7;total=a*b;mode=n%2;
+    q(mode===0?'Milo decorates '+total+' cookies, which is '+b+' times as many as Naia decorates. How many cookies does Naia decorate?':'Naia decorates '+a+' cookies and Milo decorates '+total+'. Milo decorates how many times as many cookies as Naia?',mode===0?a:b,mode===0?'The larger amount is made of '+b+' equal copies of Naia’s amount. Divide to find one copy.':'Find how many copies of the smaller amount fit inside the larger amount. Divide the larger by the smaller.',{kind:'r_plan',parts:mode===0?[['Milo',total],['Equal copies',b],['Naia','?']]:[['Naia',a],['Milo',total],['Times as many','?']],expression:[total,'÷',mode===0?b:a]});
+  }
+  if(k==='wp_multistep4') {
+    a=12+n;b=15+n%11;c=4+n%8;mode=n%3;
+    if(mode===0){q('We bake '+a+' trays of '+b+' cookies. We sell '+c+' full trays, then '+(c+3)+' loose cookies. How many cookies remain?',(a-c)*b-c-3,'Find how many full trays remain. Multiply by cookies per tray, then subtract the loose cookies sold.',plan([['Trays baked',a],['Cookies per tray',b],['Trays sold',c],['Loose cookies sold',c+3]],[[a,'−',c],'×',b,'−',c+3]));}
+    if(mode===1){total=a*b+c;q('We have '+total+' cookies and set aside '+c+'. We pack the rest in boxes of '+b+' and sell each box for $'+(2+n%5)+'. How many dollars do all the boxes earn?',a*(2+n%5),'Subtract the set-aside cookies, divide to find the number of boxes, then multiply by dollars per box.',plan([['Cookies',total],['Set aside',c],['Per box',b],['Dollars per box',2+n%5]],[[total,'−',c],'÷',b,'×',2+n%5]));}
+    if(mode===2){q('We bake '+a+' trays with '+b+' muffins each and '+c+' trays with '+(b+3)+' muffins each. We sell '+(a+c)+' muffins. How many remain?',a*b+c*(b+3)-a-c,'Find each batch’s total, add the batches, and subtract the muffins sold.',plan([['First batch',a+' × '+b],['Second batch',c+' × '+(b+3)],['Muffins sold',a+c]],[a,'×',b,'+',c,'×',b+3,'−',a+c]));}
+  }
+  if(k==='wp_remainders') {
+    b=3+n%7;a=3+Math.floor(n/3)%8;c=1+n%(b-1);total=a*b+c;mode=n%3;
+    answer=mode===0?a+1:mode===1?a:c;
+    q(mode===0?'We must deliver all '+total+' cupcakes. Each box holds at most '+b+' cupcakes. How many boxes are needed, including a partly filled box?':mode===1?'There are '+total+' cupcakes. A full gift box needs exactly '+b+'. How many full boxes can we make?':'There are '+total+' cupcakes. We fill as many boxes of '+b+' as possible. How many cupcakes are left outside the full boxes?',answer,mode===0?'Every cupcake needs a box. A leftover cupcake means one more box is needed.':mode===1?'Count only complete groups. A partly filled box is not a full gift box.':'Find the largest complete groups, then count only the cupcakes remaining.',{kind:'r_groups',total:total,groupSize:b,interpretation:['all','full','left'][mode]},Array.from(new Set([String(a),String(a+1),String(c),String(total)])));
+  }
+  if(k==='fm_halves'||k==='fm_quarters'||k==='fm_thirds') {
+    var d=k==='fm_halves'?2:k==='fm_quarters'?4:3;var t=1+n%d;
+    var names=d===2?['','one half','two halves (the whole)']:d===3?['','one third','two thirds','three thirds (the whole)']:['','one quarter','two quarters','three quarters','four quarters (the whole)'];
+    q('Shade '+names[t]+' of the brownie. Every piece has the same area.',fractionText(t,d),'The whole has '+d+' equal shares. Select '+t+' of those shares. Selected pieces can be next to each other or apart.',{kind:'r_partition',parts:d,shaded:0,orientation:Math.floor(n/d)%2?'horizontal':'vertical',caption:d+' equal shares make one whole.'});
+    widget('fm_shade',d,t,{orientation:Math.floor(n/d)%2?'horizontal':'vertical'});p.explanation='Select '+t+' of '+d+' equal shares. That shows '+names[t]+'.';
+  }
+  if(k==='fm_comparepieces') {
+    a=n%2?4:2;b=n%2?2:4;mode=Math.floor(n/2)%2;
+    q('These brownies are the same size. Which single share is '+(mode?'smaller':'larger')+'?',mode?(a>b?'A':'B'):(a<b?'A':'B'),'The same-size whole divided into more equal shares has smaller individual pieces.',{kind:'r_fractioncompare',fractions:[[1,a],[1,b]],sameWhole:true,letters:true,orientation:n%3},['A','B','Same amount']);
+  }
+  if(k==='fm_buildwhole') {
+    var d=n%2?4:2,t=1+Math.floor(n/2)%(d-1);
+    q('The shaded pieces are ready. How many more '+(d===2?'halves':'quarters')+' are needed to complete this whole brownie?',d-t,'A whole is '+d+' '+(d===2?'halves':'quarters')+'. Count the equal shares that are still unshaded.',{kind:'r_partition',parts:d,shaded:t,orientation:Math.floor(n/3)%2?'horizontal':'vertical',caption:'One whole brownie'});
+  }
+  if(k==='fm_sharecounts') {
+    var d=2+n%3;mode=Math.floor(n/3)%2;
+    q(mode?'One whole brownie is cut into '+d+' equal shares. What do we call one share?':'What do we call each of these equal shares of one whole brownie?',['','','A half','A third','A fourth'][d],'The name tells how many equal shares make one whole: 2 halves, 3 thirds, or 4 fourths.',{kind:'r_partition',parts:d,shaded:1,orientation:Math.floor(n/2)%2?'horizontal':'vertical',caption:'All shares have equal area.'},['A half','A third','A fourth']);
+  }
+  if(k==='fm_equalarea') {
+    var d=2+n%3;var fairA=n%4<2,fairB=n%4===0||n%4===2;
+    answer=fairA?(fairB?'Both A and B':'Only A'):(fairB?'Only B':'Neither');
+    q('Each brownie is one whole. Which drawings divide the brownie into '+d+' shares with equal area?',answer,'Equal shares need equal area. The cuts can run in different directions. Compare the areas of all pieces inside each whole.',{kind:'r_equalarea',parts:d,fairA:fairA,fairB:fairB,turn:Math.floor(n/3)%2},['Only A','Only B','Both A and B','Neither']);
+  }
+  if(k==='fm_sharecompare') {
+    var pairs=[[2,3],[3,4],[2,4],[3,2],[4,3],[4,2]];a=pairs[n%6][0];b=pairs[n%6][1];mode=Math.floor(n/6)%2;
+    q('The two brownies are the same size. Which single share is '+(mode?'smaller':'larger')+'?',mode?(a>b?'A':'B'):(a<b?'A':'B'),'More equal shares of the same-size whole means smaller pieces. Compare one share, not the whole brownie.',{kind:'r_fractioncompare',fractions:[[1,a],[1,b]],sameWhole:true,letters:true,orientation:Math.floor(n/3)%2},['A','B','Same amount']);
+  }
+  if(k==='fm_numberline') {
+    var d=[2,3,4,6,8][n%5],t=1+(n*3)%(2*d);
+    q('Place the marker at '+measureText(t,d)+' on the number line. Each whole has '+d+' equal intervals.',fractionText(t,d),'Start at zero. Each step is 1/'+d+'. Count the steps; a whole is '+d+' steps.',{kind:'r_numberline',denominator:d,max:2,marker:null});
+    widget('fm_line',d,t,{max:2});p.explanation=measureText(t,d)+' is '+t+' steps of 1/'+d+' from zero.';
+  }
+  if(k==='fm_equivalence'||k==='fm_equivalence4') {
+    var d=k==='fm_equivalence4'?[3,4,5,6,8,10,12][n%7]:[2,3,4][n%3];
+    var t=1+Math.floor(n/(k==='fm_equivalence4'?7:3))%(d-1),factor=k==='fm_equivalence4'?2+n%2:d===2?2+Math.floor(n/3)%3:2;
+    q('The first bar shows '+t+'/'+d+'. Shade the second bar, divided into '+(d*factor)+' equal pieces, to show the same amount.',fractionText(t,d),'Both bars represent the same-size whole. Splitting every old piece into '+factor+' equal smaller pieces multiplies both the numerator and denominator by '+factor+'.',{kind:'r_equivalence',numerator:t,denominator:d,newDenominator:d*factor});
+    widget('fm_equivalent',d*factor,t*factor);p.explanation=t+'/'+d+' = '+t*factor+'/'+(d*factor)+'. Both bars cover the same fraction of the same-size whole.';
+  }
+  if(k==='fm_compare') {
+    mode=n%3;var d=[3,4,6,8][Math.floor(n/3)%4];a=1+Math.floor(n/3)%(d-1);b=1+(n+2)%(d-1);
+    var fractions=mode===0?[[a,d],[b,d]]:mode===1?[[1+n%2,[3,4,6][Math.floor(n/3)%3]],[1+n%2,8]]:[[a,d],[a,d]];
+    var av=fractions[0][0]/fractions[0][1],bv=fractions[1][0]/fractions[1][1];
+    q('Compare the shaded fractions. Both bars represent the same-size whole.',av<bv?'<':av>bv?'>':'=','With the same denominator, compare the number of pieces. With the same numerator, a larger denominator means smaller pieces. Compare fractions of the same-size whole.',{kind:'r_fractioncompare',fractions:fractions,sameWhole:true,showFractions:true},['<','=','>']);
+  }
+  if(k==='fm_unitsteps') {
+    var d=[2,3,4,6,8][n%5],t=2+n%(2*d-1);
+    q('How many steps of 1/'+d+' reach '+measureText(t,d)+' from zero?',t,'Each interval is one unit fraction. Count the equal intervals, including those beyond one whole.',{kind:'r_numberline',denominator:d,max:2,marker:t});
+  }
+  if(k==='fm_mixedops') {
+    var d=[3,4,6,8][n%4];a=d*(1+n%3)+1+n%(d-1);b=d+1+Math.floor(n/3)%(d-1);mode=n%2;if(mode&&a<b){var hold=a;a=b;b=hold;}
+    q('A recipe uses '+measureText(a,d)+' cups of flour '+(mode?'and removes '+measureText(b,d)+' cups. How many cups remain?':'and then adds '+measureText(b,d)+' cups. How many cups are used altogether?'),fractionText(mode?a-b:a+b,d),mode?'Rename a whole as '+d+'/'+d+' if you need to. Subtract the same-size fractional units.':'Keep the common denominator. Add the same-size fractional units, then regroup any whole.',{kind:'r_fractionoperation',a:a,b:b,denominator:d,operation:mode?'−':'+'});
+    p.fractionInput=true;p.explanation=p.hintText+' The answer is '+measureText(mode?a-b:a+b,d)+' cups.';
+  }
+  if(k==='fm_fractiontimes') {
+    var d=[2,3,4,6,8][n%5],t=1+Math.floor(n/3)%(d-1),groups=2+n%4;
+    q('Each batch uses '+t+'/'+d+' cup of milk. How many cups are needed for '+groups+' equal batches?',fractionText(t*groups,d),'Add '+t+'/'+d+' once per batch, or multiply the numerator by '+groups+'. The size of each fractional piece stays the same.',{kind:'r_fractiongroups',groups:groups,numerator:t,denominator:d});p.fractionInput=true;
+    p.explanation=groups+' × '+t+'/'+d+' = '+measureText(t*groups,d)+' cups.';
+  }
+  if(k==='fm_decimalconnections') {
+    mode=n%3;var tenths=1+n%8,hundredths=1+Math.floor(n/3)%9,t=mode===0?tenths*10:mode===1?tenths*10+hundredths:12+n*3;
+    var targetLabel=mode===0?tenths+'/10':mode===1?tenths+'/10 + '+hundredths+'/100':(t/100).toFixed(2);
+    q('One grid is one whole. Shade the same amount as '+targetLabel+'.',fractionText(t,100),'Each small square is 1/100 = 0.01. A complete row has 10 squares, so 1/10 = 10/100 = 0.10.',{kind:'r_decimalgrid',count:0,caption:'10 rows of 10 equal squares = 1 whole'});
+    widget('fm_hundredgrid',100,t);p.explanation=targetLabel+' = '+t+'/100 = '+(t/100).toFixed(2)+'. Shade '+t+' of the 100 equal squares.';
+  }
+  if(k==='fm_decimalcompare') {
+    a=10+n*3;b=n%4===0?a:n%4===1?a+5:n%4===2?a-4:Math.floor(a/10)*10;
+    q('Compare these decimal amounts. Each square grid represents the same-size whole.',a<b?'<':a>b?'>':'=','Write both amounts in hundredths. A tenth is ten hundredths, so an extra trailing zero does not change the amount.',{kind:'r_decimalcompare',a:a,b:b,labels:[n%4===0&&a%10===0?(a/100).toFixed(1):(a/100).toFixed(2),(b/100).toFixed(2)],sameWhole:true},['<','=','>']);
+  }
+  return p;
+}
+function renderReasoningVisual(container,v,hint) {
+  var kinds=['r_equation','r_place','r_pairs','r_array','r_compare','r_round','r_groups','r_factor','r_pattern','r_story','r_plan','r_division','r_comparisonstory','r_partition','r_fractioncompare','r_equalarea','r_numberline','r_equivalence','r_fractionoperation','r_fractiongroups','r_decimalgrid','r_decimalcompare'];
+  if(!v||kinds.indexOf(v.kind)===-1)return false;
+  container.replaceChildren();
+  var svg=visualNode('svg',{viewBox:'0 0 400 250',role:'img','class':'path-diagram'+(hint?' diagram-hint':'')});
+  var ink='#69452e',green='#287963',pale='#fff6e8',peach='#f3b97c',desc='';
+  function rect(x,y,w,h,fill){svg.appendChild(visualNode('rect',{x:x,y:y,width:w,height:h,fill:fill||pale,stroke:ink,'stroke-width':1.5}));}
+  function line(x1,y1,x2,y2,color,width){svg.appendChild(visualNode('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:color||ink,'stroke-width':width||2}));}
+  function label(x,y,text,size,color){var s=String(text);svg.appendChild(visualNode('text',{x:x,y:y,'text-anchor':'middle','font-size':size||16,'font-family':'sans-serif',fill:color||ink},s));}
+  function fitLabel(x,y,text,width,size){label(x,y,text,Math.min(size||18,width/(Math.max(1,String(text).length)*0.58)));}
+  function dot(x,y,r,color){svg.appendChild(visualNode('circle',{cx:x,cy:y,r:r,fill:color||green}));}
+  function bar(x,y,w,h,parts,shaded,orientation,unequal){var weights=Array(parts).fill(1);if(unequal)weights[parts-1]=2;var sum=weights.reduce(function(s,x){return s+x;},0),pos=0;weights.forEach(function(weight,i){var size=(orientation==='horizontal'?h:w)*weight/sum;rect(x+(orientation==='horizontal'?0:pos),y+(orientation==='horizontal'?pos:0),orientation==='horizontal'?w:size,orientation==='horizontal'?size:h,i<shaded?green:pale);pos+=size;});}
+  function grid(x,y,size,count){for(var i=0;i<100;i++)rect(x+i%10*size,y+Math.floor(i/10)*size,size,size,i<count?green:pale);}
+  function miniArray(x,y,rows,cols,split){var cell=Math.min(25,310/cols,135/rows);for(var r=0;r<rows;r++)for(var c=0;c<cols;c++)rect(x+c*cell,y+r*cell,cell-2,cell-2,split!==undefined&&c>=split?'#b8e6d0':peach);return cell;}
+  if(v.kind==='r_equation') {
+    desc='Equation: '+reasoningEquationText(v.left)+' equals '+reasoningEquationText(v.right)+'. Question mark is the missing number.';
+    fitLabel(200,v.array?38:72,reasoningEquationText(v.left)+' = '+reasoningEquationText(v.right),355,27);
+    fitLabel(200,228,v.subtitle,360,16);
+    if(v.array){var size=Math.min(25,310/(v.array.first+v.array.second),135/v.array.rows),x=(400-(v.array.first+v.array.second)*size)/2;miniArray(x,65,v.array.rows,v.array.first+v.array.second,v.array.first);label(200,208,v.array.rows+' rows · '+v.array.first+' columns + '+v.array.second+' columns',15);desc+=' Array: '+v.array.rows+' rows, split into '+v.array.first+' and '+v.array.second+' columns.';}
+    else if(v.placeValues){
+      var columns=v.placeColumns||3,shortNames=['O','T','H','Th','TTh','HTh','M'],fullNames=['ones','tens','hundreds','thousands','ten-thousands','hundred-thousands','millions'],cell=columns>3?43:83,left=200-columns*cell/2;
+      for(var col=0;col<columns;col++){
+        var power=columns-col-1,x=left+(col+.5)*cell;
+        var heading=visualNode('text',{x:x,y:113,'text-anchor':'middle','font-size':columns>3?13:17,fill:ink,'font-family':'sans-serif','data-place-value':Math.pow(10,power)},columns>3?shortNames[power]:fullNames[power]);svg.appendChild(heading);
+        v.placeValues.forEach(function(number,row){var digits=String(number),offset=digits.length-columns+col;label(x,150+row*35,offset<0?'':digits[offset],21);});
+      }
+      label(left-13,185,v.left[1],20);line(left-4,199,left+columns*cell,199);desc+=' Columns align '+fullNames.slice(0,columns).reverse().join(', ')+'.';
+    }
+    else{rect(55,109,125,64,peach);rect(220,109,125,64,'#b8e6d0');label(118,149,'Left side',20);label(282,149,'Right side',20);label(200,150,'=',26);}
+  }
+  if(v.kind==='r_place') {
+    desc='One bundle contains 10 ones. Beside it are '+v.ones+' loose ones.';
+    rect(37,52,110,115,peach);for(var i=0;i<10;i++)dot(58+i%5*18,91+Math.floor(i/5)*33,6,ink);label(92,193,'1 ten',20);
+    for(var i=0;i<v.ones;i++)dot(200+i%5*31,85+Math.floor(i/5)*52,9);label(270,193,'Loose ones',18);label(200,228,'10 ones can be bundled as 1 ten.',15);
+  }
+  if(v.kind==='r_pairs') {
+    desc='Treats arranged into '+Math.floor(v.count/2)+' pairs'+(v.count%2?' with 1 unpaired treat.':' with no unpaired treat.');
+    var pairs=Math.ceil(v.count/2);for(var i=0;i<pairs;i++){var x=30+i%5*74,y=55+Math.floor(i/5)*94;rect(x,y,48,64);dot(x+24,y+19,9);if(i*2+1<v.count)dot(x+24,y+45,9);}
+    label(200,235,'Two in a pair · look for a leftover',16);
+  }
+  if(v.kind==='r_array') {
+    desc='Array with '+v.rows+' rows and '+v.cols+' treats in each row.'+(v.crossLast?' The last row is sold.':'');
+    var cell=Math.min(36,300/v.cols,160/v.rows),x=(400-v.cols*cell)/2,y=42;
+    for(var r=0;r<v.rows;r++)for(var c=0;c<v.cols;c++){rect(x+c*cell,y+r*cell,cell-3,cell-3,v.crossLast&&r===v.rows-1?'#ddd':peach);if(v.crossLast&&r===v.rows-1){line(x+c*cell+3,y+r*cell+3,x+(c+1)*cell-6,y+(r+1)*cell-6);}}
+    label(200,226,v.rows+' equal rows · '+v.cols+' in each row'+(v.crossLast?' · last row sold':''),15);
+  }
+  if(v.kind==='r_compare') {
+    desc='Compare '+v.a+' with '+v.b+'.';label(110,100,v.a,36);label(200,100,'?',30);label(290,100,v.b,36);
+    [v.a,v.b].forEach(function(number,i){label(110+i*180,150,Math.floor(number/100)+' H   '+Math.floor(number/10)%10+' T   '+number%10+' O',18);});label(200,215,'Compare hundreds, then tens, then ones.',15);
+  }
+  if(v.kind==='r_round') {
+    var low=Math.floor(v.number/v.unit)*v.unit,high=low+v.unit,x=45+(v.number-low)/v.unit*310;
+    desc='Number line from '+low+' to '+high+', with midpoint '+(low+v.unit/2)+'. The number '+v.number+' is marked.';
+    line(45,135,355,135);[low,low+v.unit/2,high].forEach(function(number,i){var xx=45+i*155;line(xx,124,xx,145);label(xx,177,number,19);});dot(x,135,7);label(x,106,v.number,21,green);label(200,221,'Choose the nearest endpoint.',17);
+  }
+  if(v.kind==='r_groups') {
+    desc=v.total+' treats in all. Each group has '+v.groupSize+' treats.';
+    rect(30,45,155,125,peach);label(107,84,'Total treats',17);label(107,133,v.total,34);
+    rect(220,45,150,125);label(295,76,'One full group',16);for(var i=0;i<v.groupSize;i++)dot(244+i%4*32,104+Math.floor(i/4)*23,7);
+    label(295,195,v.groupSize+' per group',17);label(200,232,'Complete groups and any leftover',16);
+  }
+  if(v.kind==='r_factor') {
+    desc=v.task==='prime'?'Find the factor pairs of '+v.number+'.':v.task==='factor'?'Can '+v.number+' make whole equal groups of '+v.candidate+'?':'Does skip-counting by '+v.number+' reach '+v.candidate+'?';
+    label(200,65,v.task==='prime'?'Factor-pair detective':v.task==='factor'?'Factors divide evenly':'Multiples repeat equal groups',21);
+    label(200,122,v.task==='prime'?v.number:v.task==='factor'?v.number+' ÷ '+v.candidate:v.number+' × ? = '+v.candidate,32);
+    fitLabel(200,188,v.task==='prime'?'Test factor pairs: 1 × ?, 2 × ?, 3 × ?…':v.task==='factor'?'Can you divide with no leftover?':'Can a whole number fill the box?',350,18);
+  }
+  if(v.kind==='r_pattern') {
+    desc='Pattern starts '+v.values.join(', ')+'. Rule: add '+v.step+' each time. Find the next term.';
+    label(200,57,'Rule: add '+v.step,23);var terms=v.values.concat(['?']),w=350/terms.length;terms.forEach(function(number,i){rect(25+i*w,90,w-7,65,i===terms.length-1?'#b8e6d0':pale);label(25+i*w+(w-7)/2,132,number,22);});label(200,208,'One more step follows the same rule.',17);
+  }
+  if(v.kind==='r_story'||v.kind==='r_plan') {
+    desc='Story map: '+v.parts.map(function(part){return part[0]+': '+part[1];}).join('; ')+'. Boxes are not drawn to scale.';
+    var rows=v.parts.length>3?2:1,cols=rows===2?2:v.parts.length,w=345/cols;
+    v.parts.forEach(function(part,i){var col=i%cols,row=Math.floor(i/cols),y=rows===1?65:30+row*95;rect(27+col*w,y,w-10,75,i===v.parts.length-1?'#b8e6d0':pale);fitLabel(27+col*w+(w-10)/2,y+25,part[0],w-23,17);fitLabel(27+col*w+(w-10)/2,y+59,part[1],w-23,27);});
+    if(v.equation)fitLabel(200,190,reasoningEquationText(v.equation.left)+' = '+reasoningEquationText(v.equation.right),350,24);
+    label(200,238,'Story map · boxes are not drawn to scale.',13);
+  }
+  if(v.kind==='r_division') {
+    desc=v.total+' cookies in all. '+(v.meaning==='share'?v.known+' equal boxes; cookies per box unknown.':v.known+' cookies per box; number of boxes unknown.');
+    label(200,38,v.total+' cookies altogether',23);
+    if(v.meaning==='share'){var w=Math.min(65,340/v.known);for(var i=0;i<v.known;i++){rect((400-v.known*w)/2+i*w,85,w-7,65);label((400-v.known*w)/2+i*w+(w-7)/2,129,'?',26);}label(200,191,v.known+' equal boxes · how many in each?',17);}
+    else{rect(90,68,220,100);for(var i=0;i<v.known;i++)dot(123+i%5*38,99+Math.floor(i/5)*38,10);label(200,198,v.known+' in each box · how many boxes?',17);}
+  }
+  if(v.kind==='r_comparisonstory') {
+    desc='Naia has '+v.base+'. Milo has '+v.factor+(v.multiplicative?' times as many.':' more.');
+    label(45,60,'Naia',17);rect(86,35,50,44,peach);label(111,63,v.base,20);
+    label(45,136,'Milo',17);
+    if(v.multiplicative){var w=Math.min(50,280/v.factor);for(var i=0;i<v.factor;i++){rect(86+i*w,108,w,44,'#b8e6d0');label(86+(i+.5)*w,137,v.base,18);}label(200,201,v.factor+' equal copies of '+v.base,18);}
+    else{rect(86,108,95,44,peach);rect(181,108,95,44,'#b8e6d0');label(133,138,v.base,21);label(228,138,'+'+v.factor,21);label(200,201,'Original amount plus an extra amount',16);}
+    label(200,237,'Comparison map · boxes are not to scale',13);
+  }
+  if(v.kind==='r_partition') {
+    desc='One whole brownie divided into '+v.parts+' equal shares; '+v.shaded+' are shaded.';
+    bar(50,47,300,130,v.parts,v.shaded,v.orientation);fitLabel(200,219,v.caption||'One whole; all shares have equal area.',350,16);
+  }
+  if(v.kind==='r_fractioncompare') {
+    desc='Two same-size wholes. A has '+v.fractions[0][0]+' of '+v.fractions[0][1]+' equal shares shaded. B has '+v.fractions[1][0]+' of '+v.fractions[1][1]+' equal shares shaded.';
+    v.fractions.forEach(function(f,i){label(24,63+i*100,['A','B'][i],21);bar(50,28+i*100,290,65,f[1],f[0],v.orientation===1?'horizontal':'vertical');if(v.showFractions)label(363,67+i*100,f[0]+'/'+f[1],18);});label(200,239,'Each bar is the same-size whole.',16);
+  }
+  if(v.kind==='r_equalarea') {
+    desc='Two same-size brownies each divided into '+v.parts+' pieces. A: '+(v.fairA?'all pieces take 1/'+v.parts+' of the area.':'the last piece has twice the area of each other piece.')+' B: '+(v.fairB?'all pieces take 1/'+v.parts+' of the area.':'the last piece has twice the area of each other piece.');
+    label(25,65,'A',21);label(25,167,'B',21);bar(55,28,290,70,v.parts,0,v.turn?'horizontal':'vertical',!v.fairA);bar(55,130,290,70,v.parts,0,v.turn?'vertical':'horizontal',!v.fairB);label(200,235,'Equal area matters; cut direction can differ.',15);
+  }
+  if(v.kind==='r_numberline') {
+    var intervals=v.denominator*v.max;
+    desc='Number line from 0 to '+v.max+', divided into '+v.denominator+' equal intervals per whole.'+(v.marker===null?' No target has been marked.':' Marker at '+measureText(v.marker,v.denominator)+'.');
+    line(30,125,370,125);for(var i=0;i<=intervals;i++){var x=30+i/intervals*340;line(x,119,x,133);if(i%v.denominator===0)label(x,164,i/v.denominator,21);else if(hint&&v.denominator<=4)label(x,163,measureText(i,v.denominator),13);}
+    if(v.marker!==null){var x=30+v.marker/intervals*340;dot(x,125,7);label(x,94,measureText(v.marker,v.denominator),21,green);}
+    label(200,211,'Each step = 1/'+v.denominator,18);
+  }
+  if(v.kind==='r_equivalence') {
+    desc='Two equal-size whole bars. The first has '+v.numerator+' of '+v.denominator+' equal pieces shaded. The second has '+v.newDenominator+' equal pieces and is unshaded.';
+    bar(45,35,310,65,v.denominator,v.numerator);bar(45,135,310,65,v.newDenominator,0);label(200,122,v.numerator+'/'+v.denominator+' of one whole',16);label(200,235,'Same-size wholes · smaller pieces below',15);
+  }
+  if(v.kind==='r_fractionoperation') {
+    desc='Combine quantities: '+measureText(v.a,v.denominator)+(v.operation==='+'?' plus ':' minus ')+measureText(v.b,v.denominator)+'. Each whole is divided into '+v.denominator+' equal parts.';
+    label(200,30,measureText(v.a,v.denominator)+' '+v.operation+' '+measureText(v.b,v.denominator)+' = ?',25);
+    var maxWholes=Math.max(Math.ceil(v.a/v.denominator),Math.ceil(v.b/v.denominator)),w=310/maxWholes;
+    [v.a,v.b].forEach(function(num,row){for(var i=0;i<Math.ceil(num/v.denominator);i++)bar(45+i*w,57+row*82,w-6,53,v.denominator,Math.min(v.denominator,num-i*v.denominator));});label(200,239,'Each outlined bar is one whole cup.',15);
+  }
+  if(v.kind==='r_fractiongroups') {
+    desc=v.groups+' equal batches, each with '+v.numerator+'/'+v.denominator+' cup.';
+    label(200,30,v.groups+' batches · '+v.numerator+'/'+v.denominator+' cup each',21);
+    var w=340/v.groups;for(var i=0;i<v.groups;i++){bar(30+i*w,65,w-8,115,v.denominator,v.numerator,'horizontal');label(30+i*w+(w-8)/2,207,'Batch '+(i+1),13);}label(200,240,'Each outlined bar represents one whole cup.',14);
+  }
+  if(v.kind==='r_decimalgrid') {
+    desc='One whole is a ten-by-ten grid of 100 equal squares. '+v.count+' squares are shaded.';
+    grid(115,22,17,v.count);fitLabel(200,226,v.caption||'Each square = 0.01 = 1/100',355,16);
+  }
+  if(v.kind==='r_decimalcompare') {
+    desc='Two same-size grids. Left: '+v.a+' hundredths, labeled '+v.labels[0]+'. Right: '+v.b+' hundredths, labeled '+v.labels[1]+'.';
+    grid(25,40,15,v.a);grid(225,40,15,v.b);label(100,221,v.labels[0],25);label(300,221,v.labels[1],25);label(200,115,'?',24);label(200,24,'Both grids represent one whole.',16);
+  }
+  svg.setAttribute('aria-label',desc);svg.appendChild(visualNode('title',{},desc));container.appendChild(svg);return true;
+}
+function renderReasoningAnswer(container,p,submit,reveal) {
+  var w=p.widget;
+  if(!w||['fm_shade','fm_line','fm_equivalent','fm_hundredgrid'].indexOf(w.kind)===-1)return false;
+  container.replaceChildren();
+  var value=reveal?w.target:0,selected=[],buttons=[],range=null;
+  var wrapper=document.createElement('div');wrapper.style.width='100%';wrapper.style.maxWidth='430px';wrapper.style.margin='0 auto';container.appendChild(wrapper);
+  var status=document.createElement('output');status.setAttribute('aria-live','polite');status.style.display='block';status.style.textAlign='center';status.style.margin='8px 0';
+  function button(text,label,action){var b=document.createElement('button');b.type='button';b.className='btn btn-small btn-back';b.textContent=text;b.setAttribute('aria-label',label);b.disabled=!!reveal;b.style.minHeight='44px';b.style.minWidth='44px';b.addEventListener('click',function(){if(!reveal)action();});return b;}
+  function raw(){return fractionText(value,w.denominator);}
+  var drawing=document.createElement('div');
+  function draw(){
+    if(w.kind==='fm_shade') {
+      value=selected.filter(Boolean).length;
+      buttons.forEach(function(b,i){b.setAttribute('aria-pressed',selected[i]?'true':'false');b.style.backgroundColor=selected[i]?'#287963':'#fff6e8';b.style.color=selected[i]?'#fff':'#69452e';b.textContent=selected[i]?'●':'○';});
+      status.textContent=value+' of '+w.denominator+' equal shares shaded';
+    }else{
+      if(range){range.value=String(value);range.setAttribute('aria-valuetext',w.kind==='fm_hundredgrid'?value+' hundredths, '+(value/100).toFixed(2):measureText(value,w.denominator));}
+      if(w.kind==='fm_line'){renderReasoningVisual(drawing,{kind:'r_numberline',denominator:w.denominator,max:w.max,marker:value},false);status.textContent='Marker: '+measureText(value,w.denominator);}
+      if(w.kind==='fm_equivalent'){renderReasoningVisual(drawing,{kind:'r_partition',parts:w.denominator,shaded:value,caption:value+'/'+w.denominator+' shaded'},false);status.textContent=value+' of '+w.denominator+' equal pieces shaded';}
+      if(w.kind==='fm_hundredgrid'){renderReasoningVisual(drawing,{kind:'r_decimalgrid',count:value,caption:value+'/100 = '+(value/100).toFixed(2)},false);status.textContent=value+' hundredths · '+(value/100).toFixed(2);}
+    }
+  }
+  if(w.kind==='fm_shade') {
+    var cells=document.createElement('div');cells.setAttribute('role','group');cells.setAttribute('aria-label','Equal shares of one whole brownie');cells.style.display='grid';cells.style.gridTemplateColumns=w.orientation==='horizontal'?'1fr':'repeat('+w.denominator+', minmax(0, 1fr))';cells.style.gap='0';cells.style.margin='8px 0';
+    for(var i=0;i<w.denominator;i++)(function(i){selected[i]=!!reveal&&i<w.target;var b=button('○','Shade or unshade equal share '+(i+1)+' of '+w.denominator,function(){selected[i]=!selected[i];draw();});b.setAttribute('data-share-cell',String(i));b.style.borderRadius='0';b.style.padding='10px';b.style.border='2px solid #69452e';b.style.minHeight=w.orientation==='horizontal'?'44px':'95px';buttons.push(b);cells.appendChild(b);})(i);
+    wrapper.appendChild(cells);
+  }else{
+    wrapper.appendChild(drawing);
+    var label=document.createElement('label');label.textContent=w.kind==='fm_line'?'Move the marker:':'Set the number of shaded pieces:';label.style.display='block';
+    range=document.createElement('input');range.type='range';range.min='0';range.max=String(w.denominator*(w.kind==='fm_line'?w.max:1));range.step='1';range.value=String(value);range.disabled=!!reveal;range.setAttribute('aria-label',w.kind==='fm_line'?'Position on the fraction number line':'Number of equal pieces shaded');range.style.width='100%';range.style.minHeight='44px';range.style.accentColor='#287963';range.addEventListener('input',function(){if(!reveal){value=Number(range.value);draw();}});label.appendChild(range);wrapper.appendChild(label);
+    var adjust=document.createElement('div');adjust.style.display='flex';adjust.style.justifyContent='center';adjust.style.gap='8px';
+    (w.kind==='fm_hundredgrid'?[-10,-1,1,10]:[-1,1]).forEach(function(delta){adjust.appendChild(button(delta>0?'+'+delta:'−'+Math.abs(delta),(delta>0?'Add ':'Remove ')+Math.abs(delta)+' '+(w.kind==='fm_line'?'intervals':'shaded pieces'),function(){value=Math.max(0,Math.min(Number(range.max),value+delta));draw();}));});wrapper.appendChild(adjust);
+  }
+  wrapper.appendChild(status);
+  var check=button(reveal?'Worked example':'Check my model','Check my model',function(){submit(raw());});check.className='btn btn-small btn-teal';check.setAttribute('data-reasoning-check','true');wrapper.appendChild(check);draw();return true;
+}
+function matchReasoningAnswer(p,raw) {
+  if(!p.widget||['fm_shade','fm_line','fm_equivalent','fm_hundredgrid'].indexOf(p.widget.kind)===-1)return null;
+  return answersMatch(String(raw),p.answer);
+}
+
+// Visual extension activities keep their construction rules beside their generators.
+var VISUAL_PATHWAY_ADDITIONS = {
+  shapes: [
+    [['vx_shape_vertices','Cookie-cutter workshop','Build shapes by choosing their corners'],['vx_partition','Shade a fair share','Make halves and quarters with equal squares']],
+    [['vx_attribute_shape','Build from clues','Construct polygons with a given number of sides'],['vx_equal_area','Different shapes, equal shares','Create another arrangement with the same area']],
+    [['vx_quad_sort','All the shape families','Choose every family a quadrilateral belongs to'],['vx_quad_build','Design a quadrilateral','Build squares and rectangles from their attributes']],
+    [['vx_symmetry_complete','Finish the icing design','Reflect a design across its line of symmetry'],['vx_missing_angle','Find the missing opening','Use angle addition to find an unknown angle'],['vx_right_triangles','Right-triangle detective','Recognize right triangles in different positions']]
+  ],
+  measurement: [
+    [['vx_estimate','Ribbon estimates','Estimate a length using a reference unit'],['vx_measure_units','Big blocks, little blocks','Measure the same object with different-sized units']],
+    [['vx_numberline_length','Ribbon number-line jumps','Show a sum of lengths on a number line'],['vx_numberline_difference','Mark the ribbon length','Show the distance between two measurement marks']],
+    [['vx_perimeter_layout','Same trim, new floor','Build rectangles with equal perimeter and different area'],['vx_area_cover','Build the tiled floor','Construct rectangular areas with square units']],
+    [['vx_perimeter_area_targets','Meet both design rules','Design a rectangle with a given area and perimeter'],['vx_angle_build','Angle drawing studio','Use a protractor to construct a requested angle']]
+  ],
+  data: [
+    [['vx_picture_build','Make the picture chart','Turn an order list into a picture chart'],['vx_graph_total','Orders altogether','Find the total across three graph categories']],
+    [['vx_plot_build','Make a measurement plot','Organize whole-number measurements on a line plot'],['vx_graph_compare','Compare combined orders','Compare two categories together with a third']],
+    [['vx_scaled_graph_build','Build a scaled graph','Construct bars using scales of two or five'],['vx_two_step_graph','Two-step sales puzzles','Combine and compare categories on a scaled graph']],
+    [['vx_fraction_plot_build','Plot precise ribbons','Construct line plots with fractional measurements'],['vx_plot_compare','Compare two ribbon sets','Use fractional plots to compare total lengths']]
+  ]
+};
+function makeVisualExtensionProblem(level,n) {
+  var k=level.skill,p=null;
+  function q(story,answer,hint,visual,widget,choices,explanation) {
+    p={story:story,answer:String(answer),hintText:hint,explanation:explanation||hint+' The answer is '+answer+'.',visual:visual};
+    if(widget){p.widget=widget;p.answer=widget.solution;p.explanation=explanation||hint+' The completed example shows one valid answer.';}
+    if(choices)p.choices=choices;
+  }
+  function polygonWidget(sides,solution,size,attribute){return {kind:'vx_vertices',size:size,sides:sides,attribute:attribute||'polygon',solution:solution.join(',')};}
+  if(k==='vx_shape_vertices'||k==='vx_attribute_shape'||k==='vx_quad_build') {
+    var sides=k==='vx_shape_vertices'?3+n%2:k==='vx_attribute_shape'?3+n%4:4,size=k==='vx_shape_vertices'?3:4;
+    var solutions=size===3?{3:[0,2,6],4:[0,2,8,6]}:{3:[0,3,12],4:[0,3,15,12],5:[1,3,11,14,8],6:[1,2,7,14,13,8]};
+    var attribute=k==='vx_quad_build'?(n%2?'rectangle-not-square':'square'):(k==='vx_shape_vertices'&&sides===4?'rectangle':'polygon');
+    var solution=k==='vx_quad_build'?(n%2?[0,3,11,8]:[0,2,10,8]):solutions[sides];
+    var clue=k==='vx_quad_build'?(n%2?'a rectangle with four square corners and two different side lengths':'a square with four equal sides and four square corners'):(sides===4&&k==='vx_shape_vertices'?'a rectangle with four square corners':'a shape with exactly '+sides+' straight sides');
+    q('Design a cookie cutter: build '+clue+'. Choose corners in order around the outside.',null,'Choose corners around the edge. We join the last corner to the first. Sides must not cross; a straight line through a point does not make a new corner.',{kind:'vx_notice',title:'Cookie-cutter workshop',lines:['Tap grid points in order.','Undo or clear to try another shape.']},polygonWidget(sides,solution,size,attribute));
+  }
+  if(k==='vx_partition') {
+    var cols=n%3===0?2:4,rows=2,parts=n%2?4:2,need=rows*cols/parts;
+    q('Shade '+(parts===2?'one half':'one quarter')+' of this brownie tray. Each little square has equal area.',null,'Count all the equal squares. Divide that count into '+parts+' equal groups, then shade one group.',{kind:'vx_notice',title:parts===2?'One half of a tray':'One quarter of a tray',lines:['Every square is an equal piece.','Choose any arrangement with the right area.']},{kind:'vx_cells',rows:rows,cols:cols,need:need,solution:JSON.stringify(Array.from({length:need},function(_,i){return i;}))});
+  }
+  if(k==='vx_equal_area') {
+    var count=4+(n%3)*2,reference=[ [0,1,4,5], [0,1,2,4,5,6], [0,1,2,3,4,5,6,7] ][n%3],solution=[ [0,1,2,3], [0,1,2,3,4,5], [0,1,2,4,5,6,8,9] ][n%3];
+    q('The shaded part is one share of a brownie. On the new tray, make a different SHAPE with exactly the same area. Just turning or moving the same shape does not count.',null,'The trays are the same size and have the same equal squares. Equal numbers of squares cover equal area, even when their arrangement changes.',{kind:'vx_cell_picture',rows:4,cols:4,cells:reference,title:'Reference share'},{kind:'vx_cells',rows:4,cols:4,need:count,reference:reference,differentShape:true,solution:JSON.stringify(solution)});
+  }
+  if(k==='vx_quad_sort') {
+    var shapes=[{name:'Square',points:[[0,0],[2,0],[2,2],[0,2]],families:[0,1,2,3,4]},{name:'Rectangle',points:[[0,0],[3,0],[3,2],[0,2]],families:[0,1,2]},{name:'Rhombus',points:[[0,1],[2,0],[4,1],[2,2]],families:[0,1,3]},{name:'Parallelogram',points:[[0,0],[3,0],[4,2],[1,2]],families:[0,1]}],shape=shapes[n%4];
+    q('Choose EVERY family this cookie belongs to. A shape can belong to more than one family.',null,'Quadrilaterals have four sides. Parallelograms have two pairs of parallel sides. Rectangles have four right angles. Rhombuses have four equal sides. Squares meet both of those last rules.',{kind:'vx_polygon',points:shape.points,turn:n%2?25:0,markRight:n%4<2,markEqual:n%4===0||n%4===2},{kind:'vx_select',labels:['Quadrilateral','Parallelogram','Rectangle','Rhombus','Square'],values:shape.families,solution:JSON.stringify(shape.families)},null,'This '+shape.name.toLowerCase()+' belongs to: '+shape.families.map(function(i){return ['Quadrilateral','Parallelogram','Rectangle','Rhombus','Square'][i];}).join(', ')+'. A square is both a rectangle and a rhombus.');
+  }
+  if(k==='vx_symmetry_complete') {
+    var given=[n%4*6,(n+1)%4*6+1,(n+2)%4*6+2],mirrored=given.map(function(i){return Math.floor(i/6)*6+5-i%6;});
+    q('Finish the icing design. Shade squares on the RIGHT so the dashed line is a line of symmetry.',null,'Each shaded square needs a partner on the same row, the same distance from the fold line.',{kind:'vx_notice',title:'Mirror the left-hand icing',lines:['The left half is already decorated.','Add matching squares on the right.']},{kind:'vx_cells',rows:4,cols:6,given:given,allowed:0,mirror:true,need:given.length,solution:JSON.stringify(mirrored)});
+  }
+  if(k==='vx_missing_angle') {
+    var total=n%2?180:90,known=10+(n%7)*10;
+    q('These two adjoining icing angles together make '+total+'°. One angle is '+known+'°. How many degrees is the missing angle?',total-known,'Angles that meet without overlapping add to the whole opening. Subtract the known part from '+total+'°.',{kind:'vx_angle_parts',total:total,known:known});
+  }
+  if(k==='vx_right_triangles') {
+    var points=n%2?[[0,0],[4,0],[1,3]]:[[0,0],[3+n%3,0],[0,2+n%2]];
+    q('Does this triangular cookie have one square corner?',n%2?'Not a right triangle':'Right triangle','A right triangle has one 90° corner. Turning the cookie does not change its angles. Compare its corners with the square-corner guide.',{kind:'vx_polygon',points:points,turn:(n%4)*90,guide:true},null,['Right triangle','Not a right triangle']);
+  }
+  if(k==='vx_estimate') {
+    var estimate=3+n%5,ratio=estimate+(n%2?0.2:-0.2);
+    q('About how many of the little blocks would fit along the ribbon? Choose the closest estimate.',estimate,'Imagine placing copies of the reference block end to end with no gaps. An estimate is close; it need not be exact.',{kind:'vx_estimate',ratio:ratio},null,[String(estimate-2),String(estimate),String(estimate+3)]);
+  }
+  if(k==='vx_measure_units') {
+    var large=2+n%4,factor=2+n%2;
+    q('The same ribbon fits '+large*factor+' small blocks. Each big block is as long as '+factor+' small blocks. How many big blocks fit the ribbon?',large,'Use bigger blocks along the very same ribbon. Group '+factor+' small blocks for every big block; you will need fewer big blocks.',{kind:'vx_units',small:large*factor,factor:factor});
+  }
+  if(k==='vx_numberline_length'||k==='vx_numberline_difference') {
+    var start=2+n%6,length=3+n%7,end=start+length,isSum=k==='vx_numberline_length';
+    q(isSum?'A ribbon is '+start+' cm long. Add another '+length+' cm. Mark the total length on the number line.':'A ribbon starts at '+start+' cm and ends at '+end+' cm. Mark its LENGTH on the answer number line.',null,isSum?'Start at '+start+' and move '+length+' spaces to the right. The landing mark is the total length.':'Count the spaces between the ribbon’s ends, or subtract ending mark minus starting mark. The answer line begins at zero.',{kind:'vx_length_line',start:start,end:end,hideEnd:isSum,max:20,title:isSum?'Join '+start+' cm and '+length+' cm':'Ribbon on a measurement line'}, {kind:'vx_mark',max:20,solution:String(isSum?end:length)});
+  }
+  if(k==='vx_perimeter_layout') {
+    var width=3+n%4,height=2+n%2,reference=[width,height],solution=[width+1,height-1],perimeter=2*(width+height);
+    q('This '+width+' by '+height+' floor uses '+perimeter+' meters of trim. Design a rectangle with the SAME perimeter but a DIFFERENT area. Use whole-meter sides.',null,'Keep width + height the same to keep the perimeter. Try moving one meter from one side length to the other, then compare the areas.',{kind:'vx_rectangle',width:width,height:height,title:'Original floor',unit:'m'}, {kind:'vx_rectangle_builder',max:10,reference:reference,perimeter:perimeter,differentArea:width*height,solution:JSON.stringify(solution)});
+  }
+  if(k==='vx_area_cover') {
+    var width=2+n%4,height=2+Math.floor(n/4)%3;
+    q('Design a rectangular bakery floor with area '+width*height+' square meters. Use whole-meter sides, with at least 2 meters on each side.',null,'Each small square covers 1 square meter. Choose a width and height whose product is '+width*height+'. More than one design may work.',{kind:'vx_notice',title:'Area: '+width*height+' square meters',lines:['Adjust the width and height.','Count tiles or multiply the side lengths.']},{kind:'vx_rectangle_builder',max:10,min:2,area:width*height,solution:JSON.stringify([width,height])});
+  }
+  if(k==='vx_perimeter_area_targets') {
+    var width=3+n%5,height=2+n%3;
+    q('Design a floor with area '+width*height+' square meters AND perimeter '+2*(width+height)+' meters. Use whole-meter sides.',null,'Find side pairs that multiply to the area. Then check that twice their sum equals the perimeter.',{kind:'vx_notice',title:'Meet both design rules',lines:['Area = '+width*height+' square meters','Perimeter = '+2*(width+height)+' meters']},{kind:'vx_rectangle_builder',max:10,area:width*height,perimeter:2*(width+height),solution:JSON.stringify([width,height])});
+  }
+  if(k==='vx_angle_build') {
+    var degrees=15+(n%24)*5;
+    q('Draw a '+degrees+'° opening for the bakery sign. Move the upper ray using the protractor.',null,'The fixed ray points right at 0°. Follow the scale upward to '+degrees+'°. Every small interval is 5°.',{kind:'vx_notice',title:'Draw an angle of '+degrees+'°',lines:['Use the angle control below.','Start measuring at the fixed right-hand ray.']},{kind:'vx_angle_builder',solution:String(degrees),degrees:degrees});
+  }
+  if(['vx_picture_build','vx_graph_total','vx_graph_compare','vx_scaled_graph_build','vx_two_step_graph'].indexOf(k)!==-1) {
+    var scale=k==='vx_scaled_graph_build'||k==='vx_two_step_graph'?(n%2?5:2):1,values=[(3+n%4)*scale,(2+n%3)*scale,(2+n%2)*scale],labels=['Cookies','Muffins','Donuts'];
+    if(k==='vx_picture_build'||k==='vx_scaled_graph_build') {
+      q('Make a '+(scale===1?'picture chart':'bar graph')+' for this order list: '+values.map(function(value,i){return labels[i]+' '+value;}).join(', ')+'.',null,scale===1?'Each picture stands for one treat. Make each row match the order list.':'Each interval is '+scale+' treats. Every + adds one interval, or '+scale+' treats.',{kind:'vx_order_list',labels:labels,values:values}, {kind:'vx_counts',mode:scale===1?'pictures':'bars',values:values,labels:labels,scale:scale,max:scale*8,solution:JSON.stringify(values)});
+    } else {
+      var isTotal=k==='vx_graph_total';
+      q(isTotal?'How many treats were ordered altogether?':'How many MORE cookies and muffins together were ordered than donuts?',isTotal?values.reduce(function(a,b){return a+b;},0):values[0]+values[1]-values[2],isTotal?'Read each row and add all three counts.':'First add cookies and muffins. Then subtract the donuts. '+(scale>1?'Use the scale: each interval is '+scale+' treats.':''),{kind:'vx_chart',mode:scale===1?'pictures':'bars',values:values,labels:labels,scale:scale});
+    }
+  }
+  if(k==='vx_plot_build'||k==='vx_fraction_plot_build') {
+    var denominator=k==='vx_plot_build'?1:(n%2?8:4),base=denominator+n%3,observations=[base,base+1,base+1,base+2+n%3,base+3,base+n%5],counts=Array(5).fill(0);observations.forEach(function(v){counts[v-base]++;});
+    q('Plot these ribbon lengths in inches: '+observations.map(function(v){return measureText(v,denominator);}).join(', ')+'. Add one × for each ribbon.',null,'Put each ribbon above its exact length. Repeated lengths stack above the same mark. The total number of × marks must match the number of ribbons.',{kind:'vx_measurements',observations:observations,denominator:denominator},{kind:'vx_counts',mode:'plot',values:counts,labels:counts.map(function(_,i){return measureText(base+i,denominator);}),scale:1,max:6,base:base,denominator:denominator,observations:observations,solution:JSON.stringify(counts)});
+  }
+  if(k==='vx_plot_compare') {
+    var denominator=n%2?8:4,base=denominator+n%3,countsA=[1,1,1,0,1],countsB=[1,1,0,1,0],difference=countsA.reduce(function(a,b,i){return a+b*(base+i);},0)-countsB.reduce(function(a,b,i){return a+b*(base+i);},0);
+    q('How many more inches of ribbon are in Set A than Set B?',fractionText(difference,denominator),'Find each set’s total length, counting every ×. Then subtract Set B’s total from Set A’s total. Keep the common denominator.',{kind:'vx_two_plots',countsA:countsA,countsB:countsB,base:base,denominator:denominator});p.fractionInput=true;
+  }
+  return p;
+}
+function vxReadArray(raw) {try {var a=JSON.parse(raw);return Array.isArray(a)&&a.every(function(x){return Number.isInteger(x);})?a:null;}catch(e){return null;}}
+function vxEqualSet(a,b){return a.length===b.length&&new Set(a).size===a.length&&a.every(function(x){return b.indexOf(x)!==-1;});}
+function vxSameCellShape(a,b,cols) {
+  function normalize(points){var minX=Math.min.apply(null,points.map(function(p){return p[0];})),minY=Math.min.apply(null,points.map(function(p){return p[1];}));return points.map(function(p){return (p[0]-minX)+','+(p[1]-minY);}).sort().join(';');}
+  var points=a.map(function(i){return [i%cols,Math.floor(i/cols)];}),target=normalize(b.map(function(i){return [i%cols,Math.floor(i/cols)];}));
+  for(var swap=0;swap<2;swap++)for(var sx=-1;sx<=1;sx+=2)for(var sy=-1;sy<=1;sy+=2)if(normalize(points.map(function(p){return [sx*p[swap],sy*p[1-swap]];}))===target)return true;return false;
+}
+function vxValidPolygon(ids,w) {
+  if(!ids||ids.length!==w.sides||new Set(ids).size!==ids.length||ids.some(function(i){return i<0||i>=w.size*w.size;}))return false;
+  var pts=ids.map(function(i){return [i%w.size,Math.floor(i/w.size)];});
+  function cross(a,b,c){return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);}
+  function between(a,b,c){return cross(a,b,c)===0&&c[0]>=Math.min(a[0],b[0])&&c[0]<=Math.max(a[0],b[0])&&c[1]>=Math.min(a[1],b[1])&&c[1]<=Math.max(a[1],b[1]);}
+  function intersects(a,b,c,d){var a1=cross(a,b,c),a2=cross(a,b,d),b1=cross(c,d,a),b2=cross(c,d,b);return (a1*a2<0&&b1*b2<0)||between(a,b,c)||between(a,b,d)||between(c,d,a)||between(c,d,b);}
+  for(var i=0;i<pts.length;i++){if(cross(pts[i],pts[(i+1)%pts.length],pts[(i+2)%pts.length])===0)return false;for(var j=i+1;j<pts.length;j++){if(j===i+1||(i===0&&j===pts.length-1))continue;if(intersects(pts[i],pts[(i+1)%pts.length],pts[j],pts[(j+1)%pts.length]))return false;}}
+  if(w.attribute!=='polygon') {
+    var squared=[];
+    for(var i=0;i<4;i++){var a=pts[i],b=pts[(i+1)%4],c=pts[(i+2)%4],dx=b[0]-a[0],dy=b[1]-a[1];if(dx*(c[0]-b[0])+dy*(c[1]-b[1])!==0)return false;squared.push(dx*dx+dy*dy);}
+    var equal=squared.every(function(x){return x===squared[0];});
+    if(w.attribute==='square'&&!equal)return false;if(w.attribute==='rectangle-not-square'&&equal)return false;
+  }
+  return true;
+}
+function matchVisualExtensionAnswer(p,raw) {
+  if(!p.widget||p.widget.kind.indexOf('vx_')!==0)return null;
+  var w=p.widget,a=vxReadArray(String(raw));
+  if(w.kind==='vx_vertices') {if(!/^\d+(,\d+)*$/.test(String(raw).trim()))return false;return vxValidPolygon(String(raw).trim().split(',').map(Number),w);}
+  if(w.kind==='vx_mark'||w.kind==='vx_angle_builder')return /^\d+$/.test(String(raw).trim())&&Number(raw)===Number(w.solution);
+  if(!a)return false;
+  if(w.kind==='vx_cells') {
+    if(a.length!==w.need||new Set(a).size!==a.length||a.some(function(i){return i<0||i>=w.rows*w.cols;}))return false;
+    if(w.mirror)return vxEqualSet(a,JSON.parse(w.solution));
+    return !w.reference||(w.differentShape?!vxSameCellShape(a,w.reference,w.cols):!vxEqualSet(a,w.reference));
+  }
+  if(w.kind==='vx_select')return vxEqualSet(a,w.values);
+  if(w.kind==='vx_counts')return a.length===w.values.length&&a.every(function(x,i){return x===w.values[i];});
+  if(w.kind==='vx_rectangle_builder')return a.length===2&&a.every(function(x){return x>=(w.min||1)&&x<=w.max;})&&(!w.area||a[0]*a[1]===w.area)&&(!w.perimeter||2*(a[0]+a[1])===w.perimeter)&&(!w.differentArea||a[0]*a[1]!==w.differentArea);
+  return null;
+}
+function vxVisualDescription(v) {
+  if(v.kind==='vx_notice')return [v.title].concat(v.lines||[]).join('. ');
+  if(v.kind==='vx_chart'||v.kind==='vx_order_list')return v.labels.map(function(label,i){return label+': '+v.values[i];}).join('; ')+'. Each interval or symbol represents '+(v.scale||1)+'.';
+  if(v.kind==='vx_measurements')return 'Ribbon lengths in inches: '+v.observations.map(function(x){return measureText(x,v.denominator);}).join(', ')+'.';
+  function plot(counts){return counts.map(function(count,i){return count+' ribbons of '+measureText(v.base+i,v.denominator)+' inches';}).join('; ');}
+  if(v.kind==='vx_single_plot')return plot(v.values);
+  if(v.kind==='vx_two_plots')return 'Set A: '+plot(v.countsA)+'. Set B: '+plot(v.countsB)+'.';
+  if(v.kind==='vx_rectangle')return (v.title||'Rectangle')+': '+v.width+' by '+v.height+' '+(v.unit||'meters')+'. Every grid square is one square unit.';
+  if(v.kind==='vx_angle_parts')return 'A '+v.total+' degree opening split into two adjoining angles: '+v.known+' degrees and an unknown angle.';
+  if(v.kind==='vx_polygon') {
+    if(v.points.length===4)return 'A quadrilateral with two pairs of parallel sides. '+(v.markRight?'Four square corners. ':'No square corners. ')+(v.markEqual?'All four sides have matching length marks.':'Two different side lengths.');
+    return 'Triangle corner angles, to the nearest degree: '+v.points.map(function(p,i){var a=v.points[(i+1)%3],b=v.points[(i+2)%3],ax=a[0]-p[0],ay=a[1]-p[1],bx=b[0]-p[0],by=b[1]-p[1];return Math.round(Math.acos((ax*bx+ay*by)/(Math.hypot(ax,ay)*Math.hypot(bx,by)))*180/Math.PI)+' degrees';}).join(', ')+'.';
+  }
+  if(v.kind==='vx_cell_picture')return 'Reference tray: '+v.rows+' rows and '+v.cols+' columns. Shaded cells: '+v.cells.map(function(i){return 'row '+(Math.floor(i/v.cols)+1)+' column '+(i%v.cols+1);}).join('; ')+'.';
+  if(v.kind==='vx_units')return 'One ribbon covers '+v.small+' small blocks. One big block has the length of '+v.factor+' small blocks.';
+  if(v.kind==='vx_estimate')return 'The ribbon is a little '+(v.ratio%1<0.5?'longer':'shorter')+' than '+Math.round(v.ratio)+' reference blocks placed end to end.';
+  if(v.kind==='vx_length_line')return v.hideEnd?'Separate ribbons measuring '+v.start+' and '+(v.end-v.start)+' centimeters.':'Ribbon begins at '+v.start+' and ends at '+v.end+' on a centimeter ruler.';
+  if(v.kind==='vx_mark_line')return 'Answer number line from zero to '+v.max+'. '+(v.value===null?'No mark selected.':'Selected mark: '+v.value+'.');
+  if(v.kind==='vx_angle_drawing')return 'Protractor with 5-degree intervals. The moving ray is at '+v.degrees+' degrees from the fixed ray.';
+  return 'Bakery activity diagram';
+}
+function renderVisualExtensionVisual(container,v,hint) {
+  if(!v||!/^vx_/.test(v.kind))return false;
+  container.replaceChildren();
+  var svg=visualNode('svg',{viewBox:'0 0 400 250',role:'img','aria-label':v.description||vxVisualDescription(v),'class':'path-diagram'+(hint?' diagram-hint':'')}),ink='#69452e',green='#287963',cream='#fff6e8';
+  function line(x1,y1,x2,y2,color,width,extra){var attrs={x1:x1,y1:y1,x2:x2,y2:y2,stroke:color||ink,'stroke-width':width||2};Object.assign(attrs,extra||{});svg.appendChild(visualNode('line',attrs));}
+  function rect(x,y,w,h,color){svg.appendChild(visualNode('rect',{x:x,y:y,width:w,height:h,fill:color||cream,stroke:ink,'stroke-width':1.5}));}
+  function label(x,y,text,size,color){svg.appendChild(visualNode('text',{x:x,y:y,'text-anchor':'middle','font-size':size||16,fill:color||ink,'font-family':'sans-serif'},text));}
+  function plot(counts,base,denominator,y,title,maxHeight) {
+    label(200,y-maxHeight-22,title,15);line(45,y,355,y);
+    counts.forEach(function(count,i){var x=45+i*310/(counts.length-1);line(x,y-4,x,y+5);label(x,y+23,measureText(base+i,denominator),13);for(var j=0;j<count;j++)label(x,y-13-j*22,'×',23,green);});
+  }
+  if(v.kind==='vx_notice') {label(200,65,v.title,20);(v.lines||[]).forEach(function(text,i){label(200,115+i*32,text,16);});}
+  if(v.kind==='vx_cell_picture') {var cell=Math.min(38,300/v.cols,160/v.rows),left=(400-v.cols*cell)/2;label(200,26,v.title,18);for(var r=0;r<v.rows;r++)for(var c=0;c<v.cols;c++)rect(left+c*cell,45+r*cell,cell,cell,v.cells.indexOf(r*v.cols+c)!==-1?green:cream);label(200,230,'Equal squares · same-sized tray',14);}
+  if(v.kind==='vx_polygon') {
+    var xs=v.points.map(function(p){return p[0];}),ys=v.points.map(function(p){return p[1];}),xmin=Math.min.apply(null,xs),ymin=Math.min.apply(null,ys),width=Math.max.apply(null,xs)-xmin,height=Math.max.apply(null,ys)-ymin,scale=145/Math.max(width,height);
+    var pts=v.points.map(function(p){return [200+(p[0]-xmin-width/2)*scale,118+(p[1]-ymin-height/2)*scale];}),group=visualNode('g',{transform:'rotate('+(v.turn||0)+' 200 118)'});
+    group.appendChild(visualNode('polygon',{points:pts.map(function(p){return p.join(',');}).join(' '),fill:'#f3b97c',stroke:ink,'stroke-width':3}));
+    pts.forEach(function(p,i){var next=pts[(i+1)%pts.length],prev=pts[(i+pts.length-1)%pts.length];
+      if(v.markEqual){var dx=next[0]-p[0],dy=next[1]-p[1],len=Math.hypot(dx,dy),mx=(p[0]+next[0])/2,my=(p[1]+next[1])/2;group.appendChild(visualNode('line',{x1:mx-dy/len*6,y1:my+dx/len*6,x2:mx+dy/len*6,y2:my-dx/len*6,stroke:green,'stroke-width':2}));}
+      if(v.markRight){var l1=Math.hypot(next[0]-p[0],next[1]-p[1]),l2=Math.hypot(prev[0]-p[0],prev[1]-p[1]),a=[(next[0]-p[0])/l1*12,(next[1]-p[1])/l1*12],b=[(prev[0]-p[0])/l2*12,(prev[1]-p[1])/l2*12];group.appendChild(visualNode('polyline',{points:[[p[0]+a[0],p[1]+a[1]],[p[0]+a[0]+b[0],p[1]+a[1]+b[1]],[p[0]+b[0],p[1]+b[1]]].map(function(x){return x.join(',');}).join(' '),fill:'none',stroke:green,'stroke-width':2}));}
+    });svg.appendChild(group);
+    if(v.guide){line(340,180,340,145,green,3);line(340,180,375,180,green,3);line(340,165,355,165,green);line(355,165,355,180,green);label(200,238,'Compare each corner with the square-corner guide.',13);}
+    else label(200,235,v.markEqual?'Matching tick marks mean equal side lengths.':'Notice the side directions and square corners.',13);
+  }
+  if(v.kind==='vx_angle_parts') {
+    var cx=200,cy=195,r=140;
+    [0,v.known,v.total].forEach(function(d){var a=d*Math.PI/180;line(cx,cy,cx+r*Math.cos(a),cy-r*Math.sin(a),green,3);});
+    function arc(start,end,rad){var a=start*Math.PI/180,b=end*Math.PI/180;svg.appendChild(visualNode('path',{d:'M '+(cx+rad*Math.cos(a))+' '+(cy-rad*Math.sin(a))+' A '+rad+' '+rad+' 0 0 0 '+(cx+rad*Math.cos(b))+' '+(cy-rad*Math.sin(b)),fill:'none',stroke:ink,'stroke-width':2}));}
+    arc(0,v.known,48);arc(v.known,v.total,69);var ka=v.known/2*Math.PI/180,ua=(v.known+v.total)/2*Math.PI/180;label(cx+83*Math.cos(ka),cy-83*Math.sin(ka),v.known+'°',17);label(cx+105*Math.cos(ua),cy-105*Math.sin(ua),'?°',20,green);label(200,235,'Whole opening: '+v.total+'°',18);
+  }
+  if(v.kind==='vx_estimate') {var unit=38;label(200,30,'Imagine copies of the reference block.',16);rect(40,62,v.ratio*unit,30,green);label(200,115,'Ribbon',16);rect(40,157,unit,34,'#f3b97c');label(160,180,'One reference block',15);label(200,235,'Diagram units, not actual screen size',13);}
+  if(v.kind==='vx_units') {var unit=300/v.small;label(200,27,'The same ribbon, two different block sizes',16);rect(50,45,300,24,green);for(var i=0;i<v.small;i++)rect(50+i*unit,83,unit,26,'#f3b97c');label(200,138,v.small+' small blocks cover the ribbon',16);rect(50,162,unit*v.factor,27,'#b8e6d0');for(var j=0;j<v.factor;j++)line(50+j*unit,193,50+(j+1)*unit,193,ink,4);label(235,183,'One big block',15);label(200,235,'One big block = '+v.factor+' small blocks',16);}
+  if(v.kind==='vx_length_line') {
+    label(200,28,v.title,17);
+    if(v.hideEnd){rect(35,75,v.start*17,28,green);rect(35,143,(v.end-v.start)*17,28,'#f3b97c');label(300,97,v.start+' cm');label(300,165,(v.end-v.start)+' cm');label(200,225,'Join the two pieces end to end.',16);}
+    else {var unit=17;rect(30+v.start*unit,70,(v.end-v.start)*unit,25,green);line(30,123,370,123);for(var i=0;i<=20;i++){line(30+i*unit,117,30+i*unit,132);if(i%2===0||i===v.start||i===v.end)label(30+i*unit,151,i,12);}label(200,202,'Marked in centimeters',16);label(200,230,'Answer below: the length, measured from zero.',13);}
+  }
+  if(v.kind==='vx_rectangle') {var unit=Math.min(30,280/v.width,145/v.height),left=(400-unit*v.width)/2,top=45;label(200,24,v.title||'Your floor',17);for(var r=0;r<v.height;r++)for(var c=0;c<v.width;c++)rect(left+c*unit,top+r*unit,unit,unit,'#b8e6d0');label(200,top+v.height*unit+24,v.width+' '+(v.unit||'m'));label(left-25,top+v.height*unit/2,v.height+' '+(v.unit||'m'),13);if(v.showMeasures)label(200,237,'Area '+v.width*v.height+' m² · perimeter '+2*(v.width+v.height)+' m',15);}
+  if(v.kind==='vx_order_list') {label(200,35,'Today’s order list',20);v.labels.forEach(function(name,i){label(200,88+i*51,name+': '+v.values[i],22);});}
+  if(v.kind==='vx_measurements') {label(200,35,'Ribbon measurements (inches)',18);v.observations.forEach(function(value,i){label(95+i%3*105,99+Math.floor(i/3)*67,measureText(value,v.denominator),23);});label(200,230,'One measurement = one ribbon',15);}
+  if(v.kind==='vx_chart') {
+    var max=Math.max.apply(null,v.values),top=Math.max(v.scale,Math.ceil(max/v.scale)*v.scale);
+    if(v.mode==='pictures'){label(200,24,'Key: each ● = 1 treat',15);v.values.forEach(function(value,i){label(55,66+i*66,v.labels[i],13);for(var j=0;j<value;j++)svg.appendChild(visualNode('circle',{cx:120+j*31,cy:60+i*66,r:9,fill:green}));});}
+    else {var tickStep=v.scale*Math.max(1,Math.ceil(top/v.scale/10));for(var tick=0;tick<=top;tick+=tickStep){var y=205-tick/top*165;line(50,y,375,y,'#dbcbb9',1);label(29,y+5,tick,13);}v.values.forEach(function(value,i){rect(76+i*105,205-value/top*165,54,value/top*165,green);label(103+i*105,234,v.labels[i],13);});label(200,20,'Treats · one interval = '+v.scale,15);}
+  }
+  if(v.kind==='vx_single_plot') {plot(v.values,v.base,v.denominator,195,'Ribbon lengths (inches)',130);label(200,243,'Each × is one ribbon.',13);}
+  if(v.kind==='vx_two_plots') {plot(v.countsA,v.base,v.denominator,92,'Set A',40);plot(v.countsB,v.base,v.denominator,203,'Set B',40);label(200,246,'Ribbon lengths in inches · each × is one ribbon',13);}
+  if(v.kind==='vx_angle_drawing') {
+    var cx=200,cy=210,r=145;
+    svg.appendChild(visualNode('path',{d:'M '+(cx-r)+' '+cy+' A '+r+' '+r+' 0 0 1 '+(cx+r)+' '+cy,fill:cream,stroke:ink}));
+    for(var d=0;d<=180;d+=5){var a=d*Math.PI/180;line(cx+(r-(d%15?5:10))*Math.cos(a),cy-(r-(d%15?5:10))*Math.sin(a),cx+r*Math.cos(a),cy-r*Math.sin(a));if(d%30===0)label(cx+(r+18)*Math.cos(a),cy-(r+18)*Math.sin(a)+4,d+'°',12);}
+    var a=v.degrees*Math.PI/180;line(cx,cy,cx+r,cy,green,4);line(cx,cy,cx+r*Math.cos(a),cy-r*Math.sin(a),green,4);label(200,246,'Start at 0° on the right.',14);
+  }
+  if(v.kind==='vx_mark_line') {line(30,140,370,140);for(var i=0;i<=v.max;i++){var x=30+i*340/v.max;line(x,134,x,148);if(i%2===0)label(x,169,i,12);}if(v.value!==null){var x=30+v.value*340/v.max;svg.appendChild(visualNode('circle',{cx:x,cy:121,r:8,fill:green}));label(x,101,v.value,17,green);}label(200,215,'Your answer line starts at zero.',16);}
+  container.appendChild(svg);return true;
+}
+function renderVisualExtensionAnswer(container,p,submit,reveal) {
+  var w=p.widget;if(!w||w.kind.indexOf('vx_')!==0)return false;
+  container.replaceChildren();
+  var root=document.createElement('div');root.style.maxWidth='400px';root.style.width='100%';root.style.margin='0 auto';container.appendChild(root);
+  function element(tag,text,parent){var el=document.createElement(tag);if(text!==undefined)el.textContent=text;(parent||root).appendChild(el);return el;}
+  function button(text,action,parent,label){var b=element('button',text,parent);b.type='button';b.className='btn btn-small btn-back';b.disabled=!!reveal;b.style.minHeight='44px';if(label)b.setAttribute('aria-label',label);b.addEventListener('click',function(){if(!reveal)action();});return b;}
+  function check(fn,label){button(label||'Check my design',function(){submit(fn());}).className='btn btn-small btn-teal';}
+  function note(text){var el=element('p',text);el.style.fontSize='0.85rem';el.style.margin='6px 0';return el;}
+  if(w.kind==='vx_cells') {
+    var selected=reveal?JSON.parse(w.solution):[],grid=element('div');grid.style.display='grid';grid.style.gridTemplateColumns='repeat('+w.cols+', minmax(0, 1fr))';grid.style.gap='3px';grid.style.maxWidth=w.cols*46+'px';grid.style.margin='8px auto';
+    var buttons=[];
+    function draw(){buttons.forEach(function(b,i){var fixed=(w.given||[]).indexOf(i)!==-1,active=selected.indexOf(i)!==-1;b.textContent=fixed||active?'●':'·';b.style.background=fixed||active?'#287963':'#fff6e8';b.style.color=fixed||active?'white':'#69452e';b.setAttribute('aria-pressed',String(fixed||active));});}
+    for(var i=0;i<w.cols*w.rows;i++)(function(i){var b=button('',function(){var at=selected.indexOf(i);if(at===-1)selected.push(i);else selected.splice(at,1);draw();},grid,'Row '+(Math.floor(i/w.cols)+1)+', column '+(i%w.cols+1));b.setAttribute('data-vx-cell',i);b.style.padding='0';b.style.minWidth='0';b.style.borderRadius='4px';b.style.aspectRatio='1';if(w.mirror&&i%w.cols<w.cols/2)b.disabled=true;if(w.mirror&&i%w.cols===w.cols/2)b.style.borderLeft='3px dashed #8d4d91';buttons.push(b);})(i);
+    note(w.mirror?'The dashed line is the fold. Add squares on the right.':'Tap a square to shade it; tap again to clear it.');check(function(){return JSON.stringify(selected);});draw();
+  }
+  if(w.kind==='vx_vertices') {
+    var ids=reveal?w.solution.split(',').map(Number):[],board=element('div');board.style.position='relative';board.style.width='100%';board.style.maxWidth='320px';board.style.aspectRatio='1';board.style.margin='10px auto';
+    var svg=visualNode('svg',{viewBox:'0 0 300 300','aria-hidden':'true'});svg.style.width='100%';svg.style.height='100%';board.appendChild(svg);var buttons=[];
+    function xy(i){return [25+(i%w.size)*250/(w.size-1),25+Math.floor(i/w.size)*250/(w.size-1)];}
+    function draw(){svg.replaceChildren();if(ids.length>1)svg.appendChild(visualNode(ids.length>=3?'polygon':'polyline',{points:ids.map(function(i){return xy(i).join(',');}).join(' '),fill:ids.length>=3?'#b8e6d0':'none',stroke:'#287963','stroke-width':3}));buttons.forEach(function(b,i){var at=ids.indexOf(i);b.textContent=at===-1?'•':String(at+1);b.setAttribute('aria-pressed',String(at!==-1));b.style.background=at===-1?'#fff6e8':'#287963';b.style.color=at===-1?'#69452e':'white';});}
+    for(var i=0;i<w.size*w.size;i++)(function(i){var point=xy(i),b=button('',function(){var at=ids.indexOf(i);if(at!==-1)ids.splice(at,1);else if(ids.length<w.sides)ids.push(i);draw();},board,'Corner at row '+(Math.floor(i/w.size)+1)+', column '+(i%w.size+1));b.style.position='absolute';b.style.left=point[0]/3+'%';b.style.top=point[1]/3+'%';b.style.transform='translate(-50%, -50%)';b.style.width='44px';b.style.height='44px';b.style.borderRadius='50%';b.style.padding='0';buttons.push(b);})(i);
+    button('Undo',function(){ids.pop();draw();});button('Clear',function(){ids=[];draw();});note('Choose '+w.sides+' corners in order. Tap a selected corner to remove it.');check(function(){return ids.join(',');});draw();
+  }
+  if(w.kind==='vx_select') {
+    var selected=reveal?w.values.slice():[],buttons=[];w.labels.forEach(function(label,i){var b=button(label,function(){var at=selected.indexOf(i);if(at===-1)selected.push(i);else selected.splice(at,1);draw();});b.style.margin='4px';buttons.push(b);});
+    function draw(){buttons.forEach(function(b,i){b.setAttribute('aria-pressed',String(selected.indexOf(i)!==-1));b.style.background=selected.indexOf(i)!==-1?'#b8e6d0':'#fff6e8';});}note('Select every family that fits, then check.');check(function(){return JSON.stringify(selected);},'Check my families');draw();
+  }
+  if(w.kind==='vx_rectangle_builder') {
+    var sides=reveal?JSON.parse(w.solution):[w.min||1,w.min||1],graph=element('div'),counts=[];
+    ['Width','Height'].forEach(function(label,i){var row=element('div');row.style.display='flex';row.style.alignItems='center';row.style.justifyContent='center';row.style.gap='8px';element('span',label,row);button('−',function(){sides[i]=Math.max(w.min||1,sides[i]-1);draw();},row,'Decrease '+label.toLowerCase());counts.push(element('output','',row));button('+',function(){sides[i]=Math.min(w.max,sides[i]+1);draw();},row,'Increase '+label.toLowerCase());});
+    function draw(){counts.forEach(function(count,i){count.textContent=sides[i]+' m';});renderVisualExtensionVisual(graph,{kind:'vx_rectangle',width:sides[0],height:sides[1],title:'Your floor',unit:'m',showMeasures:true},false);}check(function(){return JSON.stringify(sides);});draw();
+  }
+  if(w.kind==='vx_mark') {
+    var selected=reveal?Number(w.solution):null,graph=element('div'),grid=element('div'),buttons=[];grid.style.display='grid';grid.style.gridTemplateColumns='repeat(7, minmax(0, 1fr))';grid.style.gap='4px';
+    for(var i=0;i<=w.max;i++)(function(i){var b=button(String(i),function(){selected=i;draw();},grid,'Mark '+i+' centimeters');b.style.padding='4px';buttons.push(b);})(i);
+    function draw(){renderVisualExtensionVisual(graph,{kind:'vx_mark_line',max:w.max,value:selected},false);buttons.forEach(function(b,i){b.setAttribute('aria-pressed',String(i===selected));b.style.background=i===selected?'#b8e6d0':'#fff6e8';});}note('Choose a numbered mark.');check(function(){return selected===null?'':String(selected);},'Check my mark');draw();
+  }
+  if(w.kind==='vx_angle_builder') {
+    var value=reveal?Number(w.solution):0,graph=element('div'),range=element('input');range.type='range';range.min='0';range.max='180';range.step='5';range.value=String(value);range.disabled=!!reveal;range.setAttribute('aria-label','Angle opening in degrees');range.style.width='100%';range.style.minHeight='44px';
+    function draw(){range.setAttribute('aria-valuetext',value+' degrees');renderVisualExtensionVisual(graph,{kind:'vx_angle_drawing',degrees:value},false);}range.addEventListener('input',function(){if(!reveal){value=Number(range.value);draw();}});note('Slide to rotate the ray. Arrow keys move 5° at a time.');check(function(){return String(value);},'Check my angle');draw();
+  }
+  if(w.kind==='vx_counts') {
+    var values=reveal?w.values.slice():w.values.map(function(){return 0;}),graph=element('div'),counts=[];
+    w.labels.forEach(function(label,i){var row=element('div');row.style.display='flex';row.style.alignItems='center';row.style.justifyContent='space-between';row.style.gap='5px';row.style.margin='4px 0';var name=element('span',label,row);name.style.minWidth='70px';button('−',function(){values[i]=Math.max(0,values[i]-w.scale);draw();},row,'Remove '+(w.mode==='plot'?'one ribbon at ':w.scale+' from ')+label);var count=element('output','',row);count.setAttribute('aria-live','polite');counts.push(count);button('+',function(){values[i]=Math.min(w.max,values[i]+w.scale);draw();},row,'Add '+(w.mode==='plot'?'one ribbon at ':w.scale+' to ')+label);});
+    function draw(){counts.forEach(function(el,i){el.textContent=values[i]+(w.mode==='plot'?' ×':'');});renderVisualExtensionVisual(graph,w.mode==='plot'?{kind:'vx_single_plot',values:values,base:w.base,denominator:w.denominator}:{kind:'vx_chart',mode:w.mode,values:values,labels:w.labels,scale:w.scale},false);}check(function(){return JSON.stringify(values);},w.mode==='plot'?'Check my plot':'Check my chart');draw();
+  }
+  return true;
+}
+
+Object.assign(PATHWAYS, FOUNDATION_PATHWAYS, REASONING_PATHWAYS);
+Object.keys(VISUAL_PATHWAY_ADDITIONS).forEach(function(topic){VISUAL_PATHWAY_ADDITIONS[topic].forEach(function(skills,i){PATHWAYS[topic].grades[i]=PATHWAYS[topic].grades[i].concat(skills);});});
 Object.keys(PATHWAYS).forEach(function(topic) {
   TOPICS.push([topic, PATHWAYS[topic].name]);
   PATHWAYS[topic].grades.forEach(function(skills, i) {
     var track = topic + '_g' + (i + 1);
     TRACK_LEVELS[track] = skills.map(function(s, j) {
-      return {id: track + '_' + s[0], track: track, pathway: topic, grade: i + 1, skill: s[0], name: s[1], desc: s[2], icon: ['🍪','📏','📊'][Object.keys(PATHWAYS).indexOf(topic)], open: true, step: j};
+      return {id: track + '_' + s[0], track: track, pathway: topic, grade: i + 1, skill: s[0], name: s[1], desc: s[2], icon: PATHWAYS[topic].icon || {shapes:'🍪',measurement:'📏',data:'📊'}[topic], open: true, step: j};
     });
   });
 });
@@ -913,10 +1991,13 @@ var selectedLesson = null;
 var lessonProblem = null;
 var lessonGuided = false;
 var lessonRevealed = false;
-var selectedPathGrade = {shapes: 1, measurement: 1, data: 1};
+var selectedPathGrade = {};
+Object.keys(PATHWAYS).forEach(function(topic){selectedPathGrade[topic]=1;});
 
 function measureText(n,d){var whole=Math.floor(n/d),remainder=n%d;return whole && remainder ? whole+' '+fractionText(remainder,d) : fractionText(n,d);}
 function makePathProblem(level, n) {
+  var extra=makeFoundationProblem(level,n)||makeReasoningProblem(level,n)||makeVisualExtensionProblem(level,n);
+  if(extra){extra.type='pathway';extra.skill=level.skill;extra.display=extra.display||'';extra.answer=String(extra.answer);extra.explanation=extra.explanation||extra.hintText+' The answer is '+extra.answer+'.';extra.srKey='path:'+level.id+':'+n;return extra;}
   var k = level.skill, a = 3 + n % 5, b = 2 + n % 3;
   var p = {type: 'pathway', skill: k, display: '', story: '', answer: '', hintText: '', explanation: '', visual: null};
   function q(story, answer, hint, visual, choices) {
@@ -987,6 +2068,8 @@ function buildPathPool(level) {
   return Array.from({length:24},function(_,n){var p=makePathProblem(level,n);return {key:p.srKey,weight:SR_WEIGHTS[getSRData(progress,p.srKey).box],problem:p};});
 }
 function pathAnswerMatches(problem, raw) {
+  var matchers=[matchFoundationAnswer,matchReasoningAnswer,matchVisualExtensionAnswer];
+  for(var i=0;i<matchers.length;i++){var match=matchers[i](problem,raw);if(match!==null)return match;}
   if (problem.choices || problem.builder) return String(raw)===String(problem.answer);
   return answersMatch(raw,problem.answer);
 }
@@ -999,6 +2082,75 @@ function recordPathResult(level, correct, independent) {
   progress.pathProgress[level.id]={rounds:old.rounds+1,lastCorrect:correct,lastIndependent:independent,bestIndependent:Math.max(old.bestIndependent,independent),ready:independent>=8};
   saveProgressData(progress);
 }
+
+// Learning navigation, activity records, and mixed application challenges.
+var PATHWAY_ORDER=['place','strategies','stories','time','fractionmodels','shapes','measurement','data'];
+var BAKERY_CHALLENGES=[
+  {id:'opening',name:'Open the bakery',icon:'🏪',description:'Get ready for the day with number, time, money and sales tasks.',topics:['place','time','stories','data']},
+  {id:'orders',name:'Prepare the orders',icon:'🧁',description:'Combine number strategies, recipe fractions and word problems.',topics:['strategies','fractionmodels','stories','measurement']},
+  {id:'design',name:'Design the bakery',icon:'🏡',description:'Use shapes, measurements and data to plan your bakery.',topics:['shapes','measurement','data']}
+];
+function learningNode(tag,text,cls){var el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;}
+function setLearningGrade(grade){if(!Number.isInteger(grade)||grade<1||grade>4)return;var p=getProgress();p.learningGrade=grade;saveProgressData(p);}
+function recordLearningActivity(level,kind){
+  if(!level||!level.pathway||!reportLevel(level.id)||['example','guided'].indexOf(kind)===-1)return;
+  var p=getProgress(),item=p.learningProgress[level.id]||{exampleViewed:false,guidedCompleted:false};
+  item[kind==='example'?'exampleViewed':'guidedCompleted']=true;item.lastSeen=Date.now();p.learningProgress[level.id]=item;saveProgressData(p);
+}
+function getLearningRecommendations(progress,grade){
+  var levels=PATHWAY_ORDER.flatMap(function(topic){return TRACK_LEVELS[topic+'_g'+grade]||[];}),result=[],used={};
+  function add(level,reason){if(level&&!used[level.id]&&result.length<3){used[level.id]=true;result.push({level:level,reason:reason});}}
+  levels.filter(function(l){var s=progress.report.skills[l.id];return s&&['Practice together','Building independence','Try more time'].indexOf(reportStatus(s.recent||[]))!==-1;}).sort(function(a,b){return (progress.report.skills[b.id].lastSeen||0)-(progress.report.skills[a.id].lastSeen||0);}).forEach(function(l){add(l,'Revisit the example, then practice with help if you need it.');});
+  levels.forEach(function(l){var a=progress.learningProgress[l.id],done=progress.pathProgress[l.id];if(a&&a.guidedCompleted&&!(done&&done.ready))add(l,'You tried this with guidance. Try a short practice next.');});
+  PATHWAY_ORDER.forEach(function(topic){var list=TRACK_LEVELS[topic+'_g'+grade]||[],next=list.find(function(l){return !(progress.pathProgress[l.id]&&progress.pathProgress[l.id].ready);});add(next,'Start with an example or continue this skill.');});
+  return result;
+}
+function renderLearningGrades(id,screen){
+  var row=document.getElementById(id),grade=getProgress().learningGrade;row.replaceChildren();
+  for(var g=1;g<=4;g++)(function(value){var b=learningNode('button','Grade '+value,'mode-btn'+(grade===value?' active':''));b.setAttribute('aria-pressed',String(grade===value));b.addEventListener('click',function(){setLearningGrade(value);showScreen(screen);});row.appendChild(b);})(g);
+}
+function openPathway(topic,grade){if(!PATHWAYS[topic]||!TRACK_LEVELS[topic+'_g'+grade])return;selectedPathGrade[topic]=grade;setTrack(topic+'_g'+grade);showScreen('level-screen');}
+function renderPathways(){
+  var p=getProgress(),grade=p.learningGrade;renderLearningGrades('learning-grades','pathways-screen');
+  var next=document.getElementById('learning-next');next.replaceChildren();
+  getLearningRecommendations(p,grade).forEach(function(r){var card=learningNode('button',undefined,'learning-card recommendation-card');card.appendChild(learningNode('strong',r.level.name));card.appendChild(learningNode('span',PATHWAYS[r.level.pathway].name+' · Grade '+grade));card.appendChild(learningNode('small',r.reason));card.addEventListener('click',function(){openPathLesson(r.level);});next.appendChild(card);});
+  var grid=document.getElementById('pathway-cards');grid.replaceChildren();
+  PATHWAY_ORDER.filter(function(topic){return PATHWAYS[topic];}).forEach(function(topic){
+    var path=PATHWAYS[topic],levels=TRACK_LEVELS[topic+'_g'+grade],ready=levels.filter(function(l){return p.pathProgress[l.id]&&p.pathProgress[l.id].ready;}).length;
+    var card=learningNode('button',undefined,'learning-card');card.dataset.pathway=topic;
+    card.appendChild(learningNode('span',path.icon||({shapes:'🍪',measurement:'📏',data:'📊'}[topic]),'learning-icon'));card.appendChild(learningNode('strong',path.name));
+    card.appendChild(learningNode('small',levels.slice(0,3).map(function(l){return l.name;}).join(' · ')));
+    card.appendChild(learningNode('span',levels.length+' skills · '+ready+' ready','learning-progress'));
+    card.addEventListener('click',function(){openPathway(topic,grade);});grid.appendChild(card);
+  });
+}
+function buildChallengePool(id,grade,seed){
+  var mission=BAKERY_CHALLENGES.find(function(c){return c.id===id;});if(!mission||!Number.isInteger(grade)||grade<1||grade>4)return [];
+  var groups=mission.topics.map(function(topic){return TRACK_LEVELS[topic+'_g'+grade]||[];}).filter(function(levels){return levels.length;});
+  if(!groups.length)return [];
+  var progress=getProgress();
+  return Array.from({length:24},function(_,n){var group=groups[n%groups.length],level=group[(Math.floor(n/groups.length)+(seed||0))%group.length],p=makePathProblem(level,(n+(seed||0)*7)%24);
+    p.sourceLevelId=level.id;p.reportContext='challenge';p.srKey='challenge:'+id+':g'+grade+':'+p.srKey;
+    return {key:p.srKey,weight:SR_WEIGHTS[getSRData(progress,p.srKey).box],problem:p};
+  });
+}
+function recordChallengeResult(id,grade,correct,independent){
+  if(!BAKERY_CHALLENGES.some(function(c){return c.id===id;})||!Number.isInteger(grade)||grade<1||grade>4)return;
+  var p=getProgress(),key=id+'_g'+grade,old=p.challengeProgress[key]||{rounds:0,bestIndependent:0};
+  p.challengeProgress[key]={rounds:old.rounds+1,lastCorrect:correct,lastIndependent:independent,bestIndependent:Math.max(old.bestIndependent,independent),lastSeen:Date.now()};saveProgressData(p);
+}
+function renderChallenges(){
+  renderLearningGrades('challenge-grades','challenges-screen');var p=getProgress(),grade=p.learningGrade,grid=document.getElementById('challenge-cards');grid.replaceChildren();
+  BAKERY_CHALLENGES.forEach(function(m){var card=learningNode('button',undefined,'learning-card');card.dataset.challenge=m.id;card.appendChild(learningNode('span',m.icon,'learning-icon'));card.appendChild(learningNode('strong',m.name));card.appendChild(learningNode('small',m.description));var old=p.challengeProgress[m.id+'_g'+grade];card.appendChild(learningNode('span',old?'Last challenge: '+old.lastIndependent+'/10 on my own':'10 mixed tasks · starts without a timer','learning-progress'));card.addEventListener('click',function(){startChallenge(m.id,grade);});grid.appendChild(card);});
+}
+function startChallenge(id,grade){
+  var mission=BAKERY_CHALLENGES.find(function(m){return m.id===id;}),pool=buildChallengePool(id,grade,Math.floor(Math.random()*24));if(!mission||!pool.length)return;
+  stopRoundTimers();state.challenge={id:id,grade:grade,name:mission.name};state.roundActive=true;state.roundPace=0;
+  var first=reportLevel(pool[0].problem.sourceLevelId).level;state.pathLevel=first;state.track=first.track;state.levelId=first.id;state.levelIndex=0;
+  state.currentOrder=0;state.tips=0;state.correct=0;state.independentCorrect=0;state.streak=0;state.bestStreak=0;state.wrongFacts=[];state.factsPool=pool;
+  showScreen('game-screen');document.getElementById('total-orders').textContent=ORDERS_PER_ROUND;document.getElementById('tips-count').textContent='0';nextOrder();
+}
+function continueLearning(){showScreen(state.challenge?'challenges-screen':state.pathLevel?'pathways-screen':'level-screen');}
 
 // ═══════════════════════════════════════
 // GAME STATE
@@ -1030,7 +2182,9 @@ var state = {
 
 // Report card: actual practice only; old records are kept as a separate snapshot.
 var REPORT_TOPICS = {addition:'Addition',subtraction:'Subtraction',multiply:'Multiplication',divide:'Division',decimals:'Decimals',fractions:'Fractions',shapes:'Shapes & Space',measurement:'Measurement',data:'Data & Graphs'};
+Object.keys(PATHWAYS).forEach(function(topic){REPORT_TOPICS[topic]=PATHWAYS[topic].name;});
 function reportLevel(id) {
+  if(typeof id==='string' && id.startsWith('apply_'))id=id.slice(6);
   var result=null;
   Object.keys(TRACK_LEVELS).some(function(track){var level=TRACK_LEVELS[track].find(function(l){return l.id===id;});if(level){result={level:level,track:track};return true;}return false;});
   return result;
@@ -1073,13 +2227,14 @@ function reportSkillLabel(level) {
 }
 function recordReportOutcome(outcome) {
   if(!state.roundActive || !state.currentProblem || state.reportRecorded || ['independent','supported','incorrect','timeout'].indexOf(outcome)===-1)return;
-  var found=reportLevel(state.levelId),mixed=state.track==='both',topic=mixed?state.currentProblem.type:state.track.split('_')[0];
+  var applied=state.currentProblem.reportContext==='challenge',sourceId=applied?state.currentProblem.sourceLevelId:state.levelId;
+  var found=reportLevel(sourceId),mixed=state.track==='both',topic=applied&&found?found.level.pathway:mixed?state.currentProblem.type:state.track.split('_')[0];
   if(!REPORT_TOPICS[topic])return;
   var level=found && found.level;
   if(!level && !mixed)return;
-  var progress=getProgress(),id=mixed?'mixed_'+topic:state.levelId,now=Date.now();
+  var progress=getProgress(),id=applied?'apply_'+sourceId:mixed?'mixed_'+topic:sourceId,now=Date.now();
   var skill=progress.report.skills[id];
-  if(!skill)skill=progress.report.skills[id]={id:id,topic:topic,track:mixed?topic:state.track,label:mixed?'Mixed '+REPORT_TOPICS[topic].toLowerCase():reportSkillLabel(level),grade:level && level.pathway?level.grade:null,independent:0,supported:0,incorrect:0,timeouts:0,recent:[],firstSeen:now,lastSeen:now};
+  if(!skill)skill=progress.report.skills[id]={id:id,topic:topic,track:applied?found.track:mixed?topic:state.track,context:applied?'challenge':'practice',label:(applied?'Bakery challenge · ':'')+(mixed?'Mixed '+REPORT_TOPICS[topic].toLowerCase():reportSkillLabel(level)),grade:level && level.pathway?level.grade:null,independent:0,supported:0,incorrect:0,timeouts:0,recent:[],firstSeen:now,lastSeen:now};
   skill[outcome==='timeout'?'timeouts':outcome]++;
   skill.lastSeen=now;skill.recent.push(outcome);skill.recent=skill.recent.slice(-20);
   saveProgressData(progress);
@@ -1104,13 +2259,13 @@ function reportNextStep(skill) {
 }
 function buildReportData(progress) {
   var report=progress.report||normalizeReport(progress),groups={},questions=0,answered=0,independent=0,supported=0,incorrect=0,timeouts=0;
-  function topic(id){if(!groups[id])groups[id]={id:id,name:REPORT_TOPICS[id],skills:[],earlier:[]};return groups[id];}
+  function topic(id){if(!groups[id])groups[id]={id:id,name:REPORT_TOPICS[id],skills:[],earlier:[],learning:[]};return groups[id];}
   Object.keys(report.skills).forEach(function(id){
     var raw=report.skills[id];if(!raw||!REPORT_TOPICS[raw.topic])return;
     var skill=Object.assign({},raw);
     // Existing addition/subtraction records always tested the missing result.
     var found=reportLevel(id);
-    if(found && found.level.formLabel){
+    if(found && found.level.formLabel && raw.context!=='challenge'){
       skill.label=reportSkillLabel(found.level);
       skill.practiceOrder=NUMBER_FORMS.findIndex(function(form){return form.position===found.level.unknownPosition;})*3+found.level.difficulty;
     }
@@ -1121,6 +2276,7 @@ function buildReportData(progress) {
     skill.status=reportStatus(skill.recent);skill.nextStep=reportNextStep(skill);
     topic(skill.topic).skills.push(skill);questions+=skill.questions;answered+=skill.answered;independent+=skill.independent;supported+=skill.supported;incorrect+=skill.incorrect;timeouts+=skill.timeouts;
   });
+  Object.keys(progress.learningProgress||{}).forEach(function(id){var found=reportLevel(id),a=progress.learningProgress[id];if(found&&found.level.pathway&&a&&(a.exampleViewed||a.guidedCompleted))topic(found.level.pathway).learning.push({id:id,label:found.level.name,grade:found.level.grade,exampleViewed:Boolean(a.exampleViewed),guidedCompleted:Boolean(a.guidedCompleted)});});
   report.earlier.forEach(function(item){if(item&&REPORT_TOPICS[item.topic])topic(item.topic).earlier.push(item);});
   var topics=Object.keys(REPORT_TOPICS).filter(function(id){return groups[id];}).map(function(id){var group=groups[id];group.skills.sort(function(a,b){
     if(a.practiceOrder!==undefined && b.practiceOrder!==undefined)return a.practiceOrder-b.practiceOrder;
@@ -1137,7 +2293,9 @@ function earlierReportText(item){
 function reportText(report){
   var lines=['BAKERY QUEST — MY REPORT CARD','Prepared '+reportDate(report.generatedAt),'Subject: Math','Only practice on this device is included. Untried topics are not scored.','Detailed recording began '+reportDate(report.startedAt)+'.',report.questions+' questions recorded: '+report.independent+' on my own, '+report.supported+' with help, '+report.incorrect+' to review, '+report.timeouts+' ran out of time.',''];
   report.topics.forEach(function(topic){lines.push(topic.name.toUpperCase());topic.skills.forEach(function(skill){lines.push(skill.label+(skill.grade?' · Grade '+skill.grade:''),skill.status,skill.independent+'/'+skill.answered+' answered on my own; '+skill.supported+' with help; '+skill.incorrect+' to review; '+skill.timeouts+' ran out of time.','Next time: '+skill.nextStep,'Last practiced: '+reportDate(skill.lastSeen),'');});if(topic.earlier.length){lines.push('Earlier practice (separate from the detailed counts above):');topic.earlier.forEach(function(item){lines.push(earlierReportText(item));});lines.push('');}});
+  report.topics.forEach(function(topic){if(topic.learning.length){lines.push(topic.name+' — Learning activities (not scored)');topic.learning.forEach(function(a){lines.push(a.label+' · Grade '+a.grade+': '+(a.guidedCompleted?'Guided practice completed':'Worked example explored'));});lines.push('');}});
   if(!report.topics.length)lines.push('No practice recorded yet. Try any topic to begin your report card.');
+  lines.push('Learning activities are not scored. Bakery challenge entries show mixed practice separately; they do not mark a focused skill ready.');
   lines.push('On my own = correct first try without an in-app hint or chart. With help = correct after a hint, chart, or retry. Outside help cannot be detected.','Feedback uses up to the last 10 answered questions; fewer than 5 means Getting started. Timeouts do not count as incorrect answers.','This is a practice report, not a school grade or an assessment of everything a child knows. Grade labels describe the activities practiced, not the child’s overall grade level.');return lines.join('\n');
 }
 function downloadReport(){
@@ -1166,12 +2324,14 @@ function renderReport(){
       card.appendChild(el('p','Last practiced '+reportDate(skill.lastSeen),'report-note'));
       var practice=el('button','Practice this skill','btn btn-small btn-back report-no-print');practice.addEventListener('click',function(){var found=reportLevel(skill.id);if(found && found.level.pathway)openPathLesson(found.level);else{setTrack(skill.track);showScreen('level-screen');}});card.appendChild(practice);section.appendChild(card);
     });
+    if(topic.learning.length){var activities=el('div',undefined,'report-history');activities.appendChild(el('h4','Learning activities · not scored'));topic.learning.forEach(function(a){activities.appendChild(el('p',a.label+' · Grade '+a.grade+': '+(a.guidedCompleted?'Guided practice completed':'Worked example explored')));});section.appendChild(activities);}
     if(topic.earlier.length){var history=el('div',undefined,'report-history');history.appendChild(el('h4','Earlier practice'));topic.earlier.forEach(function(item){history.appendChild(el('p',earlierReportText(item)));});section.appendChild(history);}
     content.appendChild(section);
   });
   var key=el('section',undefined,'report-key');key.appendChild(el('h3','How to read this card'));
   key.appendChild(el('p','On my own means a correct first try without an in-app hint or chart. With help means a correct answer after a hint, chart, or retry. Help given outside the app is not detected.'));
   key.appendChild(el('p','Feedback uses up to the last 10 answered questions in each skill; fewer than 5 means “Getting started.” Timeouts are shown separately and do not count as incorrect answers.'));
+  key.appendChild(el('p','Learning activities are not scored. Bakery challenge entries show mixed practice separately; they do not mark a focused skill ready.'));
   key.appendChild(el('p','Grade labels describe the activities practiced, not the child’s overall grade level. This is a practice report, not a school grade. Only topics tried on this device appear.'));content.appendChild(key);
 }
 
@@ -1192,6 +2352,9 @@ function loadProgress() {
   if (!Number.isFinite(progress.totalTips)) progress.totalTips = 0;
   if ([0, 20, 40, 60].indexOf(progress.timerSeconds) === -1) progress.timerSeconds = PATIENCE_SECONDS;
   if (!progress.pathProgress || typeof progress.pathProgress !== 'object') progress.pathProgress = {};
+  if(!Number.isInteger(progress.learningGrade)||progress.learningGrade<1||progress.learningGrade>4)progress.learningGrade=2;
+  if(!progress.learningProgress||typeof progress.learningProgress!=='object'||Array.isArray(progress.learningProgress))progress.learningProgress={};
+  if(!progress.challengeProgress||typeof progress.challengeProgress!=='object'||Array.isArray(progress.challengeProgress))progress.challengeProgress={};
   progress.bakery = normalizeBakery(progress);
   progress.report = normalizeReport(progress);
   return progress;
@@ -1539,7 +2702,7 @@ function parseAnswer(text) {
     var parts = text.split('/').map(Number);
     return parts[1] > 0 ? parts : null;
   }
-  if (!/^(?:\d{1,6}(?:\.\d{0,4})?|\.\d{1,4})$/.test(text)) return null;
+  if (!/^(?:\d{1,7}|\d{1,6}\.\d{0,4}|\.\d{1,4})$/.test(text)) return null;
   var places = (text.split('.')[1] || '').length;
   var denominator = Math.pow(10, places);
   return [Math.round(Number(text) * denominator), denominator];
@@ -1552,6 +2715,7 @@ function answersMatch(input, answer) {
 }
 
 function generateProblem() {
+  if(state.challenge)return state.factsPool[(state.currentOrder-1)%state.factsPool.length].problem;
   var fact = pickWeightedFact(state.factsPool);
   if (fact.problem) return fact.problem;
   var a = fact.a, b = fact.b;
@@ -1591,6 +2755,8 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
   if (id === 'shop-screen') renderShop();
+  if (id === 'pathways-screen') renderPathways();
+  if (id === 'challenges-screen') renderChallenges();
   if (id === 'report-screen') renderReport();
   if (id === 'level-screen') renderLevelSelect();
   if (id === 'chart-screen') buildChartTable('chart-table');
@@ -1608,6 +2774,7 @@ function visualNode(tag,attrs,text) {
   return node;
 }
 function renderPathVisual(container, v, hint) {
+  if(renderFoundationVisual(container,v,hint)||renderReasoningVisual(container,v,hint)||renderVisualExtensionVisual(container,v,hint))return;
   container.replaceChildren();
   var svg=visualNode('svg',{viewBox:'0 0 400 250',role:'img','aria-label':v.description||'Bakery math diagram: '+v.kind,'class':'path-diagram'+(hint?' diagram-hint':'')});
   var stroke='#69452e',fill='#f3b97c',accent='#287963';
@@ -1708,7 +2875,8 @@ function renderPathVisual(container, v, hint) {
   if(v.kind==='order_list') {label(200,35,'Today’s orders',20);v.values.forEach(function(value,i){label(200,85+i*55,v.labels[i]+': '+value,23);});}
   container.appendChild(svg);
 }
-function renderPathAnswer(container, problem, submit) {
+function renderPathAnswer(container, problem, submit, reveal) {
+  if(renderFoundationAnswer(container,problem,submit,reveal)||renderReasoningAnswer(container,problem,submit,reveal)||renderVisualExtensionAnswer(container,problem,submit,reveal))return;
   container.replaceChildren();
   if(problem.choices) {
     // Rotate choices to avoid a predictable correct-answer position.
@@ -1727,7 +2895,7 @@ function renderPathAnswer(container, problem, submit) {
     });
     var check=document.createElement('button');check.className='btn btn-small btn-teal';check.textContent='Check my graph';check.addEventListener('click',function(){submit(values.join(','));});container.appendChild(check);draw();
   } else {
-    var input=document.createElement('input');input.className='answer-input';input.type='text';input.inputMode=problem.fractionInput?'text':'numeric';input.setAttribute('aria-label','Guided practice answer');input.placeholder=problem.fractionInput?'e.g. 3/4':'Answer';
+    var input=document.createElement('input');input.className='answer-input';input.type='text';input.inputMode=problem.fractionInput?'text':problem.decimalInput?'decimal':'numeric';input.setAttribute('aria-label','Guided practice answer');input.placeholder=problem.fractionInput?'e.g. 3/4':'Answer';
     var check=document.createElement('button');check.className='btn btn-small btn-teal';check.textContent='Check';check.addEventListener('click',function(){submit(input.value);});input.addEventListener('keydown',function(e){if(e.key==='Enter')submit(input.value);});container.appendChild(input);container.appendChild(check);
   }
 }
@@ -1736,6 +2904,7 @@ function openPathLesson(level) {
   document.getElementById('lesson-note').textContent='Watch an example, try with help, or jump into practice. No timer here.';
   document.getElementById('lesson-explanation').hidden=false;
   document.getElementById('start-path-practice').hidden=false;
+  recordLearningActivity(level,'example');
   selectedLesson=level;state.track=level.track;selectedPathGrade[level.pathway]=level.grade;lessonGuided=false;lessonRevealed=false;
   lessonProblem=makePathProblem(level,0);showScreen('lesson-screen');renderLesson();
 }
@@ -1748,9 +2917,12 @@ function renderLesson() {
   var answers=document.getElementById('lesson-answers');answers.replaceChildren();
   document.getElementById('lesson-feedback').textContent='';
   document.getElementById('guided-try').hidden=lessonGuided;
+  if(!lessonGuided && p.widget)renderPathAnswer(answers,p,function(){},true);
   if(lessonGuided)renderPathAnswer(answers,p,function(raw){
-    if(pathAnswerMatches(p,raw)){document.getElementById('lesson-feedback').textContent='That’s it! You can start practice when you’re ready.';}
-    else {document.getElementById('lesson-feedback').textContent=lessonRevealed?p.explanation:'Let’s look together. '+p.hintText;lessonRevealed=true;renderPathVisual(document.getElementById('lesson-visual'),p.visual,true);}
+    if(pathAnswerMatches(p,raw)){recordLearningActivity(selectedLesson,'guided');document.getElementById('lesson-feedback').textContent='That’s it! You can start practice when you’re ready.';}
+    else {document.getElementById('lesson-feedback').textContent=lessonRevealed?p.explanation:'Let’s look together. '+p.hintText;
+      if(lessonRevealed && p.widget){renderPathAnswer(answers,p,function(){},true);var retry=learningNode('button','Try again with help','btn btn-small btn-teal');retry.addEventListener('click',tryGuidedLesson);answers.appendChild(retry);}
+      lessonRevealed=true;renderPathVisual(document.getElementById('lesson-visual'),p.visual,true);}
   });
 }
 function tryGuidedLesson(){lessonGuided=true;lessonRevealed=false;lessonProblem=makePathProblem(selectedLesson,1);renderLesson();}
@@ -1792,7 +2964,7 @@ function renderPathCheck(){
         selectedPathGrade[topic]=suggested;setTrack(topic+'_g'+suggested);showScreen('level-screen');
         document.getElementById('level-guide').textContent='Suggested starting point: Grade '+suggested+'. This was only a small sample. Choose any skill or grade that feels right.';
       }
-    });document.getElementById('lesson-answers').replaceChildren(next);
+    });var answers=document.getElementById('lesson-answers');answers.replaceChildren();if(lessonProblem.widget)renderPathAnswer(answers,lessonProblem,function(){},true);answers.appendChild(next);
   });
 }
 
@@ -1809,7 +2981,8 @@ function renderPracticePicker() {
     btn.addEventListener('click', function() { setTrack(track); });
     return btn;
   }
-  TOPICS.forEach(function(t) {
+  picker.hidden=Boolean(PATHWAYS[topic]);document.getElementById('practice-topic-label').hidden=Boolean(PATHWAYS[topic]);
+  TOPICS.filter(function(t){return !PATHWAYS[t[0]];}).forEach(function(t) {
     picker.appendChild(button(t[1], PATHWAYS[t[0]] ? t[0]+'_g'+selectedPathGrade[t[0]] : t[0] === 'fractions' || t[0] === 'decimals' ? t[0] + '_compare' : t[0], topic === t[0]));
   });
   var skills = document.getElementById('skill-picker');
@@ -1854,6 +3027,7 @@ function renderLevelSelect() {
 
   var levels = TRACK_LEVELS[state.track] || [];
   var pathway=levels[0] && levels[0].pathway;
+  document.getElementById('practice-title').textContent=pathway?PATHWAYS[pathway].name+' · Grade '+levels[0].grade:'Fact & Number Practice';
   document.getElementById('level-guide').textContent=pathway?'Choose a skill. Start untimed, learn with hints, and earn tips.':'Choose a level • Get 7 of 10 right to unlock the next!';
   document.getElementById('level-pace').parentElement.hidden=Boolean(pathway);
   document.getElementById('pace-advice').hidden=Boolean(pathway);
@@ -1914,6 +3088,7 @@ function renderLevelSelect() {
 // GAME LOGIC
 // ═══════════════════════════════════════
 function startLevel(track, levelIndex, levelDef) {
+  state.challenge=null;
   stopRoundTimers();
   state.roundActive = true;
   state.pathLevel = levelDef.pathway ? levelDef : null;
@@ -1937,6 +3112,7 @@ function startLevel(track, levelIndex, levelDef) {
 }
 
 function startBothMode() {
+  state.challenge=null;
   state.pathLevel=null;state.roundPace=null;
   stopRoundTimers();
   state.roundActive = true;
@@ -1982,6 +3158,8 @@ function nextOrder() {
   }
 
   state.currentProblem = generateProblem();
+  document.getElementById('round-context').textContent=state.challenge?state.challenge.name+' · Grade '+state.challenge.grade:state.pathLevel?state.pathLevel.name+' · Grade '+state.pathLevel.grade:'Fact & number practice';
+  document.getElementById('round-unit-label').textContent=state.challenge?'Task':'Question';
   state.reportRecorded = false;
   state.reportHelpUsed = document.getElementById('game-chart').style.display !== 'none';
   state.attempts = 0;
@@ -2020,7 +3198,7 @@ function nextOrder() {
   input.className = 'answer-input';
   var comparison = state.currentProblem.operation === 'compare';
   var fractional = state.currentProblem.type === 'fractions' || state.currentProblem.fractionInput;
-  var decimal = state.currentProblem.type === 'decimals';
+  var decimal = state.currentProblem.type === 'decimals' || state.currentProblem.decimalInput;
   document.getElementById('comparison-pad').hidden = !comparison;
   document.getElementById('number-pad').hidden = comparison;
   document.getElementById('decimal-key').hidden = !decimal;
@@ -2032,14 +3210,14 @@ function nextOrder() {
   if (!comparison) input.focus({preventScroll:true});
   else document.querySelector('#comparison-pad button').focus();
 
-  var path=state.currentProblem.type==='pathway', custom=path && (state.currentProblem.choices || state.currentProblem.builder);
+  var path=state.currentProblem.type==='pathway', custom=path && (state.currentProblem.choices || state.currentProblem.builder || state.currentProblem.widget);
   document.getElementById('game-screen').classList.toggle('visual-round',path);
-  document.getElementById('path-visual').hidden=!path || Boolean(state.currentProblem.builder);
+  document.getElementById('path-visual').hidden=!path || Boolean(state.currentProblem.builder) || Boolean(state.currentProblem.widget && (['fm_shade','fm_line','fm_hundredgrid'].indexOf(state.currentProblem.widget.kind)!==-1 || ['fd_prompt','vx_notice'].indexOf(state.currentProblem.visual.kind)!==-1));
   document.getElementById('path-hint').hidden=!path;
   document.getElementById('path-answers').hidden=!custom;
   if(path){
     renderPathVisual(document.getElementById('path-visual'),state.currentProblem.visual,false);
-    if(custom){input.hidden=true;document.getElementById('number-pad').hidden=true;document.getElementById('answer-help').textContent=state.currentProblem.builder?'Use the controls to build your graph, then check it.':'Tap your answer.';
+    if(custom){input.hidden=true;document.getElementById('number-pad').hidden=true;document.getElementById('answer-help').textContent=state.currentProblem.builder || state.currentProblem.widget?'Use the tools, then check your work.':'Tap your answer.';
       renderPathAnswer(document.getElementById('path-answers'),state.currentProblem,function(raw){if(!state.roundActive||state.answered)return;input.value=raw;state.hintPaused=false;checkAnswer();});
     }
   }
@@ -2101,6 +3279,20 @@ function startPatience() {
   }, 100);
 }
 
+function revealPathSolution() {
+  var p=state.currentProblem;if(p.type!=='pathway')return false;
+  clearInterval(state.patienceTimer);clearTimeout(state.nextOrderTimer);
+  var answers=document.getElementById('path-answers');answers.hidden=false;answers.replaceChildren();
+  if(p.widget)renderPathAnswer(answers,p,function(){},true);
+  else if(p.builder)renderPathVisual(answers,{kind:'bars',values:p.builder.values,labels:p.builder.labels,scale:1},true);
+  else renderPathVisual(document.getElementById('path-visual'),p.visual,true);
+  document.getElementById('answer-input').hidden=true;document.getElementById('number-pad').hidden=true;
+  document.getElementById('answer-help').textContent='Take your time with the example, then continue.';
+  var next=learningNode('button','Next question','btn btn-small btn-teal');
+  next.addEventListener('click',function(){if(state.roundActive&&state.answered&&state.currentProblem===p)nextOrder();});answers.appendChild(next);
+  return true;
+}
+
 function timeUp() {
   recordReportOutcome('timeout');
   state.answered = true;
@@ -2110,10 +3302,10 @@ function timeUp() {
   // Running out of time is not evidence of an incorrect answer.
 
   var fb = document.getElementById('feedback');
-  fb.textContent = "Time ran out. The answer was " + state.currentProblem.answer + ". You can choose more time or No timer above.";
+  fb.textContent = state.currentProblem.type==='pathway' ? "Time ran out. "+state.currentProblem.explanation+" You can choose more time or No timer above." : "Time ran out. The answer was " + state.currentProblem.answer + ". You can choose more time or No timer above.";
   fb.className = 'feedback wrong-fb';
 
-  scheduleNextOrder(4000);
+  if(!revealPathSolution())scheduleNextOrder(4000);
 }
 
 function showHint(text, problem, wrongAnswer) {
@@ -2158,7 +3350,7 @@ function checkAnswer() {
 
   var input = document.getElementById('answer-input');
   var parsed = parseAnswer(input.value);
-  var customAnswer=state.currentProblem.choices || state.currentProblem.builder;
+  var customAnswer=state.currentProblem.choices || state.currentProblem.builder || state.currentProblem.widget;
   if (parsed === null && (!customAnswer || !input.value)) {
     document.getElementById('feedback').textContent = 'Enter a number or fraction with a nonzero denominator.';
     return;
@@ -2174,7 +3366,7 @@ function checkAnswer() {
     input.className = 'answer-input correct';
 
     state.correct++;
-    if(state.pathLevel && state.attempts===1 && !state.hintShown)state.independentCorrect++;
+    if(state.pathLevel && state.attempts===1 && !state.hintShown && !state.reportHelpUsed)state.independentCorrect++;
     state.streak++;
     if (state.streak > state.bestStreak) state.bestStreak = state.streak;
 
@@ -2223,10 +3415,10 @@ function checkAnswer() {
     srRecordWrong(state.currentProblem.srKey);
     refreshPoolWeights();
 
-    fb.textContent = 'The answer is ' + state.currentProblem.answer + ". You'll get it next time!";
+    fb.textContent = state.currentProblem.type==='pathway' ? state.currentProblem.explanation : 'The answer is ' + state.currentProblem.answer + ". You'll get it next time!";
     fb.className = 'feedback wrong-fb';
 
-    scheduleNextOrder(2500);
+    if(!revealPathSolution())scheduleNextOrder(2500);
   }
 }
 
@@ -2277,12 +3469,18 @@ function endRound() {
   document.getElementById('stat-streak').textContent = state.bestStreak;
 
   var rec=document.getElementById('path-recommendation');rec.replaceChildren();
-  if(state.pathLevel){
+  if(state.pathLevel && !state.challenge){
     recordPathResult(state.pathLevel,state.correct,state.independentCorrect);
     var next=nextPathSkill(state.pathLevel),ready=state.independentCorrect>=8;
     var summary=document.createElement('p');summary.className='bakery-help';summary.textContent=state.independentCorrect+'/10 solved independently. '+(ready?(next?'Ready for a next step: '+next.name+' (Grade '+next.grade+').':'You completed the last step in this path. Try another path or practice again!'):'Try this skill again with the worked example. You can also choose an earlier grade.');rec.appendChild(summary);
     var action=document.createElement('button');action.className='btn btn-small btn-teal';action.textContent=ready&&next?'Try the next skill':'Practice this skill';action.addEventListener('click',function(){openPathLesson(ready&&next?next:state.pathLevel);});rec.appendChild(action);
   }
+  if(state.challenge){
+    recordChallengeResult(state.challenge.id,state.challenge.grade,state.correct,state.independentCorrect);
+    document.getElementById('results-title').textContent='Challenge complete!';
+    document.getElementById('results-subtitle').textContent=state.challenge.name+' · Grade '+state.challenge.grade;
+    rec.appendChild(learningNode('p',state.independentCorrect+'/10 tasks solved independently. Your report lists these as bakery challenges.','bakery-help'));
+  }else if(state.pathLevel)document.getElementById('results-subtitle').textContent='You practiced '+state.pathLevel.name+'.';
   // Show tricky facts + pattern insights
   var trickyEl = document.getElementById('tricky-facts');
   while (trickyEl.firstChild) trickyEl.removeChild(trickyEl.firstChild);
@@ -2389,7 +3587,7 @@ document.getElementById('answer-input').addEventListener('input', function() {
 document.addEventListener('keydown', function(e) {
   if (!document.getElementById('game-screen').classList.contains('active') || state.answered) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  if(state.currentProblem.choices || state.currentProblem.builder)return;
+  if(state.currentProblem.choices || state.currentProblem.builder || state.currentProblem.widget)return;
   if (state.currentProblem.operation === 'compare') {
     if (['<', '=', '>'].indexOf(e.key) !== -1) { e.preventDefault(); submitComparison(e.key); }
     return;
